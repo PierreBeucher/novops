@@ -1,0 +1,5 @@
+environments:
+  dev:
+    variables:
+      - name: AWS_DEFAULT_REGION
+        string: eu-central-1 
