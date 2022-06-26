@@ -1,5 +1,26 @@
 environments:
   dev:
     variables:
-      - name: AWS_DEFAULT_REGION
-        string: eu-central-1 
+      # Variables can be in multiple forms
+      # Either direct string or with 'value' key
+      AWS_DEFAULT_REGION:
+        value: eu-central-1
+      AWS_PROFILE: "test"
+      AWS_SECRET_ACCESS_KEY:
+        bitwarden:
+          entry: "AWS Access Key"
+          field: login.password
+    files: 
+      foo:
+        dest: /tmp/foo
+        content: 
+          value: "foo"
+      bar:
+        dest: /tmp/bar
+        content: "bar"
+      bw:
+        dest: /tmp/bw
+        content:
+          bitwarden:
+            entry: "Somme SSH Key"
+            field: notes
