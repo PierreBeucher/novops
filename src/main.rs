@@ -1,3 +1,5 @@
+#[macro_use]
+extern crate enum_dispatch;
 use std::io::Error;
 use std::collections::HashMap;
 use serde::Deserialize;
@@ -24,24 +26,16 @@ struct NovopsFile {
  */
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
+#[enum_dispatch(ResolvableNovopsValue)]
 enum NovopsValue {
     String(String), 
     StringValue(StringValue),
     BitwardenItem(BitwardenItem)
 }
 
+#[enum_dispatch]
 trait ResolvableNovopsValue {
     fn resolve(&self) -> String;
-}
-
-impl ResolvableNovopsValue for NovopsValue {
-    fn resolve(&self) -> String {
-        match self {
-            NovopsValue::String(v) => return v.resolve(),
-            NovopsValue::StringValue(v) => return v.resolve(),
-            NovopsValue::BitwardenItem(v) => return v.resolve()
-        }
-    }
 }
 
 impl ResolvableNovopsValue for String {
@@ -125,8 +119,8 @@ fn parse_config(config: &NovopsConfig, env_name: String) -> (HashMap<String, Str
     let env_config: &NovopsEnvironment = &config.environments[&env_name];
 
     let mut variable_map: HashMap<String, String> = HashMap::new();
-    for (var_name, var_abstract_value) in &env_config.variables {
-        variable_map.insert(var_name.clone(), var_abstract_value.resolve());
+    for (var_name, var_value) in &env_config.variables {
+        variable_map.insert(var_name.clone(), var_value.resolve());
     }
 
     let mut file_content_map: HashMap<String, String> = HashMap::new();
