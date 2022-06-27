@@ -8,7 +8,7 @@ environments:
       AWS_PROFILE: "test"
       AWS_SECRET_ACCESS_KEY:
         bitwarden:
-          entry: "AWS Access Key"
+          entry: "Novops test - login.password entry"
           field: login.password
     files: 
       foo:
@@ -22,5 +22,5 @@ environments:
         dest: /tmp/bw
         content:
           bitwarden:
-            entry: "Somme SSH Key"
+            entry: Novops test - notes entry
             field: notes

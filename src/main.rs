@@ -1,95 +1,11 @@
 #[macro_use]
 extern crate enum_dispatch;
+mod novops;
+mod bitwarden;
+
+use novops::{NovopsConfig, NovopsEnvironment, ResolvableNovopsValue};
 use std::io::Error;
 use std::collections::HashMap;
-use serde::Deserialize;
-
-#[derive(Debug, Deserialize)]
-struct NovopsConfig {
-    environments: HashMap<String, NovopsEnvironment>
-}
-
-#[derive(Debug, Deserialize)]
-struct NovopsEnvironment {
-    variables: HashMap<String, NovopsValue>,
-    files: HashMap<String, NovopsFile>
-}
-
-#[derive(Debug, Deserialize)]
-struct NovopsFile {
-    dest: String,
-    content: NovopsValue
-}
-
-/**
- * A Novops value is it's core: in can be a string, a secret, or something else
- */
-#[derive(Debug, Deserialize)]
-#[serde(untagged)]
-#[enum_dispatch(ResolvableNovopsValue)]
-enum NovopsValue {
-    String(String), 
-    StringValue(StringValue),
-    BitwardenItem(BitwardenItem)
-}
-
-#[enum_dispatch]
-trait ResolvableNovopsValue {
-    fn resolve(&self) -> String;
-}
-
-impl ResolvableNovopsValue for String {
-    fn resolve(&self) -> String {
-        return self.clone()
-    }
-}
-
-/**
- * A string set with 'value' key such as 
- * 
- * myvar:
- *   value: foo
- */
-
-#[derive(Debug, Deserialize)]
-struct StringValue{
-    value: String
-}
-
-impl ResolvableNovopsValue for StringValue {
-    fn resolve(&self) -> String {
-        return self.value.clone();
-    }
-}
-
-/**
- * A BitWarden secret such as
- * 
- * myvar:
- *   bitwarden:
- *     entry: wordpress_prod
- *     field: login.password
- */
-
-#[derive(Debug, Deserialize)]
- struct BitwardenItem {
-    bitwarden: BitwardenValue,
-}
-
-impl ResolvableNovopsValue for BitwardenItem {
-    fn resolve(&self) -> String {
-        // Dummy implementation for now
-        return format!("{}:{}", self.bitwarden.entry, self.bitwarden.field);
-    }
-}
-
-
-#[derive(Debug, Deserialize)]
- struct BitwardenValue {
-    entry: String,
-    field: String
-}
-
 
 fn main() -> Result<(), Error> {
 
