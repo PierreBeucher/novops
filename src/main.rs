@@ -6,10 +6,23 @@ mod bitwarden;
 use novops::{NovopsConfig, NovopsEnvironment, ResolvableNovopsValue};
 use std::io::Error;
 use std::collections::HashMap;
+use clap::Parser;
+
+#[derive(Parser, Debug)]
+#[clap(author, version, about, long_about = None)]
+#[clap(name = "novops")]
+#[clap(about = "Environment agnostic secret and config aggregator", long_about = None)]
+struct NovopsArgs {
+    #[clap(short, long, value_parser, default_value = ".novops.yml", help = "Config file to load")]
+    config: String
+}
 
 fn main() -> Result<(), Error> {
 
-    let config = read_config(".novops.yml").unwrap();
+    let args = NovopsArgs::parse();
+    println!("Loading config: {:}", args.config);
+
+    let config = read_config(&args.config).unwrap();
     println!("Found config: {:?}", config);
 
     let (variable_map, file_content_map) = parse_config(&config, String::from("dev"));
