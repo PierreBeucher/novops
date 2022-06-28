@@ -4,6 +4,7 @@ use crate::bitwarden;
 
 #[derive(Debug, Deserialize)]
 pub struct NovopsConfig {
+    pub name: String,
     pub environments: HashMap<String, NovopsEnvironment>,
     pub default: Option<NovopsConfigDefault>
 }

@@ -1,3 +1,6 @@
+# The unique application name
+name: novops-test
+
 # Set of existing environments
 # Each environment defined files and variables to load
 environments:

@@ -5,6 +5,7 @@ mod novops;
 mod bitwarden;
 
 use novops::{NovopsConfig, NovopsEnvironment, ResolvableNovopsValue, ResolvedNovopsFile, ResolvedNovopsVariable};
+
 use std::io::Error;
 use clap::Parser;
 use std::fs;
@@ -15,31 +16,39 @@ use text_io;
 #[clap(name = "novops")]
 #[clap(about = "Environment agnostic secret and config aggregator", long_about = None)]
 struct NovopsArgs {
-    #[clap(short, long, value_parser, default_value = ".novops.yml", help = "Config file to load")]
+    #[clap(short = 'c', long, value_parser, default_value = ".novops.yml", help = "Config file to load")]
     config: String,
 
-    #[clap(short, long, value_parser, help = "Environment to load")]
-    env: Option<String>
+    #[clap(short = 'e', long, value_parser, help = "Name of environment to load")]
+    env: Option<String>,
+
+    #[clap(short = 'w', long = "workdir", value_parser, 
+        help = "Working directory under which files and variable files will be stored by default. \
+            Use XDG runtime directory if available ($XDG_RUNTIME_DIR/novops/<app>/<env>), default to current directory (.novops/<app>/<env>)")]
+    working_directory: Option<String>
 }
 
 fn main() -> Result<(), Error> {
+    // configure_logging();
 
     // Read CLI args and load config
     let args = NovopsArgs::parse();
     let config = read_config_file(&args.config).unwrap();
+    let app_name = &config.name;
 
     // Env name is either specified as arg, as default or prompt user
     let env_name = read_environment_name(&config, &args.env);
     let env_config = &config.environments[&env_name];
 
+    // working directory under which to save files
+    let workdir = get_working_directory(&args, &app_name, &env_name);
+    println!("Using workdir: {:?}", &workdir);
+
     // resolve concrete variable values and file content from config
     let (
         user_resolved_vars, 
         user_resolved_files
-    ) = parse_environment(env_config, &env_name);
-
-    println!("Resolved vars: {:?}", user_resolved_vars);
-    println!("Resolved files: {:?}", user_resolved_files);
+    ) = parse_environment(env_config, &env_name, &workdir);
 
     // env var pointing to files
     let file_resolved_vars:Vec<ResolvedNovopsVariable> = user_resolved_files.iter()
@@ -50,17 +59,19 @@ fn main() -> Result<(), Error> {
     all_resolved_vars.extend(user_resolved_vars);
     all_resolved_vars.extend(file_resolved_vars);
 
-    write_files(user_resolved_files);
+    // write resolved files and variable
+    prepare_workir(&workdir);
+    write_resolved_files(user_resolved_files);
     
     let exportable_vars = build_exportable_vars(all_resolved_vars);
 
-    println!("Exportable vars: {:?}", exportable_vars);
+    let exported_var_path = write_exportable_vars(&exportable_vars, &workdir);
 
-    write_exportable_vars(exportable_vars, env_name);
+    println!("Novops environment loaded ! Export variables with:");
+    println!("  source {:}", exported_var_path);
     
     Ok(())
 }
-
 
 fn read_config_file(config_path: &str) -> Result<NovopsConfig, serde_yaml::Error> {
     let f = std::fs::File::open(config_path).unwrap();
@@ -80,6 +91,43 @@ fn read_environment_name(config: &NovopsConfig, flag: &Option<String>) -> String
         Some(e) => e.clone(),
         None => prompt_for_environment(config)
     }
+}
+
+/**
+ * Retrieve working directory where files and exportable variable file will be written by default
+ * with the following precedence:
+ * - CLI flag working directory
+ * - XDG runtime dir (if available), such as $XDg_RUNTIME_DIR/novops/<app>/<env>
+ * - Current directory such as .novops/<app>/<env>
+ */
+fn get_working_directory(args: &NovopsArgs, app_name: &String, env_name: &String) -> String {
+    let workdir_suffix = format!("novops/{:}/{:}", app_name, env_name);
+
+
+    match &args.working_directory {
+        Some(w) => return w.clone(),
+        None => {
+            let xdg_dir = xdg::BaseDirectories::with_prefix(&workdir_suffix).unwrap();
+
+            // Try to use XDG if available
+            // Fallback to current directory
+            if xdg_dir.has_runtime_directory() {
+                let runtime_dir = xdg_dir.get_runtime_directory().unwrap().clone().into_os_string().into_string().unwrap().clone();
+                return format!("{:}/{:}", runtime_dir, workdir_suffix)
+            } else {
+                return format!(".{:}", &workdir_suffix)
+            }
+        },
+    }
+    
+}
+
+/**
+ * Prepare working directory (ensure directories exists so that we can create files)
+ */
+fn prepare_workir(workir: &String){
+    fs::create_dir_all(workir).unwrap();
+    fs::create_dir_all(format!("{:}/files", workir)).unwrap();
 }
 
 /**
@@ -123,7 +171,11 @@ fn prompt_for_environment(config: &NovopsConfig) -> String{
  * Parse configuration and resolve file and variables into concrete values 
  * Return a Vector of tuples for variables and files and their resolved values
  */
-fn parse_environment(env_config: &NovopsEnvironment, env_name: &String) -> (Vec<ResolvedNovopsVariable>, Vec<ResolvedNovopsFile>) {
+fn parse_environment(env_config: &NovopsEnvironment, env_name: &String, workdir_root: &String) -> (Vec<ResolvedNovopsVariable>, Vec<ResolvedNovopsFile>) {
+    
+    // subpath in workdir where to store file by default
+    let file_workdir = format!("{:}/files", workdir_root);
+
     // resolve variables
     // straightforward: variable name is key in config, value is resolvable
     let mut variable_vec: Vec<ResolvedNovopsVariable> = Vec::new();
@@ -135,21 +187,15 @@ fn parse_environment(env_config: &NovopsEnvironment, env_name: &String) -> (Vec<
         variable_vec.push(resolved);
     }
 
-    let xdg_basedir = xdg::BaseDirectories::with_prefix(format!("novops/{:}/files", env_name)).unwrap();
-
     // resolve file
     let mut file_vec: Vec<ResolvedNovopsFile> = Vec::new();
     for (file_key, file_def) in &env_config.files {
 
         // if dest provided, use it
-        // otherwise default to XDG runtime dir named after file entry
+        // otherwise use working directory
         let dest = match &file_def.dest {
             Some(s) => s.clone(),
-            None =>  xdg_basedir.place_runtime_file(&file_key)
-                .unwrap()
-                .into_os_string()
-                .into_string()
-                .unwrap()
+            None => format!("{:}/{:}", file_workdir, file_key)
         };
 
         // variable pointing to file path
@@ -178,7 +224,7 @@ fn parse_environment(env_config: &NovopsEnvironment, env_name: &String) -> (Vec<
 /**
  * Write resolved files to disk
  */
-fn write_files(files:Vec<ResolvedNovopsFile>){
+fn write_resolved_files(files:Vec<ResolvedNovopsFile>){
     for f in files {
         fs::write(f.dest, f.content).expect("Unable to write file");
     }
@@ -192,7 +238,7 @@ fn write_files(files:Vec<ResolvedNovopsFile>){
 fn build_exportable_vars(vars: Vec<ResolvedNovopsVariable>) -> String{
     let mut exportable_vars = String::new();
     for v in vars{
-        let s = format!("{:}=\"{:}\"\n", &v.name, &v.value);
+        let s = format!("export {:}=\"{:}\"\n", &v.name, &v.value);
         exportable_vars.push_str(&s);
     }
 
@@ -202,10 +248,8 @@ fn build_exportable_vars(vars: Vec<ResolvedNovopsVariable>) -> String{
 /**
  * Write exportable variables under runtime directory
  */
-fn write_exportable_vars(vars: String, env_name: String){
-    let var_file = xdg::BaseDirectories::with_prefix(format!("novops/{:}", &env_name))
-        .unwrap()
-        .place_runtime_file("vars")
-        .unwrap();
-    fs::write(var_file, vars).expect("Unable to write file");
+fn write_exportable_vars(vars: &String, working_dir: &String) -> String{
+    let var_file = format!("{:}/vars", working_dir);
+    fs::write(&var_file, vars).expect("Unable to write file");
+    return var_file;
 }
