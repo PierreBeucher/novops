@@ -1,23 +1,55 @@
+# Set of existing environments
+# Each environment defined files and variables to load
 environments:
+
+  # The dev environment
   dev:
+
+    # Set of variables to load in environment
     variables:
-      # Variables can be in multiple forms
-      # Either direct string or with 'value' key
+
+      # Variable with plain value
+      AWS_PROFILE: "test"
+
+      # Variable with plain value set with "value" key
+      # TODO is this form really useful?
       AWS_DEFAULT_REGION:
         value: eu-central-1
-      AWS_PROFILE: "test"
+      
+      # Variable loaded from a Bitwarden entry
+      # Required Bitwarden CLI to be installed locally
       AWS_SECRET_ACCESS_KEY:
         bitwarden:
+          # Name of the entry to load from
+          # Required
           entry: "Novops test - login.password entry"
+
+          # Name of the field in entry to load in entry's JSON
+          # See format with bw get item "xxx"
+          # For Login: use 'login.password'
+          # For Secure Note: use 'notes'
           field: login.password
+
+    # Set of files to load
+    #
+    # By default, files will be saved under /run/user/<uid>/novops/<project>/<environment>/<file>
+    # i.e. /run/user/1000/novops/myproject/dev/foo
+    # You can specify dest: to override destination
+    #
+    # By default, an additional variable will be set pointing to file path
+    # using format NOVOPS_FILE_<ENV>_<FILE>
+    # i.e. NOVOPS_DEV_FOO="/run/user/1000/novops/myproject/dev/foo"
+    # You can specify custom variable value with variable: MY_CUSTOM_VAR
     files: 
+
       foo:
-        dest: /tmp/foo
         content: 
           value: "foo"
+      
       bar:
         dest: /tmp/bar
         content: "bar"
+      
       bw:
         dest: /tmp/bw
         content:

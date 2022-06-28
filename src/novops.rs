@@ -9,14 +9,36 @@ pub struct NovopsConfig {
 
 #[derive(Debug, Deserialize)]
 pub struct NovopsEnvironment {
-    pub variables: HashMap<String, NovopsValue>,
+    pub variables: HashMap<String, NovopsVariable>,
     pub files: HashMap<String, NovopsFile>
 }
 
 #[derive(Debug, Deserialize)]
 pub struct NovopsFile {
-    pub dest: String,
+    pub dest: Option<String>,
+    pub variable: Option<String>,
     pub content: NovopsValue
+}
+
+type NovopsVariable = NovopsValue;
+
+/**
+ * A resolved file, with known destination and content
+ */
+#[derive(Debug)]
+pub struct ResolvedNovopsFile {
+    pub dest: String,
+    pub variable: String,
+    pub content: String // TODO buffer? content may be long
+}
+
+/**
+ * A resolved variable, with known name and value
+ */
+#[derive(Debug)]
+pub struct ResolvedNovopsVariable {
+    pub name: String,
+    pub value: String
 }
 
 /**
