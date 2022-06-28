@@ -56,3 +56,7 @@ environments:
           bitwarden:
             entry: Novops test - notes entry
             field: notes
+
+# Default values
+default:
+  environment: dev

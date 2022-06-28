@@ -10,3 +10,4 @@ serde_yaml = "0.8"
 enum_dispatch = "0.3.8"
 clap = { version = "3.2.6", features = ["derive"] }
 xdg = "^2.1"
+text_io = "0.1.10"

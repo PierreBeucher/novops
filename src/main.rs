@@ -8,6 +8,7 @@ use novops::{NovopsConfig, NovopsEnvironment, ResolvableNovopsValue, ResolvedNov
 use std::io::Error;
 use clap::Parser;
 use std::fs;
+use text_io;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -15,24 +16,27 @@ use std::fs;
 #[clap(about = "Environment agnostic secret and config aggregator", long_about = None)]
 struct NovopsArgs {
     #[clap(short, long, value_parser, default_value = ".novops.yml", help = "Config file to load")]
-    config: String
+    config: String,
+
+    #[clap(short, long, value_parser, help = "Environment to load")]
+    env: Option<String>
 }
 
 fn main() -> Result<(), Error> {
 
+    // Read CLI args and load config
     let args = NovopsArgs::parse();
-    println!("Loading config: {:}", args.config);
+    let config = read_config_file(&args.config).unwrap();
 
-    let config = read_config(&args.config).unwrap();
-    println!("Found config: {:?}", config);
-
-    let env_name = String::from("dev"); // todo as arg
+    // Env name is either specified as arg, as default or prompt user
+    let env_name = read_environment_name(&config, &args.env);
+    let env_config = &config.environments[&env_name];
 
     // resolve concrete variable values and file content from config
     let (
         user_resolved_vars, 
         user_resolved_files
-    ) = parse_config(&config, &env_name);
+    ) = parse_environment(env_config, &env_name);
 
     println!("Resolved vars: {:?}", user_resolved_vars);
     println!("Resolved files: {:?}", user_resolved_files);
@@ -58,20 +62,68 @@ fn main() -> Result<(), Error> {
 }
 
 
-fn read_config(config_path: &str) -> Result<NovopsConfig, serde_yaml::Error> {
+fn read_config_file(config_path: &str) -> Result<NovopsConfig, serde_yaml::Error> {
     let f = std::fs::File::open(config_path).unwrap();
     let config: NovopsConfig = serde_yaml::from_reader(f).unwrap();
 
     return Ok(config);
 }
 
+/** 
+ * Read the environment name with this precedence (higher to lowest):
+ * - CLI flag
+ * - prompt user (using config's default if no choice given)
+ */
+fn read_environment_name(config: &NovopsConfig, flag: &Option<String>) -> String {
+
+    match flag {
+        Some(e) => e.clone(),
+        None => prompt_for_environment(config)
+    }
+}
+
+/**
+ * Prompt user for environment name
+ */
+fn prompt_for_environment(config: &NovopsConfig) -> String{
+
+    // read config for environments and eventual default environment 
+    let environments = config.environments.keys().cloned().collect::<Vec<String>>();
+    let default_environment: Option<String> = match &config.default {
+        Some(d) => match &d.environment {
+            Some(default_env) => Some(default_env.clone()),
+            None => None
+        },
+        None => None
+    };
+
+    // prompt user, show default environment if any
+    let mut prompt_msg = format!("Select environment: {:}", environments.join(", "));
+    if default_environment.is_some(){
+        prompt_msg.push_str(&format!(" (default: {:})", default_environment.unwrap()));
+    }
+    println!("{prompt_msg}");
+
+    let selected: String = text_io::read!("{}\n");
+
+    if selected.is_empty() {
+        match &config.default {
+            Some(d) => match &d.environment {
+                Some(default_env) => default_env.clone(),
+                None => panic!("No environment selected and no default in config."),
+            },
+            None => panic!("No environment selected and no default in config."),
+        }
+    } else {
+        return selected
+    }
+}
+
 /**
  * Parse configuration and resolve file and variables into concrete values 
  * Return a Vector of tuples for variables and files and their resolved values
  */
-fn parse_config(config: &NovopsConfig, env_name: &String) -> (Vec<ResolvedNovopsVariable>, Vec<ResolvedNovopsFile>) {
-    let env_config: &NovopsEnvironment = &config.environments[env_name];
-
+fn parse_environment(env_config: &NovopsEnvironment, env_name: &String) -> (Vec<ResolvedNovopsVariable>, Vec<ResolvedNovopsFile>) {
     // resolve variables
     // straightforward: variable name is key in config, value is resolvable
     let mut variable_vec: Vec<ResolvedNovopsVariable> = Vec::new();
