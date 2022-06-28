@@ -6,7 +6,7 @@ COPY . .
 
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/novops/app/target \
-    cargo build --release
+    cargo build --release --target x86_64-unknown-linux-musl
 
 FROM alpine:3.16
 
