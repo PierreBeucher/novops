@@ -28,14 +28,14 @@ type NovopsVariable = NovopsValue;
 #[derive(Debug)]
 pub struct ResolvedNovopsFile {
     pub dest: String,
-    pub variable: String,
+    pub variable: ResolvedNovopsVariable,
     pub content: String // TODO buffer? content may be long
 }
 
 /**
  * A resolved variable, with known name and value
  */
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ResolvedNovopsVariable {
     pub name: String,
     pub value: String
