@@ -1,8 +1,10 @@
 #[macro_use]
 extern crate enum_dispatch;
 extern crate xdg;
+
 mod novops;
 mod bitwarden;
+mod aws;
 
 use novops::{NovopsConfig, NovopsEnvironment, ResolvableNovopsValue, ResolvedNovopsFile, ResolvedNovopsVariable};
 
@@ -11,6 +13,7 @@ use clap::Parser;
 use std::fs;
 use text_io;
 use users;
+use tokio;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -29,8 +32,8 @@ struct NovopsArgs {
     working_directory: Option<String>
 }
 
-fn main() -> Result<(), Error> {
-    // configure_logging();
+#[tokio::main]
+async fn main() -> Result<(), Error> {
 
     // Read CLI args and load config
     let args = NovopsArgs::parse();
@@ -45,11 +48,14 @@ fn main() -> Result<(), Error> {
     let workdir = prepare_working_directory(&args, &app_name, &env_name);
     println!("Using workdir: {:?}", &workdir);
 
+    let aws_conf = &env_config.aws.clone().unwrap();
+    let aws_resolved_vars = aws::parse_aws_assumerole(&aws_conf.assume_role, &app_name, &env_name).await;
+
     // resolve concrete variable values and file content from config
     let (
         user_resolved_vars, 
         user_resolved_files
-    ) = parse_environment(env_config, &env_name, &workdir);
+    ) = parse_environment(&env_config, &env_name, &workdir);
 
     // env var pointing to files
     let file_resolved_vars:Vec<ResolvedNovopsVariable> = user_resolved_files.iter()
@@ -59,6 +65,7 @@ fn main() -> Result<(), Error> {
     let mut all_resolved_vars: Vec<ResolvedNovopsVariable> = Vec::new();
     all_resolved_vars.extend(user_resolved_vars);
     all_resolved_vars.extend(file_resolved_vars);
+    all_resolved_vars.extend(aws_resolved_vars);
 
     // write resolved files and variable
     write_resolved_files(user_resolved_files);

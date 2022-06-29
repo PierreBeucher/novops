@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 use serde::Deserialize;
+
 use crate::bitwarden;
+use crate::aws;
 
 #[derive(Debug, Deserialize)]
 pub struct NovopsConfig {
@@ -17,7 +19,8 @@ pub struct NovopsConfigDefault {
 #[derive(Debug, Deserialize)]
 pub struct NovopsEnvironment {
     pub variables: HashMap<String, NovopsVariable>,
-    pub files: HashMap<String, NovopsFile>
+    pub files: HashMap<String, NovopsFile>,
+    pub aws: Option<aws::NovopsAws>
 }
 
 #[derive(Debug, Deserialize)]

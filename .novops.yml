@@ -1,5 +1,5 @@
 # The unique application name
-name: novops-test
+name: example-app
 
 # Set of existing environments
 # Each environment defined files and variables to load
@@ -12,7 +12,7 @@ environments:
     variables:
 
       # Variable with plain value
-      AWS_PROFILE: "test"
+      MY_APP_HOST: "localhost"
 
       # Variable with plain value set with "value" key
       # TODO is this form really useful?
@@ -60,6 +60,11 @@ environments:
             entry: Novops test - notes entry
             field: notes
 
+    aws:
+      assume_role:
+        role_arn: arn:aws:iam::419998656076:role/deployinfra_dev_deploy
+        source_profile: nova-sandbox
+          
 # Default values
 default:
   environment: dev
