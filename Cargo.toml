@@ -18,6 +18,8 @@ aws-sdk-sts = "0.14.0"
 aws-sdk-iam = "0.14.0"
 aws-config = "0.14.0"
 tokio = { version = "1", features = ["full"] }
+convert_case = "0.5.0"
+async-trait = "0.1.56"
 
 [dependencies.uuid]
 version = "1.1.2"

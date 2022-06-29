@@ -6,7 +6,7 @@ mod novops;
 mod bitwarden;
 mod aws;
 
-use novops::{NovopsConfig, NovopsEnvironment, ResolvableNovopsValue, ResolvedNovopsFile, ResolvedNovopsVariable};
+use novops::{NovopsConfig, ResolveTo, FileOutput, VariableOutput, NovopsContext};
 
 use std::{io::Error, os::unix::prelude::PermissionsExt};
 use clap::Parser;
@@ -38,7 +38,7 @@ async fn main() -> Result<(), Error> {
     // Read CLI args and load config
     let args = NovopsArgs::parse();
     let config = read_config_file(&args.config).unwrap();
-    let app_name = &config.name;
+    let app_name = &config.name.clone();
 
     // Env name is either specified as arg, as default or prompt user
     let env_name = read_environment_name(&config, &args.env);
@@ -48,31 +48,52 @@ async fn main() -> Result<(), Error> {
     let workdir = prepare_working_directory(&args, &app_name, &env_name);
     println!("Using workdir: {:?}", &workdir);
 
-    let aws_conf = &env_config.aws.clone().unwrap();
-    let aws_resolved_vars = aws::parse_aws_assumerole(&aws_conf.assume_role, &app_name, &env_name).await;
+    let ctx = NovopsContext {
+        env_name: env_name.clone(),
+        app_name: app_name.clone(),
+        workdir: workdir.clone(),
+        config: config.clone(),
+    };
 
-    // resolve concrete variable values and file content from config
-    let (
-        user_resolved_vars, 
-        user_resolved_files
-    ) = parse_environment(&env_config, &env_name, &workdir);
+    // initialize Vector for all possible outputs
+    let mut variable_outputs: Vec<VariableOutput> = Vec::new();
+    let mut file_outputs: Vec<FileOutput> = Vec::new();
 
-    // env var pointing to files
-    let file_resolved_vars:Vec<ResolvedNovopsVariable> = user_resolved_files.iter()
-        .map(|f| f.variable.clone())
-        .collect();
+    //
+    // Resolve all modules
+    //
 
-    let mut all_resolved_vars: Vec<ResolvedNovopsVariable> = Vec::new();
-    all_resolved_vars.extend(user_resolved_vars);
-    all_resolved_vars.extend(file_resolved_vars);
-    all_resolved_vars.extend(aws_resolved_vars);
+    // Variable
+    for v in &env_config.variables {
+        variable_outputs.push(v.resolve(&ctx).await);
+    };
 
-    // write resolved files and variable
-    write_resolved_files(user_resolved_files);
+    // File
+    for f in &env_config.files {
+        let r = f.resolve(&ctx).await;
+        file_outputs.push(r.clone());
+        variable_outputs.push(r.variable.clone())
+    };
+
+    // AWS
+    match &env_config.aws {
+        Some(aws) => {
+            let mut r = aws.assume_role.resolve(&ctx).await;
+            variable_outputs.append(&mut r);
+        },
+        None => (),
+    }
+
+    //
+    // Export all Outputs
+    //
+
+    // Files
+    write_resolved_files(&file_outputs);
     
-    let exportable_vars = build_exportable_vars(all_resolved_vars);
-
-    let exported_var_path = write_exportable_vars(&exportable_vars, &workdir);
+    // Variables
+    let exportable_vars = build_exportable_vars(&variable_outputs);
+    let exported_var_path = write_exportable_vars(&exportable_vars, &ctx.workdir);
 
     println!("Novops environment loaded ! Export variables with:");
     println!("  source {:}", exported_var_path);
@@ -208,58 +229,58 @@ fn prompt_for_environment(config: &NovopsConfig) -> String{
  * Parse configuration and resolve file and variables into concrete values 
  * Return a Vector of tuples for variables and files and their resolved values
  */
-fn parse_environment(env_config: &NovopsEnvironment, env_name: &String, workdir_root: &String) -> (Vec<ResolvedNovopsVariable>, Vec<ResolvedNovopsFile>) {
-    // resolve variables
-    // straightforward: variable name is key in config, value is resolvable
-    let mut variable_vec: Vec<ResolvedNovopsVariable> = Vec::new();
-    for (var_key, var_value) in &env_config.variables {
-        let resolved = ResolvedNovopsVariable{
-            name: var_key.clone(),
-            value: var_value.resolve()
-        };
-        variable_vec.push(resolved);
-    }
+// fn parse_environment(env_config: &NovopsEnvironment, env_name: &String, workdir_root: &String) -> (Vec<VariableOutput>, Vec<FileOutput>) {
+//     resolve variables
+//     straightforward: variable name is key in config, value is resolvable
+//     let mut variable_vec: Vec<VariableOutput> = Vec::new();
+//     for (var_key, var_value) in &env_config.variables {
+//         let resolved = VariableOutput{
+//             name: var_key.clone(),
+//             value: var_value.resolve()
+//         };
+//         variable_vec.push(resolved);
+//     }
 
-    // resolve file
-    let mut file_vec: Vec<ResolvedNovopsFile> = Vec::new();
-    for (file_key, file_def) in &env_config.files {
+//     // // resolve file
+//     let mut file_vec: Vec<FileOutput> = Vec::new();
+//     for (file_key, file_def) in &env_config.files {
 
-        // if dest provided, use it
-        // otherwise use working directory
-        let dest = match &file_def.dest {
-            Some(s) => s.clone(),
-            None => format!("{:}/file_{:}", workdir_root, file_key)
-        };
+//         // if dest provided, use it
+//         // otherwise use working directory
+//         let dest = match &file_def.dest {
+//             Some(s) => s.clone(),
+//             None => format!("{:}/file_{:}", workdir_root, file_key)
+//         };
 
-        // variable pointing to file path
-        // if variable name is provided, use it
-        // otherwise default to NOVOPS_<env>_<key>
-        let variable_name = match &file_def.variable {
-            Some(v) => v.clone(),
-            None => format!("NOVOPS_FILE_{:}_{:}", env_name.to_uppercase(), file_key.to_uppercase()),
-        };
+//         // variable pointing to file path
+//         // if variable name is provided, use it
+//         // otherwise default to NOVOPS_<env>_<key>
+//         let variable_name = match &file_def.variable {
+//             Some(v) => v.clone(),
+//             None => format!("NOVOPS_FILE_{:}_{:}", env_name.to_uppercase(), file_key.to_uppercase()),
+//         };
         
-        let resolved_file = ResolvedNovopsFile {
-            dest: dest.clone(),
-            variable: ResolvedNovopsVariable {
-                name: variable_name,
-                value: dest.clone()
-            },
-            content: file_def.content.resolve()
-        };
+//         let resolved_file = FileOutput {
+//             dest: dest.clone(),
+//             variable: VariableOutput {
+//                 name: variable_name,
+//                 value: dest.clone()
+//             },
+//             content: file_def.content.resolve()
+//         };
 
-        file_vec.push(resolved_file);
-    }
+//         file_vec.push(resolved_file);
+//     }
 
-    return (variable_vec, file_vec)
-}
+//     return (variable_vec, file_vec)
+// }
 
 /**
  * Write resolved files to disk
  */
-fn write_resolved_files(files:Vec<ResolvedNovopsFile>){
+fn write_resolved_files(files: &Vec<FileOutput>){
     for f in files {
-        fs::write(f.dest, f.content).expect("Unable to write file");
+        fs::write(f.dest.clone(), f.content.clone()).expect("Unable to write file");
     }
 }
 
@@ -268,7 +289,7 @@ fn write_resolved_files(files:Vec<ResolvedNovopsFile>){
  *  VAR=value
  *  FOO=bar
  */
-fn build_exportable_vars(vars: Vec<ResolvedNovopsVariable>) -> String{
+fn build_exportable_vars(vars: &Vec<VariableOutput>) -> String{
     let mut exportable_vars = String::new();
     for v in vars{
         let s = format!("export {:}=\"{:}\"\n", &v.name, &v.value);

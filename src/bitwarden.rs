@@ -8,6 +8,7 @@ use std::error::Error;
 use serde_json;
 use std::option::Option;
 use serde::Deserialize;
+use async_trait::async_trait;
 
 use crate::novops;
 
@@ -20,13 +21,14 @@ use crate::novops;
  *     field: login.password
  */
 
-#[derive(Debug, Deserialize)]
-pub struct BitwardenItem {
-    bitwarden: BitwardenValue,
+#[derive(Debug, Deserialize, Clone)]
+pub struct BitwardenItemInput {
+    bitwarden: BitwardenEntry,
 }
 
-impl novops::ResolvableNovopsValue for BitwardenItem {
-    fn resolve(&self) -> String {
+#[async_trait]
+impl novops::ResolveTo<String> for BitwardenItemInput {
+    async fn resolve(&self, _: &novops::NovopsContext) -> String {
         let json_value = get_item(&self.bitwarden.entry).expect(&String::from("Error fetching Bitwarden entry"));
 
         // Novops config let use specify a string like "login.password"
@@ -38,9 +40,8 @@ impl novops::ResolvableNovopsValue for BitwardenItem {
     }
 }
 
-
-#[derive(Debug, Deserialize)]
-pub struct BitwardenValue {
+#[derive(Debug, Deserialize, Clone)]
+pub struct BitwardenEntry {
     entry: String,
     field: String
 }

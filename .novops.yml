@@ -12,50 +12,43 @@ environments:
     variables:
 
       # Variable with plain value
-      MY_APP_HOST: "localhost"
-
-      # Variable with plain value set with "value" key
-      # TODO is this form really useful?
-      AWS_DEFAULT_REGION:
-        value: eu-central-1
+      - name: MY_APP_HOST
+        value: "localhost"
       
       # Variable loaded from a Bitwarden entry
       # Required Bitwarden CLI to be installed locally
-      AWS_SECRET_ACCESS_KEY:
-        bitwarden:
-          # Name of the entry to load from
-          # Required
-          entry: "Novops test - login.password entry"
+      - name: AWS_SECRET_ACCESS_KEY
+        value:
+          bitwarden:
+            # Name of the entry to load from
+            # Required
+            entry: "Novops test - login.password entry"
 
-          # Name of the field in entry to load in entry's JSON
-          # See format with bw get item "xxx"
-          # For Login: use 'login.password'
-          # For Secure Note: use 'notes'
-          field: login.password
+            # Name of the field in entry to load in entry's JSON
+            # See format with bw get item "xxx"
+            # For Login: use 'login.password'
+            # For Secure Note: use 'notes'
+            field: login.password
 
     # Set of files to load
     #
     # By default, files will be saved under /run/user/<uid>/novops/<project>/<environment>/<file>
-    # i.e. /run/user/1000/novops/myproject/dev/foo
-    # You can specify dest: to override destination
+    # i.e. /run/user/1000/novops/example-app/dev/dog
+    # 
+    # Variable specify an environment variable name which will be exported
+    # pointing to file path
+    # By default, will be generated with format NOVOPS_<APP>_<ENV>_FILE_<NAME>
+    # such as NOVOPS_EXAMPLE_APP_DEV_FILE_DOG="/run/user/1000/novops/example-app/dev/dog"
     #
-    # By default, an additional variable will be set pointing to file path
-    # using format NOVOPS_FILE_<ENV>_<FILE>
-    # i.e. NOVOPS_DEV_FOO="/run/user/1000/novops/myproject/dev/foo"
-    # You can specify custom variable value with variable: MY_CUSTOM_VAR
     files: 
+      - name: dog
+        content: "woof"
 
-      foo:
-        content: 
-          value: "foo"
-      
-      bar:
-        dest: /tmp/bar
-        content: "bar"
-      
-      bw:
-        dest: /tmp/bw
-        content:
+      - content: "meow"
+        variable: CAT_LOCATION
+        dest: /tmp/cat
+
+      - content:
           bitwarden:
             entry: Novops test - notes entry
             field: notes
