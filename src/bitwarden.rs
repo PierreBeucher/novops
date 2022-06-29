@@ -7,6 +7,43 @@ use std::{process::{Command, Output}, fmt};
 use std::error::Error;
 use serde_json;
 use std::option::Option;
+use serde::Deserialize;
+
+use crate::novops;
+
+/**
+ * A BitWarden secret such as
+ * 
+ * myvar:
+ *   bitwarden:
+ *     entry: wordpress_prod
+ *     field: login.password
+ */
+
+#[derive(Debug, Deserialize)]
+pub struct BitwardenItem {
+    bitwarden: BitwardenValue,
+}
+
+impl novops::ResolvableNovopsValue for BitwardenItem {
+    fn resolve(&self) -> String {
+        let json_value = get_item(&self.bitwarden.entry).expect(&String::from("Error fetching Bitwarden entry"));
+
+        // Novops config let use specify a string like "login.password"
+        // we need to retrieve this field nexted in our JSON (or fail if not found)
+        let fields = self.bitwarden.field.split(".").map(|s| String::from(s)).collect();
+        let val = get_string_in_value(&json_value, fields);
+        
+        return val.expect("Couldn't get value from Bitwarden entry").to_string();
+    }
+}
+
+
+#[derive(Debug, Deserialize)]
+pub struct BitwardenValue {
+    entry: String,
+    field: String
+}
 
 /**
  * Error wrapping Bitwarden CLI errors using Command module
