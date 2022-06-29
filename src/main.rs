@@ -5,8 +5,13 @@ extern crate xdg;
 mod novops;
 mod bitwarden;
 mod aws;
+mod files;
+mod variables;
 
-use novops::{NovopsConfig, ResolveTo, FileOutput, VariableOutput, NovopsContext};
+use novops::ResolveTo;
+use files::FileOutput;
+use novops::{NovopsConfig, NovopsContext};
+use variables::VariableOutput;
 
 use std::{io::Error, os::unix::prelude::PermissionsExt};
 use clap::Parser;

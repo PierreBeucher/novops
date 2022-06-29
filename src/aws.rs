@@ -3,7 +3,8 @@ use uuid::Uuid;
 use serde::Deserialize;
 use async_trait::async_trait;
 
-use crate::novops::{VariableOutput, ResolveTo, NovopsContext};
+use crate::novops::{ResolveTo, NovopsContext};
+use crate::variables::VariableOutput;
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct AwsModule {
