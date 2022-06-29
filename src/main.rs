@@ -6,10 +6,11 @@ mod bitwarden;
 
 use novops::{NovopsConfig, NovopsEnvironment, ResolvableNovopsValue, ResolvedNovopsFile, ResolvedNovopsVariable};
 
-use std::io::Error;
+use std::{io::Error, os::unix::prelude::PermissionsExt};
 use clap::Parser;
 use std::fs;
 use text_io;
+use users;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -41,7 +42,7 @@ fn main() -> Result<(), Error> {
     let env_config = &config.environments[&env_name];
 
     // working directory under which to save files
-    let workdir = get_working_directory(&args, &app_name, &env_name);
+    let workdir = prepare_working_directory(&args, &app_name, &env_name);
     println!("Using workdir: {:?}", &workdir);
 
     // resolve concrete variable values and file content from config
@@ -60,7 +61,6 @@ fn main() -> Result<(), Error> {
     all_resolved_vars.extend(file_resolved_vars);
 
     // write resolved files and variable
-    prepare_workir(&workdir);
     write_resolved_files(user_resolved_files);
     
     let exportable_vars = build_exportable_vars(all_resolved_vars);
@@ -98,36 +98,66 @@ fn read_environment_name(config: &NovopsConfig, flag: &Option<String>) -> String
  * with the following precedence:
  * - CLI flag working directory
  * - XDG runtime dir (if available), such as $XDg_RUNTIME_DIR/novops/<app>/<env>
- * - Current directory such as .novops/<app>/<env>
+ * - Default to /tmp/novops/<uid>/<app>/<env> (with /tmp/novops/<uid> limited to user)
+ * 
+ * Returns the path to working directory
  */
-fn get_working_directory(args: &NovopsArgs, app_name: &String, env_name: &String) -> String {
-    let workdir_suffix = format!("novops/{:}/{:}", app_name, env_name);
-
-
-    match &args.working_directory {
-        Some(w) => return w.clone(),
-        None => {
-            let xdg_dir = xdg::BaseDirectories::with_prefix(&workdir_suffix).unwrap();
-
-            // Try to use XDG if available
-            // Fallback to current directory
-            if xdg_dir.has_runtime_directory() {
-                let runtime_dir = xdg_dir.get_runtime_directory().unwrap().clone().into_os_string().into_string().unwrap().clone();
-                return format!("{:}/{:}", runtime_dir, workdir_suffix)
-            } else {
-                return format!(".{:}", &workdir_suffix)
-            }
-        },
-    }
+fn prepare_working_directory(args: &NovopsArgs, app_name: &String, env_name: &String) -> String {
     
+    return match &args.working_directory {
+        Some(s) => s.clone(),
+        None => match prepare_working_directory_xdg(app_name, env_name) {
+            Ok(s) => s,
+            Err(e) => {
+                println!("Using /tmp as XDG did not seem available: {:?}", e);
+                return prepare_working_directory_tmp(app_name, env_name);
+            },
+        }
+    };
 }
 
+/** 
+ * Prepare a workding directory using xdg
+ * Returns an error if XDG is not available or failed somehow
+*/
+fn prepare_working_directory_xdg(app_name: &String, env_name: &String) -> Result<String, Error> {
+    let xdg_prefix = format!("novops/{:}/{:}", app_name, env_name);
+
+    let xdg_basedir = xdg::BaseDirectories::new()?
+        .create_runtime_directory(&xdg_prefix)?;
+    
+    return match xdg_basedir.to_str() {
+        Some(s) => Ok(String::from(s)),
+        None => panic!("Could not get string from path {:?}", xdg_basedir)
+    };
+}
+
+
 /**
- * Prepare working directory (ensure directories exists so that we can create files)
+ * Use /tmp as base for Novops workdir
  */
-fn prepare_workir(workir: &String){
-    fs::create_dir_all(workir).unwrap();
-    fs::create_dir_all(format!("{:}/files", workir)).unwrap();
+fn prepare_working_directory_tmp(app_name: &String, env_name: &String) -> String{
+    let user_workdir = format!("/tmp/novops/{:}", users::get_current_uid());
+    let workdir = format!("{:}/{:}/{:}", user_workdir, app_name, env_name);
+
+    // make sure user workdir exists with safe permissions
+    // first empty current workdir (if any) for current app/env
+    match fs::create_dir_all(&user_workdir) {
+        Ok(_) => (),
+        Err(e) => panic!("Couldn't create user working directory {:?}: {:?}", &user_workdir, e),
+    };
+    match fs::set_permissions(&user_workdir, fs::Permissions::from_mode(0o0600)) {
+        Ok(_) => (),
+        Err(e) => panic!("Couldn't set permission on user working directory {:?}: {:?}", &user_workdir, e)
+    };
+    
+    // create current app/env workdir under user workdir
+    match fs::create_dir_all(&workdir) {
+        Ok(_) => (),
+        Err(e) => panic!("Couldn't create working directory {:?}: {:?}", &workdir, e),
+    };
+
+    return workdir;
 }
 
 /**
@@ -172,10 +202,6 @@ fn prompt_for_environment(config: &NovopsConfig) -> String{
  * Return a Vector of tuples for variables and files and their resolved values
  */
 fn parse_environment(env_config: &NovopsEnvironment, env_name: &String, workdir_root: &String) -> (Vec<ResolvedNovopsVariable>, Vec<ResolvedNovopsFile>) {
-    
-    // subpath in workdir where to store file by default
-    let file_workdir = format!("{:}/files", workdir_root);
-
     // resolve variables
     // straightforward: variable name is key in config, value is resolvable
     let mut variable_vec: Vec<ResolvedNovopsVariable> = Vec::new();
@@ -195,7 +221,7 @@ fn parse_environment(env_config: &NovopsEnvironment, env_name: &String, workdir_
         // otherwise use working directory
         let dest = match &file_def.dest {
             Some(s) => s.clone(),
-            None => format!("{:}/{:}", file_workdir, file_key)
+            None => format!("{:}/file_{:}", workdir_root, file_key)
         };
 
         // variable pointing to file path
