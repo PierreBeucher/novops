@@ -59,9 +59,16 @@ pub struct FileOutput {
 #[async_trait]
 impl ResolveTo<FileOutput> for FileInput {
     async fn resolve(&self, ctx: &NovopsContext) -> FileOutput {
+        
+        // enforce either name or variable as name is used to auto-generate variable 
+        // otherwise we can't affect a deterministic variable name from config
+        if self.name.is_none() && self.variable.is_none(){
+            panic!("You must specify at least a name or a variable for file {:?}, otherwise associated variable name won't be deterministic", self)
+        }
 
         // if name is provided, use it
-        // otherwise generate random name
+        // otherwise use dest as snake user
+        // and default a uuid
         let fname = match &self.name {
             Some(s) => s.clone(),
             None => uuid::Uuid::new_v4().to_string()
@@ -79,9 +86,8 @@ impl ResolveTo<FileOutput> for FileInput {
         // otherwise default to NOVOPS_<env>_<key>
         let variable_name = match &self.variable {
             Some(v) => v.clone(),
-            None => format!("NOVOPS_{:}_{:}_FILE_{:}", 
+            None => format!("NOVOPS_{:}_FILE_{:}", 
                 &ctx.app_name.to_case(Case::Snake).to_uppercase(), 
-                &ctx.env_name.to_case(Case::Snake).to_uppercase(), 
                 fname.to_case(Case::Snake).to_uppercase()),
         };
         

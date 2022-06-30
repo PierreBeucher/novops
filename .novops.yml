@@ -17,7 +17,7 @@ environments:
       
       # Variable loaded from a Bitwarden entry
       # Required Bitwarden CLI to be installed locally
-      - name: AWS_SECRET_ACCESS_KEY
+      - name: MY_APP_PASSWORD
         value:
           bitwarden:
             # Name of the entry to load from
@@ -37,18 +37,22 @@ environments:
     # 
     # Variable specify an environment variable name which will be exported
     # pointing to file path
-    # By default, will be generated with format NOVOPS_<APP>_<ENV>_FILE_<NAME>
-    # such as NOVOPS_EXAMPLE_APP_DEV_FILE_DOG="/run/user/1000/novops/example-app/dev/dog"
+    # By default, will be generated with format NOVOPS_<APP>_FILE_<NAME>
+    # such as NOVOPS_EXAMPLE_APP_FILE_DOG="/run/user/1000/novops/example-app/dev/dog"
     #
     files: 
       - name: dog
         content: "woof"
 
       - content: "meow"
-        variable: CAT_LOCATION
+        variable: CAT_PATH
         dest: /tmp/cat
+      
+      - variable: RAT_PATH
+        content: "squeak"
 
-      - content:
+      - name: bw_item
+        content:
           bitwarden:
             entry: Novops test - notes entry
             field: notes
