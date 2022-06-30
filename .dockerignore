@@ -1,2 +1,6 @@
 Dockerfile
 target/
+.gitlab-ci.yml
+.novops.yml
+README.md
+Makefile

@@ -1,0 +1,27 @@
+include:
+  # Automatically build Docker images
+  - project: 'world/ci-templates'
+    file: '/gitlab-ci/docker-v1.yml'
+  # Use standard release to automatically trigger releases
+  # See https://git.novadiscovery.net/world/ci-template/standard-release
+  - project: 'world/ci-template/standard-release'
+    ref: v2
+    file: '/templates/.gitlab-ci-release.yml'
+
+variables:
+  DOCKER_BUILDKIT: 1
+
+stages:
+  - build
+  - test
+  - release
+
+workflow:
+  rules:
+    - if: $CI_MERGE_REQUEST_ID
+      when: never
+    - if: $CI_COMMIT_BRANCH
+
+job:release:
+  stage: release
+  
