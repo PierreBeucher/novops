@@ -8,9 +8,6 @@ include:
     ref: v2
     file: '/templates/.gitlab-ci-release.yml'
 
-variables:
-  DOCKER_BUILDKIT: 1
-
 stages:
   - build
   - test
@@ -22,6 +19,20 @@ workflow:
       when: never
     - if: $CI_COMMIT_BRANCH
 
+variables:
+  DOCKER_BUILDKIT: 1
+
+# A simple test of Novops usage with files and variables
+test-simple:
+  stage: test
+  image: ${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}
+  script:
+  - apk add bash
+  - tests/test.sh
+  rules:
+  - if: $CI_COMMIT_BRANCH != "master" && $CI_COMMIT_TAG == null 
+
+# Override stage (standard-release) by default
 job:release:
   stage: release
   
