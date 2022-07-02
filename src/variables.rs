@@ -1,6 +1,6 @@
 use serde::Deserialize;
 use async_trait::async_trait;
-use crate::novops::{ResolveTo, AnyStringInput, NovopsContext};
+use crate::novops::{ResolveTo, StringResolvableInput, NovopsContext};
 
 /**
  * An environment variable (key / value)
@@ -8,9 +8,9 @@ use crate::novops::{ResolveTo, AnyStringInput, NovopsContext};
 #[derive(Debug, Deserialize, Clone)]
 pub struct VariableInput {
     name: String,
-    value: AnyStringInput
+    value: StringResolvableInput
 }
-
+    
 /**
  * Output for VariableInput, with final name and value
  */

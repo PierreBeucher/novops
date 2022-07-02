@@ -7,7 +7,7 @@ use crate::novops::{ResolveTo, NovopsContext};
 use crate::variables::VariableOutput;
 
 #[derive(Debug, Deserialize, Clone)]
-pub struct AwsModule {
+pub struct AwsInput {
     pub assume_role: AwsAssumeRoleInput
 }
 

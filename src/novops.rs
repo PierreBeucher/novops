@@ -5,14 +5,12 @@ use async_trait::async_trait;
 use crate::bitwarden;
 use crate::aws;
 use crate::files::{FileInput};
-use crate::variables::{
-    
-    VariableInput};
+use crate::variables::{VariableInput};
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct NovopsConfig {
     pub name: String,
-    pub environments: HashMap<String, NovopsEnvironment>,
+    pub environments: HashMap<String, NovopsEnvironmentInput>,
     pub default: Option<NovopsConfigDefault>
 }
 
@@ -31,10 +29,10 @@ pub struct NovopsConfigDefault {
  * - AWS allow to assume IAM Role (Output: env vars)
  */
 #[derive(Debug, Deserialize, Clone)]
-pub struct NovopsEnvironment {
+pub struct NovopsEnvironmentInput {
     pub variables: Vec<VariableInput>,
     pub files: Vec<FileInput>,
-    pub aws: Option<aws::AwsModule>
+    pub aws: Option<aws::AwsInput>
 }
 
 /**
@@ -64,12 +62,13 @@ pub trait ResolveTo<T> {
 }
 
 /**
- * An Input that will always take a String as final Output form
+ * Enum with Input that will always resolve to String
+ * i.e. <impl ResolveTo<String>>
  */
 #[derive(Debug, Deserialize, Clone)]
 #[serde(untagged)]
 #[enum_dispatch(ResolveTo<String>)]
-pub enum AnyStringInput {
+pub enum StringResolvableInput {
     String(String),
     BitwardeItemInput(bitwarden::BitwardenItemInput)
 }
@@ -85,11 +84,11 @@ impl ResolveTo<String> for String {
 }
 
 #[async_trait]
-impl ResolveTo<String> for AnyStringInput {
+impl ResolveTo<String> for StringResolvableInput {
     async fn resolve(&self, ctx: &NovopsContext) -> String {
         return match &self {
-            &AnyStringInput::String(s) => s.clone(),
-            &AnyStringInput::BitwardeItemInput(bw) => bw.resolve(ctx).await,
+            &StringResolvableInput::String(s) => s.clone(),
+            &StringResolvableInput::BitwardeItemInput(bw) => bw.resolve(ctx).await,
         }
     }
 }

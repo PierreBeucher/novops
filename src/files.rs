@@ -2,7 +2,7 @@ use convert_case::{Case, Casing};
 use async_trait::async_trait;
 use serde::Deserialize;
 
-use crate::novops::{ResolveTo, NovopsContext, AnyStringInput};
+use crate::novops::{ResolveTo, NovopsContext, StringResolvableInput};
 use crate::variables::{VariableOutput};
 
 /**
@@ -40,7 +40,7 @@ pub struct FileInput {
     
     pub variable: Option<String>,
     
-    pub content: AnyStringInput
+    pub content: StringResolvableInput
 }
 
 /**
