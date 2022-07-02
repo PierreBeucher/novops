@@ -13,9 +13,9 @@ use files::FileOutput;
 use novops::{NovopsConfig, NovopsContext};
 use variables::VariableOutput;
 
-use std::{io::Error, os::unix::prelude::PermissionsExt};
+use std::{io, os::unix::prelude::PermissionsExt};
 use clap::Parser;
-use std::fs;
+use std::{fs, error, fmt};
 use text_io;
 use users;
 use tokio;
@@ -37,8 +37,28 @@ struct NovopsArgs {
     working_directory: Option<String>
 }
 
+#[derive(Debug)]
+struct NovopsError {
+    pub err: Box<dyn error::Error>,
+    pub message: String
+}
+
+impl error::Error for NovopsError {}
+
+impl fmt::Display for NovopsError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:} Reason:\n{:}", self.message, self.err)
+    }
+}
+
 #[tokio::main]
-async fn main() -> Result<(), Error> {
+async fn main() -> () {
+    match novops_load_config().await {
+        Ok(e) => e,
+        Err(e) => println!("{:}", e),
+    };
+}
+async fn novops_load_config() -> Result<(), Box<dyn error::Error>> {
 
     // Read CLI args and load config
     let args = NovopsArgs::parse();
@@ -70,12 +90,19 @@ async fn main() -> Result<(), Error> {
 
     // Variable
     for v in &env_config.variables {
-        variable_outputs.push(v.resolve(&ctx).await);
+        let val = match v.resolve(&ctx).await {
+            Ok(v) => v,
+            Err(e) => return Err(load_err("Could not resolve variable input.", e).into())
+        };
+        variable_outputs.push(val);
     };
 
     // File
     for f in &env_config.files {
-        let r = f.resolve(&ctx).await;
+        let r = match f.resolve(&ctx).await {
+            Ok(r) => r,
+            Err(e) => return Err(load_err("Could not resolve file input.", e).into()),
+        };
         file_outputs.push(r.clone());
         variable_outputs.push(r.variable.clone())
     };
@@ -83,7 +110,10 @@ async fn main() -> Result<(), Error> {
     // AWS
     match &env_config.aws {
         Some(aws) => {
-            let mut r = aws.assume_role.resolve(&ctx).await;
+            let mut r = match aws.assume_role.resolve(&ctx).await {
+                Ok(r) => r,
+                Err(e) => return Err(load_err("Could not resolve AWS input to impersonate role.", e).into()),
+            };
             variable_outputs.append(&mut r);
         },
         None => (),
@@ -104,6 +134,15 @@ async fn main() -> Result<(), Error> {
     println!("  source {:}", exported_var_path);
     
     Ok(())
+
+}
+
+fn input_resolve_error(){
+
+}
+
+fn load_err(msg: &str, e : Box<dyn error::Error>) -> NovopsError{
+    NovopsError { message: msg.to_string(), err: e }
 }
 
 fn read_config_file(config_path: &str) -> Result<NovopsConfig, serde_yaml::Error> {
@@ -153,7 +192,7 @@ fn prepare_working_directory(args: &NovopsArgs, app_name: &String, env_name: &St
  * Prepare a workding directory using xdg
  * Returns an error if XDG is not available or failed somehow
 */
-fn prepare_working_directory_xdg(app_name: &String, env_name: &String) -> Result<String, Error> {
+fn prepare_working_directory_xdg(app_name: &String, env_name: &String) -> Result<String, io::Error> {
     let xdg_prefix = format!("novops/{:}/{:}", app_name, env_name);
 
     let xdg_basedir = xdg::BaseDirectories::new()?

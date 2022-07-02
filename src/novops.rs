@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::error::Error;
 use serde::Deserialize;
 use async_trait::async_trait;
 
@@ -58,7 +59,7 @@ pub struct NovopsContext {
  */
 #[async_trait]
 pub trait ResolveTo<T> {
-    async fn resolve(&self, ctx: &NovopsContext) -> T;
+    async fn resolve(&self, ctx: &NovopsContext) -> Result<T, Box<dyn Error>>;
 }
 
 /**
@@ -78,16 +79,16 @@ pub enum StringResolvableInput {
  */
 #[async_trait]
 impl ResolveTo<String> for String {
-    async fn resolve(&self, _: &NovopsContext) -> String {
-        return self.clone();
+    async fn resolve(&self, _: &NovopsContext) -> Result<String, Box<dyn Error>> {
+        return Ok(self.clone());
     }
 }
 
 #[async_trait]
 impl ResolveTo<String> for StringResolvableInput {
-    async fn resolve(&self, ctx: &NovopsContext) -> String {
+    async fn resolve(&self, ctx: &NovopsContext) -> Result<String, Box<dyn Error>> {
         return match &self {
-            &StringResolvableInput::String(s) => s.clone(),
+            &StringResolvableInput::String(s) => Ok(s.clone()),
             &StringResolvableInput::BitwardeItemInput(bw) => bw.resolve(ctx).await,
         }
     }

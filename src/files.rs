@@ -1,3 +1,4 @@
+use std::error::Error;
 use convert_case::{Case, Casing};
 use async_trait::async_trait;
 use serde::Deserialize;
@@ -58,7 +59,7 @@ pub struct FileOutput {
  */
 #[async_trait]
 impl ResolveTo<FileOutput> for FileInput {
-    async fn resolve(&self, ctx: &NovopsContext) -> FileOutput {
+    async fn resolve(&self, ctx: &NovopsContext) -> Result<FileOutput, Box<dyn Error>> {
         
         // enforce either name or variable as name is used to auto-generate variable 
         // otherwise we can't affect a deterministic variable name from config
@@ -90,15 +91,22 @@ impl ResolveTo<FileOutput> for FileInput {
                 &ctx.app_name.to_case(Case::Snake).to_uppercase(), 
                 fname.to_case(Case::Snake).to_uppercase()),
         };
-        
-        return FileOutput {
-            dest: dest.clone(),
-            variable: VariableOutput {
-                name: variable_name,
-                value: dest.clone()
-            },
-            content: self.content.resolve(ctx).await
+
+        let content = match self.content.resolve(ctx).await {
+            Ok(c) => c,
+            Err(e) => return Err(e),
         };
+        
+        return Ok(
+            FileOutput {
+                dest: dest.clone(),
+                variable: VariableOutput {
+                    name: variable_name,
+                    value: dest.clone()
+                },
+                content: content
+            }
+        )
 
     }
 }

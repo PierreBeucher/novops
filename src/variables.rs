@@ -1,3 +1,4 @@
+use std::error::Error;
 use serde::Deserialize;
 use async_trait::async_trait;
 use crate::novops::{ResolveTo, StringResolvableInput, NovopsContext};
@@ -22,10 +23,17 @@ pub struct VariableOutput {
 
 #[async_trait]
 impl ResolveTo<VariableOutput> for VariableInput {
-    async fn resolve(&self, ctx: &NovopsContext) -> VariableOutput {
-        return VariableOutput { 
-            name: self.name.clone(), 
-            value: self.value.resolve(ctx).await
-        }
+    async fn resolve(&self, ctx: &NovopsContext) -> Result<VariableOutput, Box<dyn Error>> {
+        let value = match self.value.resolve(ctx).await {
+            Ok(v) => v,
+            Err(e) => return Err(e),
+        };
+
+        return Ok(
+            VariableOutput { 
+                name: self.name.clone(), 
+                value: value
+            }
+        )
     }
 }
