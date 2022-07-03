@@ -1,7 +1,7 @@
-use std::error::Error;
 use convert_case::{Case, Casing};
 use async_trait::async_trait;
 use serde::Deserialize;
+use anyhow;
 
 use crate::novops::{ResolveTo, NovopsContext, StringResolvableInput};
 use crate::variables::{VariableOutput};
@@ -59,7 +59,7 @@ pub struct FileOutput {
  */
 #[async_trait]
 impl ResolveTo<FileOutput> for FileInput {
-    async fn resolve(&self, ctx: &NovopsContext) -> Result<FileOutput, Box<dyn Error>> {
+    async fn resolve(&self, ctx: &NovopsContext) -> Result<FileOutput, anyhow::Error> {
         
         // enforce either name or variable as name is used to auto-generate variable 
         // otherwise we can't affect a deterministic variable name from config

@@ -1,7 +1,7 @@
-use std::error::Error;
 use serde::Deserialize;
 use async_trait::async_trait;
 use crate::novops::{ResolveTo, StringResolvableInput, NovopsContext};
+use anyhow;
 
 /**
  * An environment variable (key / value)
@@ -23,7 +23,7 @@ pub struct VariableOutput {
 
 #[async_trait]
 impl ResolveTo<VariableOutput> for VariableInput {
-    async fn resolve(&self, ctx: &NovopsContext) -> Result<VariableOutput, Box<dyn Error>> {
+    async fn resolve(&self, ctx: &NovopsContext) -> Result<VariableOutput, anyhow::Error> {
         let value = match self.value.resolve(ctx).await {
             Ok(v) => v,
             Err(e) => return Err(e),

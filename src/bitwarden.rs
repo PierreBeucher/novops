@@ -4,11 +4,12 @@
 */
 
 use std::{process::{Command, Output}, fmt};
-use std::error::Error;
+use std;
 use serde_json;
 use std::option::Option;
 use serde::Deserialize;
 use async_trait::async_trait;
+use anyhow::{Context, Error, anyhow};
 
 use crate::novops;
 
@@ -28,7 +29,7 @@ pub struct BitwardenItemInput {
 
 #[async_trait]
 impl novops::ResolveTo<String> for BitwardenItemInput {
-    async fn resolve(&self, _: &novops::NovopsContext) -> Result<String, Box<dyn Error>> {
+    async fn resolve(&self, _: &novops::NovopsContext) -> Result<String, Error> {
         let json_result = get_item(&self.bitwarden.entry);
 
         let json_value = match json_result {
@@ -39,12 +40,11 @@ impl novops::ResolveTo<String> for BitwardenItemInput {
         // Novops config let user specify a string like "login.password"
         // we need to retrieve this field nexted in our JSON (or fail if not found)
         let fields = self.bitwarden.field.split(".").map(|s| String::from(s)).collect();
-        let val = get_string_in_value(&json_value, fields);
-        
-        match val {
-            Ok(s) => return Ok(s.to_string()),
-            Err(e) => return Err(e.into()),
-        };
+        return Ok(
+          get_string_in_value(&json_value, fields)
+          .with_context(|| format!("Error retrieving field '{:?}' in value {:?} for input {:?}", self.bitwarden.field, &json_value, &self))?
+          .to_string()
+        )
     }
 }
 
@@ -55,102 +55,61 @@ pub struct BitwardenEntry {
 }
 
 /**
- * Error wrapping Bitwarden CLI errors using Command module
+ * Wraps Bitwarden command context
  */
 #[derive(Debug)]
-pub struct BitwardenCommandError {
-  pub message: String,
-  pub output: Output,
-  pub error: Option<Box<dyn Error>>,
+pub struct BitwardenCommandContext {
+  pub output: Option<Output>,
   pub command: String
 }
 
-impl Error for BitwardenCommandError {}
-
-impl fmt::Display for BitwardenCommandError {
+impl fmt::Display for BitwardenCommandContext {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-    write!(f, "Bitwarden CLI command errored ({:}): {:}\nCommand: {:}\nstdout: {:?}\nstderr: {:?}", 
-      &self.output.status, &self.message, &self.command, 
-      String::from_utf8(self.output.stdout.clone()).unwrap(), 
-      String::from_utf8(self.output.stderr.clone()).unwrap())
+
+    let r = write!(f, "\nCommand: {:}", self.command);
+
+    match &self.output {
+        Some(o) => return write!(f, "\n\tExit status: {:?}\n\tstdout: {:?}\n\tstderr: {:?}", 
+          o.status.code(), 
+          String::from_utf8(o.stdout.clone()).unwrap(), 
+          String::from_utf8(o.stderr.clone()).unwrap()
+        ),
+        None => r,
+    }
   }
 }
+
 
 /**
  * Retrieve a Bitwarden item as a JSON value
  */
-pub fn get_item(item: &String) -> Result<serde_json::Value, BitwardenCommandError> {
+pub fn get_item(item: &String) -> Result<serde_json::Value, Error> {
   let command_str = format!("bw get item '{}'", item);
+
+  let mut command_context = BitwardenCommandContext{command: command_str, output: None};
 
   let output = Command::new("bw")
     .arg("get")
     .arg("item")
     .arg(item)
     .output()
-    .expect("Error running bw command...");
+    .with_context(|| format!("Error running Bitwarden command {}", command_context))?;
 
-  let stdout = match std::str::from_utf8(&output.stdout) {
-      Ok(s) => s,
-      Err(e) => {
-        return Err(BitwardenCommandError {
-          message: String::from("Couldn't decode stdout as UTF-8"),
-          output: output,
-          error: Some(Box::new(e)),
-          command: command_str
-        });
-      }
-  };
+  command_context.output = Some(output.clone());
 
-  match std::str::from_utf8(&output.stderr) {
-    Ok(_) => {},
-    Err(e) => {
-      return Err(BitwardenCommandError {
-        message: String::from("Couldn't decode stderr as UTF-8"),
-        output: output,
-        error: Some(Box::new(e)),
-        command: command_str
-      });
-    }
-  };
-
+  let stdout = std::str::from_utf8(&output.stdout)
+    .with_context(|| format!("Couldn't decode stdout as UTF-8 for command: {:}", command_context))?;
+  
   if ! output.status.success() {
-    return Err(BitwardenCommandError {
-      message: String::from("Bitwarden CLI returned non-0 exit code, stderr probably has more details."),
-      output: output,
-      error: None,
-      command: command_str
-    });
-  }
-
-  let json: serde_json::Value = match serde_json::from_str(stdout) {
-    Ok(json) => json,
-    Err(e) => {
-      return Err(BitwardenCommandError {
-        message: String::from("Couldn't parse Bitwarden stdout as JSON"),
-        output: output,
-        error: Some(Box::new(e)),
-        command: command_str
-      });
-    },
+    return Err(anyhow!("Bitwarden command returned non-0 exit code, stderr probably has more details. For command: {:}", command_context));
   };
+
+  let json: serde_json::Value = serde_json::from_str(stdout)
+    .with_context(|| format!("Couldn't parse Bitwarden stdout as JSON. {:}", command_context))?;
+
 
   return Ok(json);
 
-}
-
-#[derive(Debug)]
-pub struct BitwardenFieldValueError {
-  pub message: String,
-  pub field: String,
-  pub value: serde_json::Value
-}
-
-impl Error for BitwardenFieldValueError{}
-
-impl fmt::Display for BitwardenFieldValueError {
-  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-    write!(f, "Error: {:?}\nField: {:?}\nValue: {:?}", self.message, self.field, self.value)
-  }
 }
 
 /**
@@ -160,33 +119,15 @@ impl fmt::Display for BitwardenFieldValueError {
  * get_string_in_value(myJson, ["item", "foo"]) ==> "bar"
  * This is a wrapper for Novops config where client provide a string like "login.password" for the desired Bitwarden entry
  */
-pub fn get_string_in_value(value: &serde_json::Value, mut fields: Vec<String>) -> Result<&str, BitwardenFieldValueError>{
+pub fn get_string_in_value(value: &serde_json::Value, mut fields: Vec<String>) -> Result<String, Error>{
   let field = fields.remove(0);
 
-  let found_value = match value.get(&field) {
-    Some(v) => v,
-    None => {
-      return Err(BitwardenFieldValueError {
-        message: String::from("Couldn't find field on value"),
-        field: field,
-        value: value.clone()
-      });
-    }
-  };
-
+  let found_value = value.get(&field)
+    .with_context(|| format!("Couldn't find field '{:}' in value {:?}", field, value))?;
+  
   if fields.len() > 0 {
     return get_string_in_value(found_value, fields);
   } else {
-    let result = match found_value.as_str() {
-      Some(s) => s,
-      None => { 
-        return Err(BitwardenFieldValueError{
-          message: String::from("Value must be a string for field"),
-          field: field,
-          value: value.clone()
-        })
-      }
-     };
-    return Ok(result);
+    return Ok(found_value.as_str().with_context(|| format!("Couldn't convert to string: {:?}", found_value))?.to_string());
   }
 }

@@ -1,9 +1,8 @@
-use std::error::Error;
-use std::fmt;
 use aws_sdk_sts::Client as StsClient;
 use uuid::Uuid;
 use serde::Deserialize;
 use async_trait::async_trait;
+use anyhow::{self, Context};
 
 use crate::novops::{ResolveTo, NovopsContext};
 use crate::variables::VariableOutput;
@@ -19,21 +18,9 @@ pub struct AwsAssumeRoleInput {
     pub source_profile: String
 }
 
-#[derive(Debug)]
-struct AwsError {
-    pub message: String
-}
-
-impl Error for AwsError {}
-impl fmt::Display for AwsError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:}", self.message)
-    }
-}
-
 #[async_trait]
 impl ResolveTo<Vec<VariableOutput>> for AwsAssumeRoleInput {
-    async fn resolve(&self, ctx: &NovopsContext) -> Result<Vec<VariableOutput>, Box<dyn Error>> {
+    async fn resolve(&self, ctx: &NovopsContext) -> Result<Vec<VariableOutput>, anyhow::Error> {
         let config = aws_config::from_env()
         .credentials_provider(
             aws_config::profile::ProfileFileCredentialsProvider::builder()
@@ -55,34 +42,18 @@ impl ResolveTo<Vec<VariableOutput>> for AwsAssumeRoleInput {
             Err(e) => return Err(e.into())
         };
 
-        let creds = match &aso.credentials {
-            Some(c) => c,
-            None => return Err( AwsError { 
-                message: format!("Can't assume role: returned Credentials Option was None for {:?}", &aso)
-            }.into())
-        };
+        let creds = &aso.credentials.clone()
+            .with_context(|| format!("Can't assume role: returned Credentials Option was None for {:?}", &aso))?;
 
-        let access_key = match creds.access_key_id.as_ref() {
-            Some(k) => k,
-            None => return Err( AwsError { 
-                message: format!("Can't assume role: Returned access key Option was None for {:?}", &aso)
-            }.into())
-        };
+        let access_key = creds.access_key_id.as_ref()
+            .with_context(|| format!("Can't assume role: Returned access key Option was None for {:?}", &aso))?;
 
-        let secret_key = match creds.secret_access_key.as_ref() {
-            Some(k) => k,
-            None => return Err( AwsError { 
-                message: format!("Can't assume role: returned secret key Option was None for {:?}", &aso)
-            }.into())
-        };
+        let secret_key = creds.secret_access_key.as_ref()
+            .with_context(|| format!("Can't assume role: returned secret key Option was None for {:?}", &aso))?;
 
-        let session_token = match creds.session_token.as_ref() {
-            Some(k) => k,
-            None => return Err( AwsError { 
-                message: format!("Can't assume role: returned access key Option was None for {:?}", &aso)
-            }.into())
-        };
-
+        let session_token = creds.session_token.as_ref()
+            .with_context(|| format!("Can't assume role: returned access key Option was None for {:?}", &aso))?;
+        
         return Ok(
             vec![
                 VariableOutput{name: "AWS_ACCESS_KEY_ID".into(), value: access_key.clone()},
