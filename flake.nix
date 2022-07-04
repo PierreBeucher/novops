@@ -22,7 +22,7 @@
           # this copies the whole folder, there is probably a better solution
           src = ./.;
 
-          cargoSha256 = "sha256-GptJwfHfQd7VReS0tXyS5f33BYeI1z5OGyPhWUKzm+A=";
+          cargoSha256 = "sha256-jc3aQ4jPeUlbHfNQE905s59R7/ZolT+sr6w5ek3O1Mo=";
         };
 
       };
