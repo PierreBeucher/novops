@@ -9,10 +9,11 @@ COPY . .
 
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/novops/target \
-    cargo build --release --target x86_64-unknown-linux-musl
+    cargo build --release --target x86_64-unknown-linux-musl \
+    && cp /novops/target/x86_64-unknown-linux-musl/release/novops /novops-rust
 
-# FROM alpine:3.16
+FROM alpine:3.16
 
-# COPY --from=builder /novops/target/release/novops /usr/local/bin/novops
+COPY --from=builder /novops-rust /usr/local/bin/novops
 
-# CMD ["novops"]
+CMD ["novops"]
