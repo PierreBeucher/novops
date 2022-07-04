@@ -1,0 +1,12 @@
+{
+  "bumpFiles": [
+    {
+      "filename": "Cargo.toml",
+      "updater": "standard-version-updater.js"
+    },
+    {
+      "filename": "Cargo.lock",
+      "updater": "standard-version-updater.js"
+    }
+  ]
+}

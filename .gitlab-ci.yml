@@ -6,20 +6,15 @@ include:
   # See https://git.novadiscovery.net/world/ci-template/standard-release
   - project: 'world/ci-template/standard-release'
     ref: v2
+    file: 'templates/.gitlab-ci-release-workflow.yml'
+  - project: 'world/ci-template/standard-release'
+    ref: v2
     file: '/templates/.gitlab-ci-release.yml'
 
 stages:
   - build
   - test
   - release
-
-workflow:
-  rules:
-    # Prevent pipeline when a MR is created
-    - if: $CI_MERGE_REQUEST_ID
-      when: never
-    # Else, run pipeline
-    - when: always
 
 variables:
   DOCKER_BUILDKIT: 1
@@ -34,7 +29,10 @@ test-simple:
   rules:
   - if: $CI_COMMIT_BRANCH != "master" && $CI_COMMIT_TAG == null
 
-# Override stage (standard-release) by default
+# Override standard-release to run on release stage (use standard-release stage by default)
+# and run on master branch automatically
 job:release:
   stage: release
+  rules:
+  - if: $CI_COMMIT_BRANCH == "master" && $CI_COMMIT_TAG == null
   
