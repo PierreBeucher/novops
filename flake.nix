@@ -27,8 +27,7 @@
 
       };
 
+      # deprecated in recent nix ~ > 2.8
       defaultPackage = packages.novops;
-
-      defaultApp = flake-utils.lib.mkApp { name = "novops"; drv = packages.novops;};
   });
 }
