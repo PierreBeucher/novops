@@ -23,6 +23,8 @@ variables:
 test-simple:
   stage: test
   image: ${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}
+  variables:
+    NOVOPS_COMMAND: novops
   script:
   - apk add bash
   - tests/test.sh

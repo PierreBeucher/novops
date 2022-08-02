@@ -309,7 +309,13 @@ fn write_resolved_files(files: &Vec<FileOutput>){
 fn build_exportable_vars(vars: &Vec<VariableOutput>) -> String{
     let mut exportable_vars = String::new();
     for v in vars{
-        let s = format!("export {:}=\"{:}\"\n", &v.name, &v.value);
+        // use single quotes to avoid interpolation
+        // if single quote "'" are in password, replace them by ` '"'"' ` 
+        // which will cause bash to interpret them properly
+        // first ' ends initial quoation, then wrap our quote with "'" and start a new quotation with '
+        // for example password ` abc'def ` will become ` export pass='abc'"'"'def' `
+        let safe_val = &v.value.replace("'", "'\"'\"'");
+        let s = format!("export {:}='{:}'\n", &v.name, safe_val);
         exportable_vars.push_str(&s);
     }
 

@@ -14,7 +14,7 @@ readonly CONFIG="$PWD/.novops.yml"
 # Shortcut to use locally built novops
 # Otherwise will work if available on PATH
 export PATH=$PATH:$PWD/target/x86_64-unknown-linux-musl/release
-
+export NOVOPS_COMMAND=${NOVOPS_COMMAND:-"cargo run --"}
 test_start() {
 	echo
 	echo ">>> Start testing: $1"
@@ -25,8 +25,8 @@ test_basic() {
   TEST_FOLDER=$(mktemp -d)
 	test_start "Basic tests"
 
-	novops -e dev -c tests/.novops.yml -w "${TEST_FOLDER}"
-	source "${TEST_FOLDER}/vars"
+	$NOVOPS_COMMAND -e dev -c tests/.novops.yml -w "${TEST_FOLDER}"
+	source "${TEST_FOLDER}/vars" || { echo "Error sourcing Novops vars"; return 1; }
 
   env | grep NOVOPS
   ls -al "${TEST_FOLDER}"
@@ -39,6 +39,17 @@ test_basic() {
 	[[ "$RAT_PATH_CUSTOM_NOVOPS_VAR" =~ ^${TEST_FOLDER}/file_* ]] || { echo "Expected var RAT_PATH_CUSTOM_NOVOPS_VAR =~ ${TEST_FOLDER}/file_*, got $RAT_PATH_CUSTOM_NOVOPS_VAR"; return 1; }
 
 	[[ "$(cat $NOVOPS_TEST_APP_FILE_CAT)" == "meow" ]] || { echo "Expected content of $NOVOPS_TEST_APP_FILE_CAT to be 'meow', found '$(cat $NOVOPS_TEST_APP_FILE_CAT)'"; return 1; }
+}
+
+test_special_char(){
+	local TEST_FOLDER
+  TEST_FOLDER=$(mktemp -d)
+	test_start "Special character tests"
+	$NOVOPS_COMMAND -e dev -c tests/.novops.yml -w "${TEST_FOLDER}"
+	source "${TEST_FOLDER}/vars" || { echo "Error sourcing Novops vars"; return 1; }
+
+	[[ "$SPECIAL_CHARACTERS\"" == $(cat tests/.novops.yml | grep special_char_ | sed -E 's/.*special_char_/special_char_/') ]] || \
+		{ echo "Expected content of $NOVOPS_TEST_APP_FILE_CAT to be \` $SPECIAL_CHARACTERS \`, found \` $(cat tests/.novops.yml | grep special_char_ | sed -E 's/.*special_char_//') \`"; return 1; }
 }
 
 
@@ -93,7 +104,8 @@ test_basic() {
 # 	fi
 # }
 
-if test_basic; then
+if test_basic; test_special_char; then
+	echo "$?"
 	echo "All tests OK"
 else
 	echo "Some error occured during test, check logs above."

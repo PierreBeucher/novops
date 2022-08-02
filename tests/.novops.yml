@@ -11,6 +11,11 @@ environments:
       #     bitwarden:
       #       entry: "Novops Test - login.password entry"
       #       field: login.password
+    
+      # Bunch of special characters which should be properly interpreted and exported
+      - name: SPECIAL_CHARACTERS
+        value: "special_char_'!?`$abc_#~%*µ€{}[]-°+@à^ç=\\"
+      
     files: 
       - name: dog
         content: "woof"
