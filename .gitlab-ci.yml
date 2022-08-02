@@ -10,8 +10,6 @@ include:
   - project: 'world/ci-template/standard-release'
     ref: v2
     file: '/templates/.gitlab-ci-release.yml'
-  - project: 'world/ci-templates'
-    file: '/gitlab-ci/nix-flake-v1.yml'
 
 stages:
   - build
