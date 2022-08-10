@@ -2,32 +2,30 @@
   description = "Novops flake";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    flake-utils.url = "github:numtide/flake-utils";
+    # cargo2nix is a more granular version of nixpkgs' buildRustPackage
+    cargo2nix.url = "github:cargo2nix/cargo2nix/release-0.11.0";
+    flake-utils.follows = "cargo2nix/flake-utils";
+    nixpkgs.follows = "cargo2nix/nixpkgs";
   };
 
-  outputs = { self, nixpkgs, flake-utils }:
-    flake-utils.lib.eachSystem ["x86_64-linux"] (system: let
-
-      pkgs = nixpkgs.legacyPackages.${system}.pkgs;
-
-    in rec {
-
-      packages = rec {
-        default = novops;
-        novops = pkgs.rustPlatform.buildRustPackage {
-          pname = "novops";
-          version = "0.1.2";
-
-          # this copies the whole folder, there is probably a better solution
-          src = ./.;
-
-          cargoSha256 = "sha256-zpbvBc9lKuGODyTIVGWMan1/B9B2V7Vi/0QyhrznfGM=";
+  outputs = inputs: with inputs;
+    flake-utils.lib.eachDefaultSystem (system:
+      let
+        pkgs = import nixpkgs {
+          inherit system;
+          overlays = [cargo2nix.overlays.default];
         };
 
-      };
+        rustPkgs = pkgs.rustBuilder.makePackageSet {
+          rustVersion = "1.61.0";
+          packageFun = import ./Cargo.nix;
+        };
 
-      # deprecated in recent nix ~ > 2.8
-      defaultPackage = packages.novops;
-  });
+      in rec {
+        packages = {
+          novops = (rustPkgs.workspace.novops {}).bin;
+          default = packages.novops;
+        };
+      }
+    );
 }
