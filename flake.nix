@@ -17,12 +17,12 @@
         default = novops;
         novops = pkgs.rustPlatform.buildRustPackage {
           pname = "novops";
-          version = "0.1.0";
+          version = "0.1.2";
 
           # this copies the whole folder, there is probably a better solution
           src = ./.;
 
-          cargoSha256 = "sha256-jc3aQ4jPeUlbHfNQE905s59R7/ZolT+sr6w5ek3O1Mo=";
+          cargoSha256 = "sha256-zpbvBc9lKuGODyTIVGWMan1/B9B2V7Vi/0QyhrznfGM=";
         };
 
       };
