@@ -15,14 +15,22 @@
 
       packages = rec {
         default = novops;
-        novops = pkgs.rustPlatform.buildRustPackage {
+        novops = pkgs.rustPlatform.buildRustPackage rec {
           pname = "novops";
-          version = "0.1.2";
+          version = (pkgs.lib.importTOML ./Cargo.toml).package.version;
+
+          # by default the vendored archive is named after the version and since 
+          # gitlab bumps the version number on every Merge Request it's best
+          # not to depend on version for the hash
+          # https://nixos.org/manual/nixpkgs/stable/#rust
+          cargoDepsName = pname;
 
           # this copies the whole folder, there is probably a better solution
           src = ./.;
-
-          cargoSha256 = "sha256-zpbvBc9lKuGODyTIVGWMan1/B9B2V7Vi/0QyhrznfGM=";
+          cargoLock = {
+            lockFile = ./Cargo.lock;
+          };
+          # cargoHash = "sha256-0/EypDUIhWZGZ99siF2QhY9KnZ4yfeljr+BIIKRjsg0=";
         };
 
       };
