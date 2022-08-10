@@ -2,40 +2,30 @@
   description = "Novops flake";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    flake-utils.url = "github:numtide/flake-utils";
+    # cargo2nix is a more granular version of nixpkgs' buildRustPackage
+    cargo2nix.url = "github:cargo2nix/cargo2nix/release-0.11.0";
+    flake-utils.follows = "cargo2nix/flake-utils";
+    nixpkgs.follows = "cargo2nix/nixpkgs";
   };
 
-  outputs = { self, nixpkgs, flake-utils }:
-    flake-utils.lib.eachSystem ["x86_64-linux"] (system: let
-
-      pkgs = nixpkgs.legacyPackages.${system}.pkgs;
-
-    in rec {
-
-      packages = rec {
-        default = novops;
-        novops = pkgs.rustPlatform.buildRustPackage rec {
-          pname = "novops";
-          version = (pkgs.lib.importTOML ./Cargo.toml).package.version;
-
-          # by default the vendored archive is named after the version and since 
-          # gitlab bumps the version number on every Merge Request it's best
-          # not to depend on version for the hash
-          # https://nixos.org/manual/nixpkgs/stable/#rust
-          cargoDepsName = pname;
-
-          # this copies the whole folder, there is probably a better solution
-          src = ./.;
-          cargoLock = {
-            lockFile = ./Cargo.lock;
-          };
-          # cargoHash = "sha256-0/EypDUIhWZGZ99siF2QhY9KnZ4yfeljr+BIIKRjsg0=";
+  outputs = inputs: with inputs;
+    flake-utils.lib.eachDefaultSystem (system:
+      let
+        pkgs = import nixpkgs {
+          inherit system;
+          overlays = [cargo2nix.overlays.default];
         };
 
-      };
+        rustPkgs = pkgs.rustBuilder.makePackageSet {
+          rustVersion = "1.61.0";
+          packageFun = import ./Cargo.nix;
+        };
 
-      # deprecated in recent nix ~ > 2.8
-      defaultPackage = packages.novops;
-  });
+      in rec {
+        packages = {
+          novops = (rustPkgs.workspace.novops {}).bin;
+          default = packages.novops;
+        };
+      }
+    );
 }
