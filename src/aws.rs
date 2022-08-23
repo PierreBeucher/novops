@@ -1,8 +1,8 @@
 use aws_sdk_sts::Client as StsClient;
-use uuid::Uuid;
 use serde::Deserialize;
 use async_trait::async_trait;
 use anyhow::{self, Context};
+use rand::{distributions::Alphanumeric, Rng};
 
 use crate::novops::{ResolveTo, NovopsContext};
 use crate::variables::VariableOutput;
@@ -30,11 +30,32 @@ impl ResolveTo<Vec<VariableOutput>> for AwsAssumeRoleInput {
         .load()
         .await;
     
-        // let config = aws_config::from_env().credentials_provider(cred)
         let sts_client = StsClient::new(&config);
+
+        let session_random_suffix: String = rand::thread_rng()
+            .sample_iter(&Alphanumeric)
+            .take(7)
+            .map(char::from)
+            .collect();
+
+        // session name is max 64 characters length
+        // by default use full app and env name with random suffix
+        // truncate if name > 64 chars to avoid error but print warning
+        // see https://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRole.html
+        let mut role_session_name = format!("novops-{:}-{:}-{:}", &ctx.app_name, &ctx.env_name, &session_random_suffix);
+        
+        if role_session_name.len() > 64 {
+           println!("WARNING: Computed AWS STS Role session name length > 64 characters and will be truncated. \
+           Consider using shorter application or environment name to avoid losing information with truncation. \
+           Role session name before truncate: '{:}'", 
+           role_session_name);
+        }
+
+        role_session_name.truncate(64);
+
         let assumed_role = sts_client.assume_role()
             .role_arn(&self.role_arn)
-            .role_session_name(&format!("novops-{:}-{:}-{:}", ctx.env_name, ctx.app_name, Uuid::new_v4()))
+            .role_session_name(role_session_name)
             .send().await;
         
         let aso = match assumed_role {
