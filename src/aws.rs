@@ -7,6 +7,8 @@ use rand::{distributions::Alphanumeric, Rng};
 use crate::novops::{ResolveTo, NovopsContext};
 use crate::variables::VariableOutput;
 
+const STS_ROLE_SESSION_NAME_MAX_LENGTH: usize = 64;
+
 #[derive(Debug, Deserialize, Clone)]
 pub struct AwsInput {
     pub assume_role: AwsAssumeRoleInput
@@ -38,20 +40,26 @@ impl ResolveTo<Vec<VariableOutput>> for AwsAssumeRoleInput {
             .map(char::from)
             .collect();
 
+        let mut role_session_name = format!("novops-{:}-{:}-{:}", &ctx.app_name, &ctx.env_name, &session_random_suffix);
+
         // session name is max 64 characters length
         // by default use full app and env name with random suffix
         // truncate if name > 64 chars to avoid error but print warning
-        // see https://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRole.html
-        let mut role_session_name = format!("novops-{:}-{:}-{:}", &ctx.app_name, &ctx.env_name, &session_random_suffix);
-        
-        if role_session_name.len() > 64 {
-           println!("WARNING: Computed AWS STS Role session name length > 64 characters and will be truncated. \
-           Consider using shorter application or environment name to avoid losing information with truncation. \
-           Role session name before truncate: '{:}'", 
-           role_session_name);
-        }
+        // see https://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRole.html        
+        if role_session_name.len() > STS_ROLE_SESSION_NAME_MAX_LENGTH {
+           let original_role_session_name = role_session_name.clone();
 
-        role_session_name.truncate(64);
+           // when truncating, truncate based on app and env name but keep random identifier
+           let mut truncated_rsname = format!("novops-{:}-{:}", &ctx.app_name, &ctx.env_name);
+           truncated_rsname.truncate(STS_ROLE_SESSION_NAME_MAX_LENGTH-session_random_suffix.len()-1);
+
+           role_session_name = format!("{:}-{:}", truncated_rsname, &session_random_suffix);
+
+           println!("WARNING: Role session name {:} truncated to {:} as length > 64 characters. \
+           Consider using shorter application or environment name to avoid losing information with truncation.", 
+           &original_role_session_name, &role_session_name);
+
+        }
 
         let assumed_role = sts_client.assume_role()
             .role_arn(&self.role_arn)
