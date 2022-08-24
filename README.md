@@ -84,7 +84,14 @@ $ novops -c /novops-config.yml -w /tmp/.novops; source /tmp/.novops/vars
 
 ### Nix
 
-TODO
+## Updating dependencies
+
+We use cargo2nix that can build dependencies separately (it is more granular
+than nixpkgs' solution) with the inconvenient that now one needs
+
+```sh
+nix run github:cargo2nix/cargo2nix
+```
 
 ## AVailable secret providers
 
