@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.5](http://git.novadiscovery.net:4224/world/novops/compare/v0.1.4...v0.1.5) (2022-08-24)
+
+
+### Bug Fixes
+
+* ensure AWS session name under 64 characters ([d3798e5](http://git.novadiscovery.net:4224/world/novops/commit/d3798e52c8fa099d23a86cd14454644cd5cbb41d))
+
 ### [0.1.4](http://git.novadiscovery.net:4224/world/novops/compare/v0.1.3...v0.1.4) (2022-08-10)
 
 ### [0.1.3](http://git.novadiscovery.net:4224/world/novops/compare/v0.1.2...v0.1.3) (2022-08-10)
