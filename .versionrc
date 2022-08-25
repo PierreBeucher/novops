@@ -10,6 +10,6 @@
     }
   ],
   "scripts": {
-	"postbump": "yes yes | nix run github:cargo2nix/cargo2nix/release-0.11.0 && git add Cargo.nix"
+	"postbump": "yes yes | nix run 'github:cargo2nix/cargo2nix/release-0.11.0' && git add Cargo.nix"
   }
 }
