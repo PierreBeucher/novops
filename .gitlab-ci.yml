@@ -19,6 +19,7 @@ stages:
 # Make sure Cargo.nix file is up to date with Cargo.lock to ensure proper release
 test-Cargo.nix:
   tags: [ nixos ]
+  needs: []
   script:
     # we need the -f to make it non-interactive
     - nix run github:cargo2nix/cargo2nix/release-0.11.0 -- -f Cargo.nix2
