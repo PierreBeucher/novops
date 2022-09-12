@@ -2,14 +2,15 @@
   "bumpFiles": [
     {
       "filename": "Cargo.toml",
-      "updater": "standard-version-updater.js"
+      "updater": "release/standard-version-updater.js"
     },
     {
       "filename": "Cargo.lock",
-      "updater": "standard-version-updater.js"
+      "updater": "release/standard-version-updater.js"
+    },
+    {
+      "filename": "Cargo.nix",
+      "updater": "release/standard-version-updater-nix.js"
     }
-  ],
-  "scripts": {
-	"postbump": "yes yes | nix run 'github:cargo2nix/cargo2nix/release-0.11.0' && git add Cargo.nix"
-  }
+  ]
 }
