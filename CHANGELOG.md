@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.7](http://git.novadiscovery.net:4224/world/novops/compare/v0.1.6...v0.1.7) (2022-09-13)
+
+
+### Bug Fixes
+
+* standard-version Cargo.nix bump ([73ecbf1](http://git.novadiscovery.net:4224/world/novops/commit/73ecbf143118877fbfb8a9338f50d49145369252))
+
 ### [0.1.6](http://git.novadiscovery.net:4224/world/novops/compare/v0.1.5...v0.1.6) (2022-08-24)
 
 ### [0.1.5](http://git.novadiscovery.net:4224/world/novops/compare/v0.1.4...v0.1.5) (2022-08-24)
