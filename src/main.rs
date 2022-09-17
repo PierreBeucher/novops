@@ -16,6 +16,7 @@ use variables::VariableOutput;
 use std::{io, os::unix::prelude::PermissionsExt};
 use clap::Parser;
 use std::fs;
+use std::os::unix::fs::symlink;
 use text_io;
 use users;
 use tokio;
@@ -35,7 +36,11 @@ struct NovopsArgs {
     #[clap(short = 'w', long = "workdir", value_parser, 
         help = "Working directory under which files and variable files will be stored by default. \
             Use XDG runtime directory if available ($XDG_RUNTIME_DIR/novops/<app>/<env>), default to current directory (.novops/<app>/<env>)")]
-    working_directory: Option<String>
+    working_directory: Option<String>,
+
+    #[clap(short = 's', long, value_parser, 
+        help = "Create a symlink at given location pointing to generated secret file.")]
+    symlink: Option<String>
 }
 
 #[tokio::main]
@@ -110,6 +115,11 @@ async fn novops_load_config() -> Result<(), anyhow::Error> {
     // Variables
     let exportable_vars = build_exportable_vars(&variable_outputs);
     let exported_var_path = write_exportable_vars(&exportable_vars, &ctx.workdir);
+
+    // If symlink option provided, create symlink
+    if args.symlink.is_some(){
+        create_symlink(&args.symlink.unwrap(), &exported_var_path)?
+    }
 
     println!("Novops environment loaded ! Export variables with:");
     println!("  source {:}", exported_var_path);
@@ -329,4 +339,9 @@ fn write_exportable_vars(vars: &String, working_dir: &String) -> String{
     let var_file = format!("{:}/vars", working_dir);
     fs::write(&var_file, vars).expect("Unable to write file");
     return var_file;
+}
+
+fn create_symlink(lnk: &String, target: &String) -> Result<(), anyhow::Error> {
+    symlink(&target, &lnk)
+        .with_context(|| format!("Couldn't create symlink {:} -> {:}", &lnk, &target))
 }
