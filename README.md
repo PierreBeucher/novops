@@ -40,7 +40,8 @@ environments:
 Run commands
 
 ```sh
-# Load secret and source env variables in current shell
+# Load dev config and source env variables in current shell
+# Creates a symlink .env -> $XDG_RUNTIME_DIR/.../vars to keep secrets safe and allow easy sourcing
 novops -e dev -s .env && source .env
 
 echo $APP_HOST 
@@ -52,7 +53,7 @@ echo $APP_PASSWORD
 cat $DOG_PATH
 # woof
 
-# Files are savec under XDG Runtime Dir to avoid unsecure access
+# Files are also created securely under XDG RUntime Dir 
 echo $DOG_PATH
 # /run/user/1000/novops/example-app/local/file_dog
 
