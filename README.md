@@ -19,6 +19,12 @@ environments:
       - name: APP_HOST
         value: "127.0.0.1:8080"
 
+      - name: APP_PASSWORD
+        value:
+          bitwarden:
+            entry: "App password dev"
+            field: login.password
+
     files: 
       - dest: ".token"
         content: 
@@ -34,14 +40,22 @@ environments:
 Run commands
 
 ```sh
-novops -e dev
-#
-# Using workdir: "/run/user/1000/novops/example-app/dev"
-# Novops environment loaded ! Export variables with:
-#   source /run/user/1000/novops/example-app/dev/vars
-#
+# Load secret and source env variables in current shell
+novops -e dev -s .env && source .env
 
-source /run/user/1000/novops/example-app/dev/vars
+echo $APP_HOST 
+# 127.0.0.1:8080
+
+echo $APP_PASSWORD
+# <secret>
+
+cat $DOG_PATH
+# woof
+
+# Files are savec under XDG Runtime Dir to avoid unsecure access
+echo $DOG_PATH
+# /run/user/1000/novops/example-app/local/file_dog
+
 ```
 
 Will result in:
