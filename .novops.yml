@@ -61,7 +61,17 @@ environments:
       assume_role:
         role_arn: arn:aws:iam::419998656076:role/deployinfra_dev_deploy
         source_profile: nova-sandbox
-          
+  
+  local:
+    variables:
+
+      # Variable with plain value
+      - name: MY_APP_HOST
+        value: "localhost"
+    files: 
+      - name: dog
+        content: "woof"
+    
 # Default values
 default:
   environment: dev
