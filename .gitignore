@@ -1,2 +1,6 @@
 /target/
 .novops
+
+# Tests output
+tests/output/test_simple_run/**
+!tests/output/test_simple_run/.gitkeep

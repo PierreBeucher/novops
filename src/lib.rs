@@ -45,6 +45,10 @@ pub struct NovopsArgs {
 
 pub async fn parse_arg_and_run() -> Result<(), anyhow::Error> {
     let args = NovopsArgs::parse();
+    run(args).await
+}
+
+pub async fn run(args: NovopsArgs) -> Result<(), anyhow::Error> {
     let ctx = make_context(&args).await?;
     let novops_env = get_current_environment(&ctx).await?;
     
