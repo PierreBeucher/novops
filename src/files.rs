@@ -1,3 +1,4 @@
+use std::path::PathBuf;
 use convert_case::{Case, Casing};
 use async_trait::async_trait;
 use serde::Deserialize;
@@ -49,7 +50,7 @@ pub struct FileInput {
  */
 #[derive(Debug, Clone, PartialEq)]
 pub struct FileOutput {
-    pub dest: String,
+    pub dest: PathBuf,
     pub variable: VariableOutput,
     pub content: String // TODO buffer? content may be long
 }
@@ -76,10 +77,10 @@ impl ResolveTo<FileOutput> for FileInput {
         };
 
         // if dest provided, use it
-        // otherwise use working directory and a random name
+        // otherwise use working directory and file name
         let dest = match &self.dest {
-            Some(s) => s.clone(),
-            None => format!("{:}/file_{:}", &ctx.workdir, &fname)
+            Some(s) => PathBuf::from(&s),
+            None => ctx.workdir.join(format!("file_{:}", &fname))
         };
 
         // variable pointing to file path
@@ -96,13 +97,13 @@ impl ResolveTo<FileOutput> for FileInput {
             Ok(c) => c,
             Err(e) => return Err(e),
         };
-        
+
         return Ok(
             FileOutput {
-                dest: dest.clone(),
+                dest:  PathBuf::from(&dest),
                 variable: VariableOutput {
                     name: variable_name,
-                    value: dest.clone()
+                    value: dest.into_os_string().into_string().unwrap()
                 },
                 content: content
             }

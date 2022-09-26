@@ -50,7 +50,7 @@ pub struct NovopsContext {
     pub app_name: String,
 
     /// working directory under which files are stored
-    pub workdir: String,
+    pub workdir: PathBuf,
 
     /// original config loaded at runtime
     pub config: NovopsConfig,

@@ -13,7 +13,6 @@ use crate::files::FileOutput;
 use crate::variables::VariableOutput;
 
 use std::{io, os::unix::prelude::PermissionsExt};
-use std::path::Path;
 use clap::Parser;
 use std::fs;
 use text_io;
@@ -21,6 +20,7 @@ use users;
 use anyhow::{self, Context};
 use std::os::unix::fs::symlink;
 use std::path::PathBuf;
+use std::env;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -57,8 +57,12 @@ pub async fn run(args: NovopsArgs) -> Result<(), anyhow::Error> {
     export_outputs(&ctx, var_out, file_out).await;
 
     // If symlink option provided, create symlink
-    if args.symlink.is_some(){
-        create_symlink(&args.symlink.unwrap(), &ctx.env_var_filepath)?
+    match args.symlink {
+        Some(lnk_str) => {
+            let lnk = PathBuf::from(&lnk_str);
+            create_symlink(&lnk, &ctx.env_var_filepath)?
+        },
+        None => (),
     }
 
     println!("Novops environment loaded ! Export variables with:");
@@ -79,11 +83,11 @@ pub async fn make_context(args: &NovopsArgs) -> Result<NovopsContext, anyhow::Er
     let env_name = read_environment_name(&config, &args.env);
 
     // working directory under which to save files
-    let workdir = prepare_working_directory(&args, &app_name, &env_name);
+    let workdir = prepare_working_directory(&args, &app_name, &env_name)?;
     println!("Using workdir: {:?}", &workdir);
 
     // environment variable file which will contain variable output the user can export
-    let env_var_filepath = Path::new(&workdir).join("vars");
+    let env_var_filepath = workdir.join("vars");
 
     Ok(NovopsContext {
         env_name: env_name.clone(),
@@ -175,19 +179,27 @@ fn read_environment_name(config: &NovopsConfig, flag: &Option<String>) -> String
  * - XDG runtime dir (if available), such as $XDg_RUNTIME_DIR/novops/<app>/<env>
  * - Default to /tmp/novops/<uid>/<app>/<env> (with /tmp/novops/<uid> limited to user)
  * 
- * Returns the path to working directory
+ * Returns the absolute path to working directory
  */
-fn prepare_working_directory(args: &NovopsArgs, app_name: &String, env_name: &String) -> String {
+fn prepare_working_directory(args: &NovopsArgs, app_name: &String, env_name: &String) -> Result<PathBuf, anyhow::Error> {
     
-    return match &args.working_directory {
-        Some(s) => s.clone(),
+    let workdir = match &args.working_directory {
+        Some(wd) => PathBuf::from(wd),
         None => match prepare_working_directory_xdg(app_name, env_name) {
             Ok(s) => s,
             Err(e) => {
                 println!("Using /tmp as XDG did not seem available: {:?}", e);
-                return prepare_working_directory_tmp(app_name, env_name);
+                prepare_working_directory_tmp(app_name, env_name)
             },
         }
+    };
+
+    // workdir may be passed as relative path or auto-generated as absolute path
+    // to avoid confusion always return it as absolute path
+    return if workdir.is_absolute() {
+        Ok(workdir)
+    } else {
+        Ok(env::current_dir()?.join(&workdir))
     };
 }
 
@@ -195,23 +207,20 @@ fn prepare_working_directory(args: &NovopsArgs, app_name: &String, env_name: &St
  * Prepare a workding directory using xdg
  * Returns an error if XDG is not available or failed somehow
 */
-fn prepare_working_directory_xdg(app_name: &String, env_name: &String) -> Result<String, io::Error> {
+fn prepare_working_directory_xdg(app_name: &String, env_name: &String) -> Result<PathBuf, io::Error> {
     let xdg_prefix = format!("novops/{:}/{:}", app_name, env_name);
 
     let xdg_basedir = xdg::BaseDirectories::new()?
         .create_runtime_directory(&xdg_prefix)?;
     
-    return match xdg_basedir.to_str() {
-        Some(s) => Ok(String::from(s)),
-        None => panic!("Could not get string from path {:?}", xdg_basedir)
-    };
+    return Ok(xdg_basedir);
 }
 
 
 /**
  * Use /tmp as base for Novops workdir
  */
-fn prepare_working_directory_tmp(app_name: &String, env_name: &String) -> String{
+fn prepare_working_directory_tmp(app_name: &String, env_name: &String) -> PathBuf{
     let user_workdir = format!("/tmp/novops/{:}", users::get_current_uid());
     let workdir = format!("{:}/{:}/{:}", user_workdir, app_name, env_name);
 
@@ -232,7 +241,7 @@ fn prepare_working_directory_tmp(app_name: &String, env_name: &String) -> String
         Err(e) => panic!("Couldn't create working directory {:?}: {:?}", &workdir, e),
     };
 
-    return workdir;
+    return PathBuf::from(workdir);
 }
 
 /**
@@ -327,7 +336,7 @@ fn prompt_for_environment(config: &NovopsConfig) -> String{
  */
 fn export_file_outputs(files: &Vec<FileOutput>){
     for f in files {
-        fs::write(f.dest.clone(), f.content.clone()).expect("Unable to write file");
+        fs::write(f.dest.clone(), f.content.clone()).expect(&format!("Unable to write file {:?}", f));
     }
 }
 
@@ -355,7 +364,7 @@ fn export_file_outputs(files: &Vec<FileOutput>){
  *  export FOO=bar
  * '  
  */
-fn export_variable_outputs(vars: &Vec<VariableOutput>, working_dir: &String) -> String{
+fn export_variable_outputs(vars: &Vec<VariableOutput>, working_dir: &PathBuf) -> PathBuf{
 
     // build a string such as
     //  '
@@ -375,12 +384,15 @@ fn export_variable_outputs(vars: &Vec<VariableOutput>, working_dir: &String) -> 
         exportable_vars.push_str(&s);
     }
 
-    let var_file = format!("{:}/vars", working_dir);
+    let var_file = working_dir.join("vars");
+    
+    println!("Writing var at {:?}", &var_file);
+
     fs::write(&var_file, exportable_vars).expect("Unable to write file");
     return var_file;
 }
 
-fn create_symlink(lnk: &String, target: &PathBuf) -> Result<(), anyhow::Error> {
+fn create_symlink(lnk: &PathBuf, target: &PathBuf) -> Result<(), anyhow::Error> {
     symlink(&target, &lnk)
-        .with_context(|| format!("Couldn't create symlink {:} -> {:?}", &lnk, &target))
+        .with_context(|| format!("Couldn't create symlink {:?} -> {:?}", &lnk, &target))
 }
