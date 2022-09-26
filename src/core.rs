@@ -2,20 +2,21 @@ use std::collections::HashMap;
 use serde::Deserialize;
 use async_trait::async_trait;
 use anyhow;
+use std::path::PathBuf;
 
 use crate::bitwarden;
 use crate::aws;
 use crate::files::{FileInput};
 use crate::variables::{VariableInput};
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Clone, PartialEq)]
 pub struct NovopsConfig {
     pub name: String,
     pub environments: HashMap<String, NovopsEnvironmentInput>,
     pub default: Option<NovopsConfigDefault>
 }
 
-#[derive(Debug, Deserialize, Clone)]    
+#[derive(Debug, Deserialize, Clone, PartialEq)]    
 pub struct NovopsConfigDefault {
     pub environment: Option<String>
 }
@@ -29,7 +30,7 @@ pub struct NovopsConfigDefault {
  * - File are defined using a specific Input struct
  * - AWS allow to assume IAM Role (Output: env vars)
  */
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Clone, PartialEq)]
 pub struct NovopsEnvironmentInput {
     pub variables: Vec<VariableInput>,
     pub files: Vec<FileInput>,
@@ -39,6 +40,7 @@ pub struct NovopsEnvironmentInput {
 /**
  * Context in which an environment is loaded. Passed to Inputs with ResolveTo() to generate related Output 
  */
+#[derive(Debug, Deserialize, Clone, PartialEq)]
 pub struct NovopsContext {
 
     /// environment name
@@ -52,6 +54,9 @@ pub struct NovopsContext {
 
     /// original config loaded at runtime
     pub config: NovopsConfig,
+
+    /// path to sourceable environment variable file
+    pub env_var_filepath: PathBuf
 }
 
 /**
@@ -66,7 +71,7 @@ pub trait ResolveTo<T> {
  * Enum with Input that will always resolve to String
  * i.e. <impl ResolveTo<String>>
  */
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Clone, PartialEq)]
 #[serde(untagged)]
 #[enum_dispatch(ResolveTo<String>)]
 pub enum StringResolvableInput {

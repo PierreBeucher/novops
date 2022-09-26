@@ -3,7 +3,7 @@ use async_trait::async_trait;
 use serde::Deserialize;
 use anyhow;
 
-use crate::novops::{ResolveTo, NovopsContext, StringResolvableInput};
+use crate::core::{ResolveTo, NovopsContext, StringResolvableInput};
 use crate::variables::{VariableOutput};
 
 /**
@@ -31,7 +31,7 @@ use crate::variables::{VariableOutput};
  * - an environment variable such as CAT_LOCATION="/tmp/thecat"
  * 
  */
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Clone, PartialEq)]
 pub struct FileInput {
     /// name to use when auto-generating file and variable name
     /// if not specified, the YAML key for file will be used
@@ -47,7 +47,7 @@ pub struct FileInput {
 /**
  * Output for FileInput, with final dest, variable and content
  */
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct FileOutput {
     pub dest: String,
     pub variable: VariableOutput,

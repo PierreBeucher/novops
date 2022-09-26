@@ -2,24 +2,25 @@
 extern crate enum_dispatch;
 extern crate xdg;
 
-mod novops;
-mod bitwarden;
-mod aws;
-mod files;
-mod variables;
+pub mod core;
+pub mod bitwarden;
+pub mod aws;
+pub mod files;
+pub mod variables;
 
-use crate::novops::ResolveTo;
+use crate::core::{ResolveTo, NovopsEnvironmentInput, NovopsConfig, NovopsContext};
 use crate::files::FileOutput;
-use crate::novops::{NovopsConfig, NovopsContext};
 use crate::variables::VariableOutput;
 
 use std::{io, os::unix::prelude::PermissionsExt};
+use std::path::Path;
 use clap::Parser;
 use std::fs;
 use text_io;
 use users;
 use anyhow::{self, Context};
 use std::os::unix::fs::symlink;
+use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -44,54 +45,86 @@ pub struct NovopsArgs {
 
 pub async fn parse_arg_and_run() -> Result<(), anyhow::Error> {
     let args = NovopsArgs::parse();
-    novops_load_config(args).await
+    let ctx = make_context(&args).await?;
+    let novops_env = get_current_environment(&ctx).await?;
+    
+    // Revole inputs and export (write data to disk)
+    let (var_out, file_out) = resolve_environment_inputs(&ctx, novops_env).await?;
+    export_outputs(&ctx, var_out, file_out).await;
+
+    // If symlink option provided, create symlink
+    if args.symlink.is_some(){
+        create_symlink(&args.symlink.unwrap(), &ctx.env_var_filepath)?
+    }
+
+    println!("Novops environment loaded ! Export variables with:");
+    println!("  source {:?}", &ctx.env_var_filepath);
+
+    Ok(())
 }
 
-pub async fn novops_load_config(args: NovopsArgs) -> Result<(), anyhow::Error> {
+/**
+ * Generate Novops context from arguments, env vars and Novops config
+ */
+pub async fn make_context(args: &NovopsArgs) -> Result<NovopsContext, anyhow::Error> {
     // Read CLI args and load config
     let config = read_config_file(&args.config).unwrap();
     let app_name = &config.name.clone();
 
     // Env name is either specified as arg, as default or prompt user
     let env_name = read_environment_name(&config, &args.env);
-    let env_config = &config.environments[&env_name];
 
     // working directory under which to save files
     let workdir = prepare_working_directory(&args, &app_name, &env_name);
     println!("Using workdir: {:?}", &workdir);
 
-    let ctx = NovopsContext {
+    // environment variable file which will contain variable output the user can export
+    let env_var_filepath = Path::new(&workdir).join("vars");
+
+    Ok(NovopsContext {
         env_name: env_name.clone(),
         app_name: app_name.clone(),
         workdir: workdir.clone(),
         config: config.clone(),
-    };
+        env_var_filepath
+    })
+}
 
-    // initialize Vector for all possible outputs
+/**
+ * Read config and load all Input types into a NovopsInputs struct
+ */
+pub async fn get_current_environment(ctx: &NovopsContext) -> Result<NovopsEnvironmentInput, anyhow::Error> {    
+    let novops_env = ctx.config.environments.get(&ctx.env_name)
+        .with_context(|| format!("Environment {} not found in config.", &ctx.env_name))?;
+    
+    Ok(novops_env.clone())
+}
+
+/**
+ * Resolve all Inputs to their concrete Output values
+ * Depending on Input types, external systems will be called-upon (such as BitWarden, Hashicorp Vault...)
+ */
+pub async fn resolve_environment_inputs(ctx: &NovopsContext, inputs: NovopsEnvironmentInput) 
+        -> Result<(Vec<VariableOutput>, Vec<FileOutput>), anyhow::Error>
+    {
+
     let mut variable_outputs: Vec<VariableOutput> = Vec::new();
     let mut file_outputs: Vec<FileOutput> = Vec::new();
 
-    //
-    // Resolve all modules
-    //
-
-    // Variable
-    for v in &env_config.variables {
+    for v in &inputs.variables {
         let val = v.resolve(&ctx).await
             .with_context(|| format!("Could not resolve variable input {:?}", v))?;
         variable_outputs.push(val);
     };
 
-    // File
-    for f in &env_config.files {
+    for f in &inputs.files {
         let r = f.resolve(&ctx).await
             .with_context(|| format!("Could not resolve file input {:?}", f))?;
         file_outputs.push(r.clone());
         variable_outputs.push(r.variable.clone())
     };
 
-    // AWS
-    match &env_config.aws {
+    match &inputs.aws {
         Some(aws) => {
             let mut r = aws.assume_role.resolve(&ctx).await
                 .with_context(|| format!("Could not resolve AWS input {:?}", aws))?;
@@ -100,26 +133,14 @@ pub async fn novops_load_config(args: NovopsArgs) -> Result<(), anyhow::Error> {
         None => (),
     }
 
-    //
-    // Export all Outputs
-    //
+    Ok((variable_outputs, file_outputs))
 
-    // Files
-    write_resolved_files(&file_outputs);
+}
+
+pub async fn export_outputs(ctx: &NovopsContext, variable_outputs: Vec<VariableOutput>, file_outputs: Vec<FileOutput>) {
     
-    // Variables
-    let exportable_vars = build_exportable_vars(&variable_outputs);
-    let exported_var_path = write_exportable_vars(&exportable_vars, &ctx.workdir);
-
-    // If symlink option provided, create symlink
-    if args.symlink.is_some(){
-        create_symlink(&args.symlink.unwrap(), &exported_var_path)?
-    }
-
-    println!("Novops environment loaded ! Export variables with:");
-    println!("  source {:}", exported_var_path);
-    
-    Ok(())
+    export_file_outputs(&file_outputs);
+    export_variable_outputs(&variable_outputs, &ctx.workdir);
 
 }
 
@@ -300,18 +321,44 @@ fn prompt_for_environment(config: &NovopsConfig) -> String{
 /**
  * Write resolved files to disk
  */
-fn write_resolved_files(files: &Vec<FileOutput>){
+fn export_file_outputs(files: &Vec<FileOutput>){
     for f in files {
         fs::write(f.dest.clone(), f.content.clone()).expect("Unable to write file");
     }
 }
 
+// fn build_exportable_vars(vars: &Vec<VariableOutput>) -> String{
+//     let mut exportable_vars = String::new();
+//     for v in vars{
+//         // use single quotes to avoid interpolation
+//         // if single quote "'" are in password, replace them by ` '"'"' ` 
+//         // which will cause bash to interpret them properly
+//         // first ' ends initial quoation, then wrap our quote with "'" and start a new quotation with '
+//         // for example password ` abc'def ` will become ` export pass='abc'"'"'def' `
+//         let safe_val = &v.value.replace("'", "'\"'\"'");
+//         let s = format!("export {:}='{:}'\n", &v.name, safe_val);
+//         exportable_vars.push_str(&s);
+//     }
+
+//     return exportable_vars;
+// }
+
 /**
- * build a string of exportable variables in the form
- *  VAR=value
- *  FOO=bar
+ * Write a sourceable environment variable file to disk
+ * With a content like
+ * '
+ *  export VAR=value
+ *  export FOO=bar
+ * '  
  */
-fn build_exportable_vars(vars: &Vec<VariableOutput>) -> String{
+fn export_variable_outputs(vars: &Vec<VariableOutput>, working_dir: &String) -> String{
+
+    // build a string such as
+    //  '
+    //   export VAR=value
+    //   export FOO=bar
+    //  '
+    // which can be exported into a shell using source
     let mut exportable_vars = String::new();
     for v in vars{
         // use single quotes to avoid interpolation
@@ -324,19 +371,12 @@ fn build_exportable_vars(vars: &Vec<VariableOutput>) -> String{
         exportable_vars.push_str(&s);
     }
 
-    return exportable_vars;
-}
-
-/**
- * Write exportable variables under runtime directory
- */
-fn write_exportable_vars(vars: &String, working_dir: &String) -> String{
     let var_file = format!("{:}/vars", working_dir);
-    fs::write(&var_file, vars).expect("Unable to write file");
+    fs::write(&var_file, exportable_vars).expect("Unable to write file");
     return var_file;
 }
 
-fn create_symlink(lnk: &String, target: &String) -> Result<(), anyhow::Error> {
+fn create_symlink(lnk: &String, target: &PathBuf) -> Result<(), anyhow::Error> {
     symlink(&target, &lnk)
-        .with_context(|| format!("Couldn't create symlink {:} -> {:}", &lnk, &target))
+        .with_context(|| format!("Couldn't create symlink {:} -> {:?}", &lnk, &target))
 }

@@ -4,17 +4,17 @@ use async_trait::async_trait;
 use anyhow::{self, Context};
 use rand::{distributions::Alphanumeric, Rng};
 
-use crate::novops::{ResolveTo, NovopsContext};
+use crate::core::{ResolveTo, NovopsContext};
 use crate::variables::VariableOutput;
 
 const STS_ROLE_SESSION_NAME_MAX_LENGTH: usize = 64;
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Clone, PartialEq)]
 pub struct AwsInput {
     pub assume_role: AwsAssumeRoleInput
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Clone, PartialEq)]
 pub struct AwsAssumeRoleInput {
     pub role_arn: String,
     pub source_profile: String
