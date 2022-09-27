@@ -37,7 +37,7 @@ in
 {
   cargo2nixVersion = "0.11.0";
   workspace = {
-    novops = rustPackages.unknown.novops."0.1.8";
+    novops = rustPackages.unknown.novops."0.1.9";
   };
   "registry+https://github.com/rust-lang/crates.io-index".addr2line."0.17.0" = overridableMkRustCrate (profileName: rec {
     name = "addr2line";
@@ -1274,9 +1274,9 @@ in
     };
   });
   
-  "unknown".novops."0.1.8" = overridableMkRustCrate (profileName: rec {
+  "unknown".novops."0.1.9" = overridableMkRustCrate (profileName: rec {
     name = "novops";
-    version = "0.1.8";
+    version = "0.1.9";
     registry = "unknown";
     src = fetchCrateLocal workspaceSrc;
     dependencies = {

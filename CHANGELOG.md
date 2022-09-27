@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.9](http://git.novadiscovery.net:4224/world/novops/compare/v0.1.8...v0.1.9) (2022-09-27)
+
+
+### Bug Fixes
+
+* path handling as string and absolute ([47b9d58](http://git.novadiscovery.net:4224/world/novops/commit/47b9d589bbd25a01068a62a7874c20233e915e17))
+
 ### [0.1.8](http://git.novadiscovery.net:4224/world/novops/compare/v0.1.7...v0.1.8) (2022-09-19)
 
 
