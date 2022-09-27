@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:experimental
-FROM rust:1.61.0-alpine3.16 as builder
+FROM rust:1.64.0-alpine3.16 as builder
 
 RUN apk update && apk add --no-cache musl-dev
 

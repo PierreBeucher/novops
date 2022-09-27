@@ -1,0 +1,10 @@
+# Simple almost empty config
+name: test-empty
+
+environments:
+  dev:
+    variables: []
+    files: []
+
+default:
+  environment: dev

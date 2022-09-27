@@ -29,14 +29,19 @@ variables:
   DOCKER_BUILDKIT: 1
 
 # A simple test of Novops usage with files and variables
-test-simple:
+test:
   stage: test
-  image: ${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}
+  image: rust:1.64.0
+  needs: []
   variables:
-    NOVOPS_COMMAND: novops
+    CARGO_HOME: $CI_PROJECT_DIR/cargo_home
   script:
-  - apk add bash
-  - tests/test.sh
+  - cargo test
+  cache:
+    key: rust-cargo-cache
+    paths:
+      - target
+      - cargo_home/registry
   rules:
   - if: $CI_COMMIT_BRANCH != "master" && $CI_COMMIT_TAG == null
 

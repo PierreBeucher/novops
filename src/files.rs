@@ -1,9 +1,10 @@
+use std::path::PathBuf;
 use convert_case::{Case, Casing};
 use async_trait::async_trait;
 use serde::Deserialize;
 use anyhow;
 
-use crate::novops::{ResolveTo, NovopsContext, StringResolvableInput};
+use crate::core::{ResolveTo, NovopsContext, StringResolvableInput};
 use crate::variables::{VariableOutput};
 
 /**
@@ -31,7 +32,7 @@ use crate::variables::{VariableOutput};
  * - an environment variable such as CAT_LOCATION="/tmp/thecat"
  * 
  */
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Clone, PartialEq)]
 pub struct FileInput {
     /// name to use when auto-generating file and variable name
     /// if not specified, the YAML key for file will be used
@@ -47,9 +48,9 @@ pub struct FileInput {
 /**
  * Output for FileInput, with final dest, variable and content
  */
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct FileOutput {
-    pub dest: String,
+    pub dest: PathBuf,
     pub variable: VariableOutput,
     pub content: String // TODO buffer? content may be long
 }
@@ -76,10 +77,10 @@ impl ResolveTo<FileOutput> for FileInput {
         };
 
         // if dest provided, use it
-        // otherwise use working directory and a random name
+        // otherwise use working directory and file name
         let dest = match &self.dest {
-            Some(s) => s.clone(),
-            None => format!("{:}/file_{:}", &ctx.workdir, &fname)
+            Some(s) => PathBuf::from(&s),
+            None => ctx.workdir.join(format!("file_{:}", &fname))
         };
 
         // variable pointing to file path
@@ -96,13 +97,13 @@ impl ResolveTo<FileOutput> for FileInput {
             Ok(c) => c,
             Err(e) => return Err(e),
         };
-        
+
         return Ok(
             FileOutput {
-                dest: dest.clone(),
+                dest:  PathBuf::from(&dest),
                 variable: VariableOutput {
                     name: variable_name,
-                    value: dest.clone()
+                    value: dest.into_os_string().into_string().unwrap()
                 },
                 content: content
             }

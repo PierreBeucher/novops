@@ -1,0 +1,35 @@
+# Simple standalone config without requiring external access
+# i.e. only plain variable and file content
+# Useful to test basic loading and flags such as 
+name: test-standalone
+
+environments:
+  dev:
+    variables:
+      - name: MY_APP_HOST
+        value: "localhost"
+    
+      # Bunch of special characters which should be properly interpreted and exported
+      - name: SPECIAL_CHARACTERS
+        value: "special_char_'!?`$abc_#~%*µ€{}[]-°+@à^ç=\\"
+      
+    files: 
+      - name: dog
+        content: "woof"
+
+      - name: cat
+        content: meow
+        dest: /tmp/novops_cat
+        variable: NOVOPS_CAT_VAR
+
+  staging:
+    variables:
+      - name: STAGING_HOST
+        value: staginghost
+      
+    files: 
+      - name: bird
+        content: "flapflap"
+
+default:
+  environment: dev

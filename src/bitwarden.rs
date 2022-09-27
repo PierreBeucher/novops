@@ -11,7 +11,7 @@ use serde::Deserialize;
 use async_trait::async_trait;
 use anyhow::{Context, Error, anyhow};
 
-use crate::novops;
+use crate::core;
 
 /**
  * A BitWarden secret such as
@@ -22,14 +22,14 @@ use crate::novops;
  *     field: login.password
  */
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Clone, PartialEq)]
 pub struct BitwardenItemInput {
     bitwarden: BitwardenEntry,
 }
 
 #[async_trait]
-impl novops::ResolveTo<String> for BitwardenItemInput {
-    async fn resolve(&self, _: &novops::NovopsContext) -> Result<String, Error> {
+impl core::ResolveTo<String> for BitwardenItemInput {
+    async fn resolve(&self, _: &core::NovopsContext) -> Result<String, Error> {
         let json_result = get_item(&self.bitwarden.entry);
 
         let json_value = match json_result {
@@ -48,7 +48,7 @@ impl novops::ResolveTo<String> for BitwardenItemInput {
     }
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Clone, PartialEq)]
 pub struct BitwardenEntry {
     entry: String,
     field: String
