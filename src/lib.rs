@@ -44,32 +44,55 @@ pub struct NovopsArgs {
     pub symlink: Option<String>
 }
 
+/**
+ * Structure containing all Outputs after resolving
+ */
+pub struct NovopsOutputs {
+    pub context: NovopsContext,
+    pub variables: Vec<VariableOutput>,
+    pub files: Vec<FileOutput>
+}
+
 pub async fn parse_arg_and_run() -> Result<(), anyhow::Error> {
     let args = NovopsArgs::parse();
     run(args).await
 }
 
 pub async fn run(args: NovopsArgs) -> Result<(), anyhow::Error> {
-    let ctx = make_context(&args).await?;
-    let novops_env = get_current_environment(&ctx).await?;
-    
-    // Revole inputs and export (write data to disk)
-    let (var_out, file_out) = resolve_environment_inputs(&ctx, novops_env).await?;
-    export_outputs(&ctx, var_out, file_out).await;
+   
+    // Read config from args and resolve all inputs to their concrete outputs
+    let outputs = load_context_and_resolve(&args).await?;
+
+    // Write outputs to disk
+    export_outputs(&outputs).await;
 
     // If symlink option provided, create symlink
     match args.symlink {
         Some(lnk_str) => {
             let lnk = PathBuf::from(&lnk_str);
-            create_symlink(&lnk, &ctx.env_var_filepath)?
+            create_symlink(&lnk, &outputs.context.env_var_filepath)?
         },
         None => (),
     }
 
     println!("Novops environment loaded ! Export variables with:");
-    println!("  source {:?}", &ctx.env_var_filepath);
+    println!("  source {:?}", &outputs.context.env_var_filepath);
 
     Ok(())
+}
+
+pub async fn load_context_and_resolve(args: &NovopsArgs) -> Result<NovopsOutputs, anyhow::Error> {
+    let ctx = make_context(&args).await?;
+    let novops_env = get_current_environment(&ctx).await?;
+    
+    // Revole inputs and export (write data to disk)
+    let (var_out, file_out) = resolve_environment_inputs(&ctx, novops_env).await?;
+
+    return Ok(NovopsOutputs { 
+        context: ctx, 
+        variables: var_out, 
+        files: file_out 
+    })
 }
 
 /**
@@ -146,10 +169,10 @@ pub async fn resolve_environment_inputs(ctx: &NovopsContext, inputs: NovopsEnvir
 
 }
 
-pub async fn export_outputs(ctx: &NovopsContext, variable_outputs: Vec<VariableOutput>, file_outputs: Vec<FileOutput>) {
+pub async fn export_outputs(outputs: &NovopsOutputs) {
     
-    export_file_outputs(&file_outputs);
-    export_variable_outputs(&variable_outputs, &ctx.workdir);
+    export_file_outputs(&outputs.files);
+    export_variable_outputs(&outputs.variables, &outputs.context.workdir);
 
 }
 

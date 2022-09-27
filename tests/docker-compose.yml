@@ -1,0 +1,11 @@
+version: "3.8"
+
+services:
+  vault:
+    image: vault:1.11.3
+    cap_add:
+    - IPC_LOCK
+    ports:
+    - 127.0.0.1:8200:8200
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: novopsRoot
