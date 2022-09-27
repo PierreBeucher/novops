@@ -2,11 +2,18 @@
 
 A platform agnostic secret aggregator for CI and development environments.
 
+## Features
+
+- Load secrets and config as file or environment variables in most shells
+- Integrate with various secret providers: Hashicorp Vault, AWS, BitWarden...
+- Manage multiple environments
+- Integrate with CI to help reduce drift between CI and local environment
+
 ## Usage
 
-Novops will load configs and secrets defined in config (`.novops.yml` by default) as environment variable and files.
+Novops load configs and secrets defined in `.novops.yml` to use them as file and/or environment variables. 
 
-## Simple example
+### Simple example
 
 Consider example `.novops.yml`
 
@@ -16,62 +23,49 @@ name: myapp
 environments:
   dev:
     variables:
-      - name: APP_HOST
-        value: "127.0.0.1:8080"
+      # Plain string
+      - name: APP_URL
+        value: "http://127.0.0.1:8080"
 
+      # Retrieve secret from Hashicorp Vault using KV v2 Secret Engine
       - name: APP_PASSWORD
         value:
-          bitwarden:
-            entry: "App password dev"
-            field: login.password
+          hvault_kv2:
+            mount: "secret"
+            path: "myapp/dev/creds"
+            entry: "password"
 
     files: 
-      - dest: ".token"
+      # Retrieve secret from BitWarden and save it to file
+      # File path will be exposed via env var APP_TOKEN
+      - name: APP_TOKEN
         content: 
           bitwarden:
             entry: "Dev Secret Token"
             field: notes
-      
-      - name: dog
-        variabe: DOG_PATH
-        content: "woof"
 ```
 
-Run commands
+Run Novops with
 
 ```sh
 # Load dev config and source env variables in current shell
 # Creates a symlink .env -> $XDG_RUNTIME_DIR/.../vars to keep secrets safe and allow easy sourcing
 novops -e dev -s .env && source .env
 
-echo $APP_HOST 
+echo $APP_URL 
 # 127.0.0.1:8080
 
 echo $APP_PASSWORD
-# <secret>
+# s3cret
 
-cat $DOG_PATH
-# woof
+cat $APP_TOKEN
+# SomeTokenValue
 
-# Files are also created securely under XDG RUntime Dir 
-echo $DOG_PATH
-# /run/user/1000/novops/example-app/local/file_dog
+# Files are created securely under XDG Runtime Dir by default
+echo $APP_TOKEN
+# /run/user/1000/novops/myapp/dev/file_APP_TOKEN
 
 ```
-
-Will result in:
-
-- File `.token` created with content from BitWarden entry `Staging Secret Token`
-- File `/run/user/1000/novops/myapp/dev/files_foo` created with content `bar`
-- Variables exported:
-  ```sh
-  # as stated in config
-  APP_HOST="127.0.0.1:8080"
-
-  # Every file in config comes with a variable pointing to its path
-  NOVOPS_FILE_DEV_NPM_TOKEN=/dir/running/novops/.token
-  NOVOPS_FILE_DEV_DOG=/run/user/1000/novops/myapp/dev/files_dog
-  ```
 
 ### Bash / Shell
 
@@ -99,19 +93,67 @@ $ novops -c /novops-config.yml -w /tmp/.novops; source /tmp/.novops/vars
 
 ### Nix
 
-## Updating dependencies
+TODO
 
-We use cargo2nix that can build dependencies separately (it is more granular
-than nixpkgs' solution) with the inconvenient that now one needs
+## Secret providers
 
-```sh
-nix run github:cargo2nix/cargo2nix
+Quick reference and example of available secret providers. See advanced doc for details.
+
+### Hashicorp Vault
+
+Variables and files:
+
+```yaml
+environment:
+  dev:
+    variables:
+    - name: APP_PASSWORD
+      value:
+        hvault_kv2:
+          mount: "secret"
+          path: "myapp/dev/creds"
+          entry: "password"
+
+    files:
+    - name: SECRET_TOKEN
+      dest: .token
+      content:
+        hvault_kv2:
+          path: "myapp/dev/creds"
+          entry: "token"
 ```
 
-## AVailable secret providers
+### AWS
 
-- Bitwarden
-- _Soon: Hashicorp Vault_
+Generate temporary IAM Role credentials:
+
+```yaml
+environments:
+  dev:
+    # Output variables to assume IAM Role:
+    # AWS_ACCESS_KEY_ID
+    # AWS_SECRET_ACCESS_KEY
+    # AWS_SESSION_TOKEN
+    aws:
+      assume_role:
+        role_arn: arn:aws:iam::12345678910:role/my_dev_role
+        source_profile: novops
+```
+
+### BitWarden
+
+_Experimental module, requires BitWarden CLI installed locally_
+
+```yaml
+environments:
+  dev:
+    files: 
+    - name: ssh-key
+      content:
+        bitwarden:
+          entry: Some SSH Key entry
+          field: notes
+```
 
 ## Development
 
@@ -129,11 +171,21 @@ Docker image (using BuildKit):
 docker buildx build .
 ```
 
+### Updating dependencies
+
+We use cargo2nix that can build dependencies separately (it is more granular than nixpkgs' solution) with the inconvenient that now one needs
+
+```sh
+nix run github:cargo2nix/cargo2nix
+```
+
 ### Run test
 
-TODO
+```
+cargo test
+```
 
-### Concepts
+### Advanced concepts
 
 Novops relies around the following concepts:
 
