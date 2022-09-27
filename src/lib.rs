@@ -7,6 +7,7 @@ pub mod bitwarden;
 pub mod aws;
 pub mod files;
 pub mod variables;
+pub mod hashivault;
 
 use crate::core::{ResolveTo, NovopsEnvironmentInput, NovopsConfig, NovopsContext};
 use crate::files::FileOutput;
