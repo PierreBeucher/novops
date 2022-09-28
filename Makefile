@@ -1,5 +1,5 @@
 docker:
-	docker buildx build . 
+	docker buildx build . -t novops:local --load 
 
 build:
 	cargo build --release --target x86_64-unknown-linux-musl

@@ -5,7 +5,9 @@ RUN apk update && apk add --no-cache musl-dev
 
 WORKDIR /novops
 
-COPY . .
+COPY Cargo.lock Cargo.lock
+COPY Cargo.toml Cargo.toml
+COPY src src/
 
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/novops/target \
