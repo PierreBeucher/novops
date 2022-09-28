@@ -29,7 +29,22 @@ check-Cargo.nix:
     - diff Cargo.nix Cargo.nix2
   after_script:
   - echo "This job failure may indicate Cargo.nix is not in sync with Cargo.lock"
-  - echo "Run `nix run github:cargo2nix/cargo2nix/release-0.11.0 -- -f Cargo.nix` locally and check-in changes and retry."
+  - echo "Run 'nix run github:cargo2nix/cargo2nix/release-0.11.0 -- -f Cargo.nix' locally and check-in changes and retry."
+  rules:
+  - if: $CI_COMMIT_TAG == null
+
+# Make sure documented JSON schema is up-to-date
+check-config-schema:
+  needs: [ docker-build ]
+  image: "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG"
+  script:
+  - novops schema > schema.json
+  - diff docs/schema.json schema.json
+  after_script:
+  - echo "This job failure may indicate docs/schema.json (JSON schema for .novops.yml) is not in sync with current code"
+  - echo "Run 'cargo run -- schema > docs/schema.json' locally and check-in changes and retry."
+  rules:
+  - if: $CI_COMMIT_TAG == null
 
 # Integration tests with Docker for external services (Hashivault...)
 test:

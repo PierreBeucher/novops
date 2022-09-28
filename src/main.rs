@@ -2,7 +2,8 @@ use std::process::exit;
 
 use tokio;
 use clap::{Arg, App, SubCommand};
-use novops;
+use novops::{self, core::NovopsConfigFile};
+use schemars::{schema_for};
 
 #[tokio::main]
 async fn main() -> () {
@@ -48,6 +49,10 @@ async fn main() -> () {
                 .required(false)
             )
         )
+        .subcommand(
+            SubCommand::with_name("schema")
+            .about("Output Novops config JSON schema")
+        )
     ; 
         
     let m = app.get_matches();
@@ -66,6 +71,15 @@ async fn main() -> () {
         },
         None => {},
     };
+
+    match m.subcommand_matches("schema") {
+        Some(_) => {
+            let schema = schema_for!(NovopsConfigFile);
+            println!("{}", serde_json::to_string_pretty(&schema).unwrap());
+            exit(0)
+        },
+        None => {},
+    }
     
     println!("Please provide a subcommand. Use --help to see available commands.");
     exit(1)

@@ -1,0 +1,275 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "NovopsConfigFile",
+  "type": "object",
+  "required": [
+    "environments",
+    "name"
+  ],
+  "properties": {
+    "config": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/NovopsConfig"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "environments": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/NovopsEnvironmentInput"
+      }
+    },
+    "name": {
+      "type": "string"
+    }
+  },
+  "definitions": {
+    "AwsAssumeRoleInput": {
+      "type": "object",
+      "required": [
+        "role_arn",
+        "source_profile"
+      ],
+      "properties": {
+        "role_arn": {
+          "type": "string"
+        },
+        "source_profile": {
+          "type": "string"
+        }
+      }
+    },
+    "AwsInput": {
+      "type": "object",
+      "required": [
+        "assume_role"
+      ],
+      "properties": {
+        "assume_role": {
+          "$ref": "#/definitions/AwsAssumeRoleInput"
+        }
+      }
+    },
+    "BitwardenEntry": {
+      "type": "object",
+      "required": [
+        "entry",
+        "field"
+      ],
+      "properties": {
+        "entry": {
+          "type": "string"
+        },
+        "field": {
+          "type": "string"
+        }
+      }
+    },
+    "BitwardenItemInput": {
+      "description": "A BitWarden secret such as\n\nmyvar: bitwarden: entry: wordpress_prod field: login.password",
+      "type": "object",
+      "required": [
+        "bitwarden"
+      ],
+      "properties": {
+        "bitwarden": {
+          "$ref": "#/definitions/BitwardenEntry"
+        }
+      }
+    },
+    "FileInput": {
+      "description": "Content is any input File can also define a destination (by default, will use XDG Runtime directory, or a secure /tmp subfolder in XDG is not available) Dest will override default destination to a custom path Variable is an environment variable output pointing to generated file\n\nExample:\n\ndog: content: \"wouf\"\n\nWould generate Outputs: - a file such as /run/user/1000/novops/animals/dev/dog - an environment variable such as NOVOPS_ANIMALS_DEV_FILE_DOG=\"/run/user/1000/novops/animals/dev/dog\"\n\ncat: dest: /tmp/thecat variable: CAT_LOCATION content: \"meow\"\n\nWould generate Outputs: - a file such as /tmp/thecat - an environment variable such as CAT_LOCATION=\"/tmp/thecat\"",
+      "type": "object",
+      "required": [
+        "content"
+      ],
+      "properties": {
+        "content": {
+          "$ref": "#/definitions/StringResolvableInput"
+        },
+        "dest": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "description": "name to use when auto-generating file and variable name if not specified, the YAML key for file will be used",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "variable": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "HashiVaultKeyValueV2": {
+      "type": "object",
+      "required": [
+        "key",
+        "path"
+      ],
+      "properties": {
+        "key": {
+          "description": "Secret key to retrieve",
+          "type": "string"
+        },
+        "mount": {
+          "description": "KV v2 mount point default to \"secret/\"",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "path": {
+          "description": "Path to secret",
+          "type": "string"
+        }
+      }
+    },
+    "HashiVaultKeyValueV2Input": {
+      "type": "object",
+      "required": [
+        "hvault_kv2"
+      ],
+      "properties": {
+        "hvault_kv2": {
+          "$ref": "#/definitions/HashiVaultKeyValueV2"
+        }
+      }
+    },
+    "HashivaultConfig": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "description": "Address in form http(s)://HOST:PORT",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "token": {
+          "description": "Token used to connect",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "verify": {
+          "description": "TLS verify",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      }
+    },
+    "NovopsConfig": {
+      "type": "object",
+      "properties": {
+        "default": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/NovopsConfigDefault"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "hashivault": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/HashivaultConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "NovopsConfigDefault": {
+      "type": "object",
+      "properties": {
+        "environment": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "NovopsEnvironmentInput": {
+      "description": "A Novops environment defining Input and Output Environment name is the corresponding YAML key\n\nAvailable modules: - Variable are simpple Key/Valye using any String input - File are defined using a specific Input struct - AWS allow to assume IAM Role (Output: env vars)",
+      "type": "object",
+      "required": [
+        "files",
+        "variables"
+      ],
+      "properties": {
+        "aws": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/AwsInput"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FileInput"
+          }
+        },
+        "variables": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/VariableInput"
+          }
+        }
+      }
+    },
+    "StringResolvableInput": {
+      "description": "Enum with Input that will always resolve to String i.e. <impl ResolveTo<String>>",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "$ref": "#/definitions/BitwardenItemInput"
+        },
+        {
+          "$ref": "#/definitions/HashiVaultKeyValueV2Input"
+        }
+      ]
+    },
+    "VariableInput": {
+      "description": "An environment variable (key / value)",
+      "type": "object",
+      "required": [
+        "name",
+        "value"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "$ref": "#/definitions/StringResolvableInput"
+        }
+      }
+    }
+  }
+}

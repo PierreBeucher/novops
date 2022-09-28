@@ -10,6 +10,7 @@ use std::option::Option;
 use serde::Deserialize;
 use async_trait::async_trait;
 use anyhow::{Context, Error, anyhow};
+use schemars::JsonSchema;
 
 use crate::core;
 
@@ -22,7 +23,7 @@ use crate::core;
  *     field: login.password
  */
 
-#[derive(Debug, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
 pub struct BitwardenItemInput {
     bitwarden: BitwardenEntry,
 }
@@ -48,7 +49,7 @@ impl core::ResolveTo<String> for BitwardenItemInput {
     }
 }
 
-#[derive(Debug, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
 pub struct BitwardenEntry {
     entry: String,
     field: String

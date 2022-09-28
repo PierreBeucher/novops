@@ -6,13 +6,14 @@ use vaultrs::client::{VaultClient, VaultClientSettingsBuilder};
 use vaultrs::kv2;
 use std::collections::HashMap;
 use url::Url;
+use schemars::JsonSchema;
 
-#[derive(Debug, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
 pub struct HashiVaultKeyValueV2Input {
   hvault_kv2: HashiVaultKeyValueV2
 }
 
-#[derive(Debug, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
 pub struct HashiVaultKeyValueV2 {
     /// KV v2 mount point
     /// default to "secret/"
@@ -25,7 +26,7 @@ pub struct HashiVaultKeyValueV2 {
     pub key: String
 }
 
-#[derive(Debug, Deserialize, Clone, PartialEq)]  
+#[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]  
 pub struct HashivaultConfig {
   /// Address in form http(s)://HOST:PORT
   address: Option<String>,

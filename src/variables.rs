@@ -2,11 +2,12 @@ use serde::Deserialize;
 use async_trait::async_trait;
 use crate::core::{ResolveTo, StringResolvableInput, NovopsContext};
 use anyhow;
+use schemars::JsonSchema;
 
 /**
  * An environment variable (key / value)
  */
-#[derive(Debug, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
 pub struct VariableInput {
     name: String,
     value: StringResolvableInput
@@ -15,7 +16,7 @@ pub struct VariableInput {
 /**
  * Output for VariableInput, with final name and value
  */
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, JsonSchema)]
 pub struct VariableOutput {
     pub name: String,
     pub value: String
