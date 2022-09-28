@@ -4,8 +4,8 @@ mod test_utils;
 
 #[cfg(test)]
 mod tests {
-    use novops::{make_context, NovopsArgs, run};
-    use novops::core::{NovopsContext, NovopsConfigFile, NovopsConfig, NovopsConfigDefault, NovopsEnvironmentInput};
+    use novops::{make_context, NovopsArgs, load_environment};
+    use novops::core::{NovopsContext, NovopsConfig, NovopsConfigFile, NovopsConfigDefault, NovopsEnvironmentInput};
     use std::collections::HashMap;
     use std::path::PathBuf;
     use std::fs;
@@ -70,7 +70,7 @@ mod tests {
     async fn test_simple_run() -> Result<(), anyhow::Error>{
         let workdir = clean_and_setup_test_dir("test_simple_run")?;
 
-        run(NovopsArgs { 
+        load_environment(NovopsArgs { 
             config: String::from(CONFIG_STANDALONE),
             env: Some(String::from("dev")), 
             working_directory: Some(workdir.clone().into_os_string().into_string().unwrap()), 
@@ -108,7 +108,7 @@ mod tests {
         let workdir = clean_and_setup_test_dir("test_symlink_flag")?;
 
         let expect_symlink_at = PathBuf::from(&workdir).join("test-symlink");
-        run(NovopsArgs { 
+        load_environment(NovopsArgs { 
             config: String::from(CONFIG_EMPTY),
             env: Some(String::from("dev")), 
             working_directory: Some(workdir.clone().into_os_string().into_string().unwrap()), 

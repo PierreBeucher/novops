@@ -584,6 +584,7 @@ in
     src = fetchCratesIo { inherit name version; sha256 = "9f1fe12880bae935d142c8702d500c63a4e8634b6c3c57ad72bf978fc7b6249a"; };
     features = builtins.concatLists [
       [ "atty" ]
+      [ "cargo" ]
       [ "clap_derive" ]
       [ "color" ]
       [ "default" ]
