@@ -14,7 +14,6 @@ use crate::files::FileOutput;
 use crate::variables::VariableOutput;
 
 use std::{io, os::unix::prelude::PermissionsExt};
-use clap::Parser;
 use std::fs;
 use text_io;
 use users;
@@ -23,24 +22,14 @@ use std::os::unix::fs::symlink;
 use std::path::PathBuf;
 use std::env;
 
-#[derive(Parser, Debug)]
-#[clap(author, version, about, long_about = None)]
-#[clap(name = "novops")]
-#[clap(about = "Environment agnostic secret and config aggregator", long_about = None)]
+#[derive(Debug)]
 pub struct NovopsArgs {
-    #[clap(short = 'c', long, value_parser, default_value = ".novops.yml", help = "Config file to load")]
     pub config: String,
 
-    #[clap(short = 'e', long, value_parser, help = "Name of environment to load")]
     pub env: Option<String>,
 
-    #[clap(short = 'w', long = "workdir", value_parser, 
-        help = "Working directory under which files and variable files will be stored by default. \
-            Use XDG runtime directory if available ($XDG_RUNTIME_DIR/novops/<app>/<env>), default to current directory (.novops/<app>/<env>)")]
     pub working_directory: Option<String>,
 
-    #[clap(short = 's', long, value_parser, 
-    help = "Create a symlink at given location pointing to generated secret file.")]
     pub symlink: Option<String>
 }
 
@@ -53,12 +42,12 @@ pub struct NovopsOutputs {
     pub files: Vec<FileOutput>
 }
 
-pub async fn parse_arg_and_run() -> Result<(), anyhow::Error> {
-    let args = NovopsArgs::parse();
-    run(args).await
-}
+// pub async fn parse_arg_and_run() -> Result<(), anyhow::Error> {
+//     let args = NovopsArgs::parse();
+//     run(args).await
+// }
 
-pub async fn run(args: NovopsArgs) -> Result<(), anyhow::Error> {
+pub async fn load_environment(args: NovopsArgs) -> Result<(), anyhow::Error> {
    
     // Read config from args and resolve all inputs to their concrete outputs
     let outputs = load_context_and_resolve(&args).await?;
