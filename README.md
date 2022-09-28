@@ -95,13 +95,13 @@ $ novops -c /novops-config.yml -w /tmp/.novops; source /tmp/.novops/vars
 
 TODO
 
-## Secret providers
+## Modules usage
 
-Quick reference and example of available secret providers. See advanced doc for details.
+Quick reference and example of available Modules. A Module allows you to load files and environment variables from a secret provider (or any external source).
 
 ### Hashicorp Vault
 
-Variables and files:
+[Key Value Version 2](https://www.vaultproject.io/docs/secrets/kv/kv-v2) with variables and files:
 
 ```yaml
 environment:
@@ -125,7 +125,7 @@ environment:
 
 ### AWS
 
-Generate temporary IAM Role credentials:
+Generate temporary [IAM Role credentials with AssumeRole](https://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRole.html):
 
 ```yaml
 environments:
@@ -171,14 +171,6 @@ Docker image (using BuildKit):
 docker buildx build .
 ```
 
-### Updating dependencies
-
-We use cargo2nix that can build dependencies separately (it is more granular than nixpkgs' solution) with the inconvenient that now one needs
-
-```sh
-nix run github:cargo2nix/cargo2nix
-```
-
 ### Run test
 
 Integ tests are run within Docker to have a similar environment locally and on CI. 
@@ -191,90 +183,18 @@ make test-docker
 
 Tests are run on CI for any non-`master` branch. 
 
+### Updating dependencies
+
+We use cargo2nix that can build dependencies separately (it is more granular than nixpkgs' solution) with the inconvenient that now one needs
+
+```sh
+nix run github:cargo2nix/cargo2nix
+```
+
 ### Advanced concepts
 
-Novops relies around the following concepts:
+- [Internal code architecture](docs/internals.md)
 
-#### Inputs, resolving & Outputs 
+## Contributing
 
-Inputs are configurations and references (provided in `.novops.yml`) representing values to load.
-
-Outputs are concrete objects based on Inputs. Currently only 2 types of Output exists:
-- Files
-- Environment variables (or a file which can be sourced into shell)
-
-When running, Novops will:
-
-1. Read config file and parse all Inputs
-2. Resolve all Inputs to their concrete values (i.e. their Outputs equivalent)
-3. Export all Outputs to system (i.e. write file and provide environment variable values)
-
-Example: YAML Input for BitWarden entry 
-
-```yaml
-bitwarden:
-  entry: Some Entry
-  field: login.password
-```
-
-Would _resolve_ into a string value corresponding to the password in Bitwarden entry _Some Entry_
-
-Depending on usage, it can output as a File or an Environment Variable, such as:
-
-```yaml
-# Output as variable
-variables:
-  - name: MY_PASSWORD
-    value:
-      bitwarden:
-        entry: Some Entry
-        field: login.password
-
-# Output as file
-files:
-  - dest: /tmp/mypass
-    content:
-      bitwarden:
-        entry: Some Entry
-        field: login.password
-```
-
-Resolving mechanism is based on `ResolveTo` trait implemented for each Input. An example implementation for `BitwardenItemInput` into a `String` can be:
-
-```rust
-impl ResolveTo<String> for BitwardenItemInput {
-    async fn resolve(&self, _: &NovopsContext) -> String {
-        // resolve our input to a concrete value
-        // contact Bitwarden API with client to retrieve item
-        // and extract field login.password 
-        bw_client = Bitwarden::client::new()
-        return bw_client.get_item(self.entry).get_field(self.field)
-    }
-}
-```
-
-See [`src/novops.rs`](src/novops.rs) for details.
-
-#### Modules
-
-Novops implement Modules for various Input and Output types:
-
-**Variables**: exportable environment variables
-- Input: _Any Input resolving to a String_
-- Output: Variables
-
-**Files**: create secure files on system
-- Input: A file definition (including _any Input resolving to a String_ as file content)
-- Output: Files (and Variables pointing to Files)
-
-**Bitwarden**: retrieve Bitwarden items and objects
-- Input: Bitwarden item or object reference
-- Output: String
-
-**AWS**: assume IAM Roles and export `AWS_*` variables (`AWS_ACCESS_KEY_ID`, etc.)
-- Input type: Assume Role definition
-- Output type: Variables
-
-**Hashicorp Vault**: (_NOT IMPLEMENTED YET_) retrieve Hashicorp Vault secrets
-- Input type: Hashicorp Vault secret definition
-- Output type: String
+Feel free to open a Pull Request to contribute code, tests, doc...
