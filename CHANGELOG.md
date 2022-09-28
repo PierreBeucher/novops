@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.10](http://git.novadiscovery.net:4224/world/novops/compare/v0.1.9...v0.1.10) (2022-09-28)
+
+
+### Features
+
+* manage Hashivault secret using Key Value secret engine ([14f70e6](http://git.novadiscovery.net:4224/world/novops/commit/14f70e623697283478ba2762c3c7bb7b41e10765))
+
 ### [0.1.9](http://git.novadiscovery.net:4224/world/novops/compare/v0.1.8...v0.1.9) (2022-09-27)
 
 
