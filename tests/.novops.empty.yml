@@ -6,5 +6,6 @@ environments:
     variables: []
     files: []
 
-default:
-  environment: dev
+config:
+  default:
+    environment: dev

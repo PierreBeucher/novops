@@ -11,23 +11,36 @@ use crate::files::{FileInput};
 use crate::variables::{VariableInput};
 
 #[derive(Debug, Deserialize, Clone, PartialEq)]
-pub struct NovopsConfig {
+pub struct NovopsConfigFile {
     pub name: String,
     pub environments: HashMap<String, NovopsEnvironmentInput>,
-    pub default: Option<NovopsConfigDefault>
+    pub config: Option<NovopsConfig>
+}
+
+#[derive(Debug, Deserialize, Clone, PartialEq)]
+pub struct NovopsConfig {
+    pub default: Option<NovopsConfigDefault>,
+    pub hashivault: Option<hashivault::HashivaultConfig>
+}
+
+impl Default for NovopsConfig {
+    fn default() -> NovopsConfig {
+        NovopsConfig {
+            default: None,
+            hashivault: None
+        }
+    }
 }
 
 #[derive(Debug, Deserialize, Clone, PartialEq)]    
 pub struct NovopsConfigDefault {
     pub environment: Option<String>,
-    pub hashivault: Option<hashivault::HashivaultConfig>
 }
 
 impl Default for NovopsConfigDefault {
     fn default() -> NovopsConfigDefault {
         NovopsConfigDefault {
             environment: None,
-            hashivault: None
         }
     }
 }
@@ -64,7 +77,7 @@ pub struct NovopsContext {
     pub workdir: PathBuf,
 
     /// original config loaded at runtime
-    pub config: NovopsConfig,
+    pub config_file_data: NovopsConfigFile,
 
     /// path to sourceable environment variable file
     pub env_var_filepath: PathBuf

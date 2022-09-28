@@ -12,8 +12,9 @@ environments:
     
     files: []
           
-default:
-  environment: dev
+config:
+  default:
+    environment: dev
   hashivault:
     # address: env var VAULT_ADDR
     token: novops

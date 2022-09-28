@@ -9,7 +9,7 @@ pub mod files;
 pub mod variables;
 pub mod hashivault;
 
-use crate::core::{ResolveTo, NovopsEnvironmentInput, NovopsConfig, NovopsContext};
+use crate::core::{ResolveTo, NovopsEnvironmentInput, NovopsConfigFile, NovopsContext};
 use crate::files::FileOutput;
 use crate::variables::VariableOutput;
 
@@ -117,7 +117,7 @@ pub async fn make_context(args: &NovopsArgs) -> Result<NovopsContext, anyhow::Er
         env_name: env_name.clone(),
         app_name: app_name.clone(),
         workdir: workdir.clone(),
-        config: config.clone(),
+        config_file_data: config.clone(),
         env_var_filepath
     })
 }
@@ -126,7 +126,7 @@ pub async fn make_context(args: &NovopsArgs) -> Result<NovopsContext, anyhow::Er
  * Read config and load all Input types into a NovopsInputs struct
  */
 pub async fn get_current_environment(ctx: &NovopsContext) -> Result<NovopsEnvironmentInput, anyhow::Error> {    
-    let novops_env = ctx.config.environments.get(&ctx.env_name)
+    let novops_env = ctx.config_file_data.environments.get(&ctx.env_name)
         .with_context(|| format!("Environment {} not found in config.", &ctx.env_name))?;
     
     Ok(novops_env.clone())
@@ -176,9 +176,9 @@ pub async fn export_outputs(outputs: &NovopsOutputs) {
 
 }
 
-fn read_config_file(config_path: &str) -> Result<NovopsConfig, serde_yaml::Error> {
+fn read_config_file(config_path: &str) -> Result<NovopsConfigFile, serde_yaml::Error> {
     let f = std::fs::File::open(config_path).unwrap();
-    let config: NovopsConfig = serde_yaml::from_reader(f).unwrap();
+    let config: NovopsConfigFile = serde_yaml::from_reader(f).unwrap();
 
     return Ok(config);
 }
@@ -188,7 +188,7 @@ fn read_config_file(config_path: &str) -> Result<NovopsConfig, serde_yaml::Error
  * - CLI flag
  * - prompt user (using config's default if no choice given)
  */
-fn read_environment_name(config: &NovopsConfig, flag: &Option<String>) -> String {
+fn read_environment_name(config: &NovopsConfigFile, flag: &Option<String>) -> String {
 
     match flag {
         Some(e) => e.clone(),
@@ -271,38 +271,41 @@ fn prepare_working_directory_tmp(app_name: &String, env_name: &String) -> PathBu
 /**
  * Prompt user for environment name
  */
-fn prompt_for_environment(config: &NovopsConfig) -> String{
+fn prompt_for_environment(config_file_data: &NovopsConfigFile) -> String{
 
     // read config for environments and eventual default environment 
-    let environments = config.environments.keys().cloned().collect::<Vec<String>>();
-    let default_environment: Option<String> = match &config.default {
-        Some(d) => match &d.environment {
-            Some(default_env) => Some(default_env.clone()),
-            None => None
-        },
+    let environments = config_file_data.environments.keys().cloned().collect::<Vec<String>>();
+    let default_environment: Option<String> = match &config_file_data.config {
+        Some(c) => match &c.default {
+            Some(d) => {
+                match &d.environment {
+                    Some(default_env) => Some(default_env.clone()),
+                    None => None
+                }
+            },
+            None => None,
+        }
         None => None
     };
 
     // prompt user, show default environment if any
     let mut prompt_msg = format!("Select environment: {:}", environments.join(", "));
     if default_environment.is_some(){
-        prompt_msg.push_str(&format!(" (default: {:})", default_environment.unwrap()));
+        prompt_msg.push_str(&format!(" (default: {:})", default_environment.clone().unwrap()));
     }
     println!("{prompt_msg}");
 
     let selected: String = text_io::read!("{}\n");
 
-    if selected.is_empty() {
-        match &config.default {
-            Some(d) => match &d.environment {
-                Some(default_env) => default_env.clone(),
-                None => panic!("No environment selected and no default in config."),
-            },
-            None => panic!("No environment selected and no default in config."),
+    return if selected.is_empty() {
+        if default_environment.is_some() {
+            return default_environment.unwrap()
+        } else {
+            panic!("No environment selected and no default in config.")
         }
     } else {
-        return selected
-    }
+        selected
+    };
 }
 
 /**

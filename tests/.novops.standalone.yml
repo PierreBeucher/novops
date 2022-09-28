@@ -31,5 +31,6 @@ environments:
       - name: bird
         content: "flapflap"
 
-default:
-  environment: dev
+config:
+  default:
+    environment: dev

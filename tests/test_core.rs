@@ -5,7 +5,7 @@ mod test_utils;
 #[cfg(test)]
 mod tests {
     use novops::{make_context, NovopsArgs, run};
-    use novops::core::{NovopsContext, NovopsConfig, NovopsConfigDefault, NovopsEnvironmentInput};
+    use novops::core::{NovopsContext, NovopsConfigFile, NovopsConfig, NovopsConfigDefault, NovopsEnvironmentInput};
     use std::collections::HashMap;
     use std::path::PathBuf;
     use std::fs;
@@ -37,7 +37,7 @@ mod tests {
                 env_name: String::from("dev"),
                 app_name: String::from("test-empty"),
                 workdir: workdir.clone(),
-                config: NovopsConfig{
+                config_file_data: NovopsConfigFile{
                     name: String::from("test-empty"),
                     environments: HashMap::from([
                         (String::from("dev"), NovopsEnvironmentInput {
@@ -46,9 +46,11 @@ mod tests {
                             aws: None
                         })
                     ]),
-                    default: Some(NovopsConfigDefault {
-                        environment: Some(String::from("dev")),
-                        hashivault: None
+                    config: Some(NovopsConfig { 
+                        default: Some(NovopsConfigDefault {
+                             environment: Some(String::from("dev"))
+                        }), 
+                        hashivault: None 
                     })
                 },
                 env_var_filepath: workdir.join("vars")

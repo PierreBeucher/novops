@@ -68,7 +68,7 @@ impl ResolveTo<String> for HashiVaultKeyValueV2Input {
 
 pub fn build_vault_client(ctx: &NovopsContext) -> VaultClient {
 
-  let hv_config = ctx.config.default.clone()
+  let hv_config = ctx.config_file_data.config.clone()
     .unwrap_or_default()
     .hashivault.unwrap_or_default();
 
