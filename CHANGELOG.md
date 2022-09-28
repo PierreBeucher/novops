@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.11](http://git.novadiscovery.net:4224/world/novops/compare/v0.1.10...v0.1.11) (2022-09-28)
+
+
+### Features
+
+* use load subcommand ([bc5b38a](http://git.novadiscovery.net:4224/world/novops/commit/bc5b38ae9bc114e407ebc2632d5b228e0128c6b7))
+
 ### [0.1.10](http://git.novadiscovery.net:4224/world/novops/compare/v0.1.9...v0.1.10) (2022-09-28)
 
 
