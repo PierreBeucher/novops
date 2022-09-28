@@ -181,9 +181,15 @@ nix run github:cargo2nix/cargo2nix
 
 ### Run test
 
+Integ tests are run within Docker to have a similar environment locally and on CI. 
+
+Run tests locally (via `docker exec` within a Rust container):
+
 ```
-cargo test
+make test-docker
 ```
+
+Tests are run on CI for any non-`master` branch. 
 
 ### Advanced concepts
 

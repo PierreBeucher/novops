@@ -38,8 +38,7 @@ mod tests {
     fn hashivault_test_client() -> VaultClient {
         return VaultClient::new(
             VaultClientSettingsBuilder::default()
-                .address("http://127.0.0.1:8200")
-                .token("novopsRoot")
+                .token("novops")
                 .build()
                 .unwrap()
         ).unwrap();

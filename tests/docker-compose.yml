@@ -6,6 +6,24 @@ services:
     cap_add:
     - IPC_LOCK
     ports:
-    - 127.0.0.1:8200:8200
+    - 8200:8200
     environment:
-      VAULT_DEV_ROOT_TOKEN_ID: novopsRoot
+      VAULT_DEV_ROOT_TOKEN_ID: novops
+  
+  # Ease reproduction of CI integ tests
+  rust:
+    image: rust:1.64.0
+    environment:
+      # Keep Rust cache
+      CARGO_HOME: /cargo_home
+      VAULT_ADDR: http://vault:8200
+      # VAULT_DEV_ROOT_TOKEN_ID: novops
+    working_dir: /novops
+    volumes:
+    - $PWD:/novops
+    - novops_cargo_home:/cargo_home
+    command: [ sleep, "9999" ]
+    stop_grace_period: 1s
+
+volumes:
+  novops_cargo_home: 
