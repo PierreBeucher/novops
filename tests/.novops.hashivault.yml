@@ -1,0 +1,20 @@
+# The unique application name
+name: test-app
+
+environments:
+  dev:
+    variables:
+      - name: HASHIVAULT_KV_V2_TEST
+        value:
+          hvault_kv2:
+            path: test_hashivault
+            key: novops_secret
+    
+    files: []
+          
+config:
+  default:
+    environment: dev
+  hashivault:
+    # address: env var VAULT_ADDR
+    token: novops

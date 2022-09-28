@@ -38,5 +38,6 @@ environments:
     #     role_arn: arn:aws:iam::419998656076:role/deployinfra_dev_deploy
     #     source_profile: nova-sandbox
           
-default:
-  environment: dev
+config:
+  default:
+    environment: dev

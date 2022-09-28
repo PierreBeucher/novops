@@ -16,25 +16,33 @@ stages:
   - test
   - release
 
+variables:
+  DOCKER_BUILDKIT: 1
+
 # Make sure Cargo.nix file is up to date with Cargo.lock to ensure proper release
-test-Cargo.nix:
+check-Cargo.nix:
   tags: [ nixos ]
   needs: []
   script:
     # we need the -f to make it non-interactive
     - nix run github:cargo2nix/cargo2nix/release-0.11.0 -- -f Cargo.nix2
     - diff Cargo.nix Cargo.nix2
+  after_script:
+  - echo "This job failure may indicate Cargo.nix is not in sync with Cargo.lock"
+  - echo "Run `nix run github:cargo2nix/cargo2nix/release-0.11.0 -- -f Cargo.nix` locally and check-in changes and retry."
 
-variables:
-  DOCKER_BUILDKIT: 1
-
-# A simple test of Novops usage with files and variables
+# Integration tests with Docker for external services (Hashivault...)
 test:
   stage: test
   image: rust:1.64.0
   needs: []
   variables:
     CARGO_HOME: $CI_PROJECT_DIR/cargo_home
+    VAULT_ADDR: http://vault:8200
+    VAULT_DEV_ROOT_TOKEN_ID: novops
+  services:
+  - vault:1.11.3
+  before_script:
   script:
   - cargo test
   cache:

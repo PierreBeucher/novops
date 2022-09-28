@@ -1,30 +1,18 @@
 
 #[cfg(test)]
+mod test_utils;
+
+#[cfg(test)]
 mod tests {
     use novops::{make_context, NovopsArgs, run};
-    use novops::core::{NovopsContext, NovopsConfig, NovopsConfigDefault, NovopsEnvironmentInput};
+    use novops::core::{NovopsContext, NovopsConfigFile, NovopsConfig, NovopsConfigDefault, NovopsEnvironmentInput};
     use std::collections::HashMap;
     use std::path::PathBuf;
     use std::fs;
-    use std::env;
+    use crate::test_utils::clean_and_setup_test_dir;
 
     const CONFIG_EMPTY: &str = "tests/.novops.empty.yml";
     const CONFIG_STANDALONE: &str = "tests/.novops.standalone.yml";
-
-    /**
-     * Util function to create a temporary dir to be used for test
-     * Mostly used as Novops workdir named after test
-     */
-    fn clean_and_setup_test_dir(test_name: &str) -> Result<PathBuf, anyhow::Error> {
-        let test_output_dir = env::current_dir()?.join("tests/output").join(test_name);
-        
-        if test_output_dir.exists(){
-            fs::remove_dir_all(&test_output_dir)?;
-        }
-        
-        fs::create_dir_all(&test_output_dir)?;
-        return Ok(test_output_dir)
-    }
 
     /**
      * Test a config is properly loaded into a NovopsContext
@@ -49,7 +37,7 @@ mod tests {
                 env_name: String::from("dev"),
                 app_name: String::from("test-empty"),
                 workdir: workdir.clone(),
-                config: NovopsConfig{
+                config_file_data: NovopsConfigFile{
                     name: String::from("test-empty"),
                     environments: HashMap::from([
                         (String::from("dev"), NovopsEnvironmentInput {
@@ -58,8 +46,11 @@ mod tests {
                             aws: None
                         })
                     ]),
-                    default: Some(NovopsConfigDefault {
-                        environment: Some(String::from("dev"))
+                    config: Some(NovopsConfig { 
+                        default: Some(NovopsConfigDefault {
+                             environment: Some(String::from("dev"))
+                        }), 
+                        hashivault: None 
                     })
                 },
                 env_var_filepath: workdir.join("vars")

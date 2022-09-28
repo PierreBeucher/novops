@@ -4,21 +4,45 @@ use async_trait::async_trait;
 use anyhow;
 use std::path::PathBuf;
 
+use crate::hashivault;
 use crate::bitwarden;
 use crate::aws;
 use crate::files::{FileInput};
 use crate::variables::{VariableInput};
 
 #[derive(Debug, Deserialize, Clone, PartialEq)]
-pub struct NovopsConfig {
+pub struct NovopsConfigFile {
     pub name: String,
     pub environments: HashMap<String, NovopsEnvironmentInput>,
-    pub default: Option<NovopsConfigDefault>
+    pub config: Option<NovopsConfig>
+}
+
+#[derive(Debug, Deserialize, Clone, PartialEq)]
+pub struct NovopsConfig {
+    pub default: Option<NovopsConfigDefault>,
+    pub hashivault: Option<hashivault::HashivaultConfig>
+}
+
+impl Default for NovopsConfig {
+    fn default() -> NovopsConfig {
+        NovopsConfig {
+            default: None,
+            hashivault: None
+        }
+    }
 }
 
 #[derive(Debug, Deserialize, Clone, PartialEq)]    
 pub struct NovopsConfigDefault {
-    pub environment: Option<String>
+    pub environment: Option<String>,
+}
+
+impl Default for NovopsConfigDefault {
+    fn default() -> NovopsConfigDefault {
+        NovopsConfigDefault {
+            environment: None,
+        }
+    }
 }
 
 /**
@@ -53,7 +77,7 @@ pub struct NovopsContext {
     pub workdir: PathBuf,
 
     /// original config loaded at runtime
-    pub config: NovopsConfig,
+    pub config_file_data: NovopsConfigFile,
 
     /// path to sourceable environment variable file
     pub env_var_filepath: PathBuf
@@ -76,7 +100,8 @@ pub trait ResolveTo<T> {
 #[enum_dispatch(ResolveTo<String>)]
 pub enum StringResolvableInput {
     String(String),
-    BitwardeItemInput(bitwarden::BitwardenItemInput)
+    BitwardeItemInput(bitwarden::BitwardenItemInput),
+    HashiVaultKeyValueV2Input(hashivault::HashiVaultKeyValueV2Input)
 }
 
 /**
@@ -95,6 +120,7 @@ impl ResolveTo<String> for StringResolvableInput {
         return match &self {
             &StringResolvableInput::String(s) => Ok(s.clone()),
             &StringResolvableInput::BitwardeItemInput(bw) => bw.resolve(ctx).await,
+            &StringResolvableInput::HashiVaultKeyValueV2Input(hv) => hv.resolve(ctx).await,
         }
     }
 }
