@@ -28,8 +28,8 @@ Tests are run on CI for any non-`master` branch.
 
 ## Updating dependencies
 
-We use cargo2nix that can build dependencies separately (it is more granular than nixpkgs' solution) with the inconvenient that now one needs
+This command regenerates the Cargo.nix and as such should be run everytime Cargo.lock is changed. It will fail on CI if not done. 
 
 ```sh
-nix run github:cargo2nix/cargo2nix
+nix run github:cargo2nix/cargo2nix/release-0.11.0
 ```
