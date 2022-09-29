@@ -1027,7 +1027,7 @@ dependencies = [
 
 [[package]]
 name = "novops"
-version = "0.1.11"
+version = "0.1.12"
 dependencies = [
  "anyhow",
  "async-trait",
