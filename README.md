@@ -76,6 +76,7 @@ env | grep APP_
 - [Advanced usages and examples: Bash, Docker, CI...](./docs/usage.md)
 - [Available modules: Hashivault, BitWarden, AWS...](./docs/modules.md)
 - [Internal architecture: Inputs, Outputs and resolving](./docs/internals.md)
+- [Full JSON schema for `.novops.yml`](./docs/schema.json)
 
 ## Contributing
 

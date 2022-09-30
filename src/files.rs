@@ -3,6 +3,7 @@ use convert_case::{Case, Casing};
 use async_trait::async_trait;
 use serde::Deserialize;
 use anyhow;
+use schemars::JsonSchema;
 
 use crate::core::{ResolveTo, NovopsContext, StringResolvableInput};
 use crate::variables::{VariableOutput};
@@ -32,7 +33,7 @@ use crate::variables::{VariableOutput};
  * - an environment variable such as CAT_LOCATION="/tmp/thecat"
  * 
  */
-#[derive(Debug, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
 pub struct FileInput {
     /// name to use when auto-generating file and variable name
     /// if not specified, the YAML key for file will be used
@@ -48,7 +49,7 @@ pub struct FileInput {
 /**
  * Output for FileInput, with final dest, variable and content
  */
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, JsonSchema)]
 pub struct FileOutput {
     pub dest: PathBuf,
     pub variable: VariableOutput,

@@ -24,6 +24,7 @@ anyhow = { version = "1.0", features = ["backtrace"] }
 rand = "0.5"
 vaultrs = "0.6.2"
 url = "2.3.1"
+schemars = "0.8.10"
 
 [dependencies.uuid]
 version = "1.1.2"

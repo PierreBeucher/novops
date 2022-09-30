@@ -3,6 +3,7 @@ use serde::Deserialize;
 use async_trait::async_trait;
 use anyhow;
 use std::path::PathBuf;
+use schemars::JsonSchema;
 
 use crate::hashivault;
 use crate::bitwarden;
@@ -10,14 +11,14 @@ use crate::aws;
 use crate::files::{FileInput};
 use crate::variables::{VariableInput};
 
-#[derive(Debug, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
 pub struct NovopsConfigFile {
     pub name: String,
     pub environments: HashMap<String, NovopsEnvironmentInput>,
     pub config: Option<NovopsConfig>
 }
 
-#[derive(Debug, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
 pub struct NovopsConfig {
     pub default: Option<NovopsConfigDefault>,
     pub hashivault: Option<hashivault::HashivaultConfig>
@@ -32,7 +33,7 @@ impl Default for NovopsConfig {
     }
 }
 
-#[derive(Debug, Deserialize, Clone, PartialEq)]    
+#[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]    
 pub struct NovopsConfigDefault {
     pub environment: Option<String>,
 }
@@ -54,7 +55,7 @@ impl Default for NovopsConfigDefault {
  * - File are defined using a specific Input struct
  * - AWS allow to assume IAM Role (Output: env vars)
  */
-#[derive(Debug, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
 pub struct NovopsEnvironmentInput {
     pub variables: Vec<VariableInput>,
     pub files: Vec<FileInput>,
@@ -95,7 +96,7 @@ pub trait ResolveTo<T> {
  * Enum with Input that will always resolve to String
  * i.e. <impl ResolveTo<String>>
  */
-#[derive(Debug, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
 #[serde(untagged)]
 #[enum_dispatch(ResolveTo<String>)]
 pub enum StringResolvableInput {
