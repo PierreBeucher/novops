@@ -212,10 +212,6 @@
     "NovopsEnvironmentInput": {
       "description": "A Novops environment defining Input and Output Environment name is the corresponding YAML key\n\nAvailable modules: - Variable are simpple Key/Valye using any String input - File are defined using a specific Input struct - AWS allow to assume IAM Role (Output: env vars)",
       "type": "object",
-      "required": [
-        "files",
-        "variables"
-      ],
       "properties": {
         "aws": {
           "anyOf": [
@@ -228,13 +224,19 @@
           ]
         },
         "files": {
-          "type": "array",
+          "type": [
+            "array",
+            "null"
+          ],
           "items": {
             "$ref": "#/definitions/FileInput"
           }
         },
         "variables": {
-          "type": "array",
+          "type": [
+            "array",
+            "null"
+          ],
           "items": {
             "$ref": "#/definitions/VariableInput"
           }

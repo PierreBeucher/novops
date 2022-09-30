@@ -57,8 +57,8 @@ impl Default for NovopsConfigDefault {
  */
 #[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
 pub struct NovopsEnvironmentInput {
-    pub variables: Vec<VariableInput>,
-    pub files: Vec<FileInput>,
+    pub variables: Option<Vec<VariableInput>>,
+    pub files: Option<Vec<FileInput>>,
     pub aws: Option<aws::AwsInput>
 }
 

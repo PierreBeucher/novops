@@ -41,8 +41,8 @@ mod tests {
                     name: String::from("test-empty"),
                     environments: HashMap::from([
                         (String::from("dev"), NovopsEnvironmentInput {
-                            variables: vec![],
-                            files: vec![],
+                            variables: None,
+                            files: None,
                             aws: None
                         })
                     ]),
