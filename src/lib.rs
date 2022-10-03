@@ -131,14 +131,14 @@ pub async fn resolve_environment_inputs(ctx: &NovopsContext, inputs: NovopsEnvir
 
     let mut variable_outputs: Vec<VariableOutput> = Vec::new();
     let mut file_outputs: Vec<FileOutput> = Vec::new();
-
-    for v in &inputs.variables {
+    
+    for v in &inputs.variables.unwrap_or(vec![]) {
         let val = v.resolve(&ctx).await
             .with_context(|| format!("Could not resolve variable input {:?}", v))?;
         variable_outputs.push(val);
     };
 
-    for f in &inputs.files {
+    for f in &inputs.files.unwrap_or(vec![]) {
         let r = f.resolve(&ctx).await
             .with_context(|| format!("Could not resolve file input {:?}", f))?;
         file_outputs.push(r.clone());
