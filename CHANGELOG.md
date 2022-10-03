@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.14](http://git.novadiscovery.net:4224/world/novops/compare/v0.1.13...v0.1.14) (2022-10-03)
+
+
+### Bug Fixes
+
+* allow no files or variables ([0ccecd0](http://git.novadiscovery.net:4224/world/novops/commit/0ccecd021e04b71df4b1fe8849ddf2534d6e84eb))
+
 ### [0.1.13](http://git.novadiscovery.net:4224/world/novops/compare/v0.1.12...v0.1.13) (2022-09-30)
 
 
