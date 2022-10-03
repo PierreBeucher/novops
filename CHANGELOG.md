@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.15](http://git.novadiscovery.net:4224/world/novops/compare/v0.1.14...v0.1.15) (2022-10-03)
+
+
+### Bug Fixes
+
+* set file permission to 600 (rw- --- ---) by default ([15987c7](http://git.novadiscovery.net:4224/world/novops/commit/15987c75d92061a7411ce7b0374aece65a505abc))
+
 ### [0.1.14](http://git.novadiscovery.net:4224/world/novops/compare/v0.1.13...v0.1.14) (2022-10-03)
 
 
