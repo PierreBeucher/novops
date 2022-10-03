@@ -9,6 +9,7 @@ mod tests {
     use std::collections::HashMap;
     use std::path::PathBuf;
     use std::fs;
+    use std::os::unix::fs::PermissionsExt;
     use crate::test_utils::clean_and_setup_test_dir;
 
     const CONFIG_EMPTY: &str = "tests/.novops.empty.yml";
@@ -82,6 +83,8 @@ mod tests {
         
         let expected_file_dog_path = PathBuf::from(&workdir).join("file_dog");
         let expected_file_dog_content = fs::read_to_string(&expected_file_dog_path)?;
+        let file_dog_metadata = fs::metadata(&expected_file_dog_path)?;
+        let file_dog_mode = file_dog_metadata.permissions().mode();
 
         let expected_file_cat_path = PathBuf::from("/tmp/novops_cat");
         let expected_file_cat_content = fs::read_to_string(&expected_file_cat_path)?;
@@ -93,8 +96,14 @@ mod tests {
         assert!(&expected_var_content.contains(r#"export SPECIAL_CHARACTERS='special_char_'"'"'!?`$abc_#~%*µ€{}[]-°+@à^ç=\'"#));
         assert!(&expected_var_content.contains( "export MY_APP_HOST='localhost'"));
         assert!(&expected_var_content.contains( &format!("export NOVOPS_TEST_STANDALONE_FILE_DOG='{:}'",
-            expected_file_dog_path.into_os_string().into_string().unwrap())));
+            &expected_file_dog_path.clone().into_os_string().into_string().unwrap())));
         assert!(&expected_var_content.contains( "export NOVOPS_CAT_VAR='/tmp/novops_cat'"));
+
+        // expect file permission to be 0600 (user readonly)
+        // use a bitwise AND on ocal value to check for user-only permission 0600
+        assert_eq!(file_dog_metadata.permissions().mode() & 0o777, 0o600, "Expected {:?} to have permission {:o}, found {:o}", 
+            &expected_file_dog_path, 0o600, &file_dog_mode);
+        
         
         assert_eq!(expected_file_dog_content, "woof");
         assert_eq!(expected_file_cat_content, "meow");
