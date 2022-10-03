@@ -13,8 +13,8 @@ use crate::core::{ResolveTo, NovopsEnvironmentInput, NovopsConfigFile, NovopsCon
 use crate::files::FileOutput;
 use crate::variables::VariableOutput;
 
-use std::{io, os::unix::prelude::PermissionsExt};
-use std::fs;
+use std::os::unix::prelude::OpenOptionsExt;
+use std::{fs, io, io::prelude::*, os::unix::prelude::PermissionsExt};
 use text_io;
 use users;
 use anyhow::{self, Context};
@@ -352,7 +352,13 @@ fn prompt_for_environment(config_file_data: &NovopsConfigFile) -> String{
  */
 fn export_file_outputs(files: &Vec<FileOutput>){
     for f in files {
-        fs::write(f.dest.clone(), f.content.clone()).expect(&format!("Unable to write file {:?}", f));
+        let mut fd = fs::OpenOptions::new()
+            .create(true)
+            .write(true)
+            .mode(0o600)
+            .open(&f.dest)
+            .unwrap();
+        fd.write_all(f.content.as_bytes()).unwrap();
     }
 }
 
