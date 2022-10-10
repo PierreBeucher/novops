@@ -29,7 +29,8 @@ convert_case = "0.5.0"
 async-trait = "0.1.56"
 anyhow = { version = "1.0", features = ["backtrace"] }
 rand = "0.5"
-vaultrs = "0.6.2"
+# Use our own fork for testing while https://github.com/jmgilman/vaultrs/pull/46 is being merged
+vaultrs = { git = "https://github.com/PierreBeucher/vaultrs", branch="api-kv" }
 url = "2.3.1"
 schemars = "0.8.10"
 http = "0.2"

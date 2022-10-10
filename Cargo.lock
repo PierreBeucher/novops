@@ -2122,8 +2122,7 @@ checksum = "830b7e5d4d90034032940e4ace0d9a9a057e7a45cd94e6c007832e39edb82f6d"
 [[package]]
 name = "vaultrs"
 version = "0.6.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "267f958930e08323a44c12e6c5461f3eaaa16d88785e9ec8550215b8aafc3d0b"
+source = "git+https://github.com/PierreBeucher/vaultrs?branch=api-kv#9dee4fa432a7e8fca47a9adbab3d32d9348ad29d"
 dependencies = [
  "async-trait",
  "bytes",

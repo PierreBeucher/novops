@@ -1,0 +1,22 @@
+# The unique application name
+name: test-app
+
+environments:
+  dev:
+    variables:
+      - name: HASHIVAULT_KV_V2_TEST
+        value:
+          hvault_kv2:
+            mount: kv2
+            path: test_hashivault_kv2
+            key: novops_secret
+    files: []
+          
+config:
+  default:
+    environment: dev
+  hashivault:
+    # Hashivault from docker-compose.yml service
+    # Alternatively, use VAULT_ADDR and VAULT_TOKEN env var
+    address: http://localhost:8200
+    token: novops
