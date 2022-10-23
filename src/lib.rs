@@ -12,6 +12,7 @@ pub mod hashivault;
 use crate::core::{ResolveTo, NovopsEnvironmentInput, NovopsConfigFile, NovopsContext};
 use crate::files::FileOutput;
 use crate::variables::VariableOutput;
+use log::{info};
 
 use std::os::unix::prelude::OpenOptionsExt;
 use std::{fs, io, io::prelude::*, os::unix::prelude::PermissionsExt};
@@ -64,8 +65,8 @@ pub async fn load_environment(args: NovopsArgs) -> Result<(), anyhow::Error> {
         None => (),
     }
 
-    println!("Novops environment loaded ! Export variables with:");
-    println!("  source {:?}", &outputs.context.env_var_filepath);
+    info!("Novops environment loaded ! Export variables with:");
+    info!("  source {:?}", &outputs.context.env_var_filepath);
 
     Ok(())
 }
@@ -162,7 +163,6 @@ pub async fn export_outputs(outputs: &NovopsOutputs) {
     
     export_file_outputs(&outputs.files);
     export_variable_outputs(&outputs.variables, &outputs.context.workdir);
-
 }
 
 fn read_config_file(config_path: &str) -> Result<NovopsConfigFile, serde_yaml::Error> {
