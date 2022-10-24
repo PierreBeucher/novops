@@ -10,6 +10,7 @@ fn build_cli() -> Command {
     let app = Command::new("novops")
         .about("Platform agnostic secret aggregator")
         .version("1.0")
+        .author("Novadiscovery")
         .after_help("See the documentation at ...")
         .subcommand(
             Command::new("load")
@@ -49,7 +50,10 @@ fn build_cli() -> Command {
         )
         .subcommand(
             Command::new("completion")
-            .about("Output completion code")
+            .about("Output completion code for the shells support by clap_complete::\
+                    - For bash, run `source <(novops completion bash)` \
+                    - For zsh, run `novops completion zsh > _novops && fpath+=($PWD) && compinit`"
+            )
             .arg(Arg::new("shell")
                 .action(ArgAction::Set)
                 .value_parser(value_parser!(Shell))
@@ -87,6 +91,7 @@ async fn main() -> () {
     if let Some(cmd) = m.subcommand_matches("completion") {
         let name = app.get_name().to_string();
         generate(*cmd.get_one::<Shell>("shell").unwrap(), &mut app, name, &mut io::stdout());
+        exit(0)
     };
 
     if let Some(_cmd) = m.subcommand_matches("schema") {
