@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.16](http://git.novadiscovery.net:4224/world/novops/compare/v0.1.15...v0.1.16) (2022-10-25)
+
+
+### Features
+
+* add 'completion' subcommand ([072a54a](http://git.novadiscovery.net:4224/world/novops/commit/072a54a328bca03b797427f70109ab001f918418))
+
 ### [0.1.15](http://git.novadiscovery.net:4224/world/novops/compare/v0.1.14...v0.1.15) (2022-10-03)
 
 
