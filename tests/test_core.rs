@@ -10,7 +10,7 @@ mod tests {
     use std::path::PathBuf;
     use std::fs;
     use std::os::unix::fs::PermissionsExt;
-    use crate::test_utils::clean_and_setup_test_dir;
+    use crate::test_utils::{clean_and_setup_test_dir, TEST_DIR};
 
     const CONFIG_EMPTY: &str = "tests/.novops.empty.yml";
     const CONFIG_STANDALONE: &str = "tests/.novops.standalone.yml";
@@ -116,9 +116,9 @@ mod tests {
     async fn test_symlink_flag() -> Result<(), anyhow::Error> {
         let workdir = clean_and_setup_test_dir("test_symlink_flag")?;
 
-        let expect_symlink_at = PathBuf::from(&workdir).join("test-symlink");
+        let expect_symlink_at = PathBuf::from(TEST_DIR).join("test-symlink");
         load_environment(NovopsArgs { 
-            config: String::from(CONFIG_EMPTY),
+            config: String::from(CONFIG_STANDALONE),
             env: Some(String::from("dev")), 
             working_directory: Some(workdir.clone().into_os_string().into_string().unwrap()), 
             symlink: Some(expect_symlink_at.clone().into_os_string().into_string().unwrap())
@@ -128,8 +128,45 @@ mod tests {
         assert!(symlink_metadata.is_symlink(), "{:?} does not seem to be a symlink: {:?}", &expect_symlink_at, symlink_metadata);
 
         // symlink is expected to point to var file under our working directory
-        let symlink_dest = fs::read_link(expect_symlink_at).unwrap();
-        assert_eq!(symlink_dest, PathBuf::from(&workdir).join("vars"));
+        let symlink_dest = fs::read_link(&expect_symlink_at).unwrap();
+        assert_eq!(symlink_dest, PathBuf::from(&workdir).join("vars"), "Symlink destination is not as expected");
+
+        // run again with different symlink dest
+        // expect existing symlink to be overriden
+        let workdir_override = clean_and_setup_test_dir("test_symlink_flag_override")?;
+        load_environment(NovopsArgs { 
+            config: String::from(CONFIG_STANDALONE),
+            env: Some(String::from("staging")), 
+            working_directory: Some(workdir_override.clone().into_os_string().into_string().unwrap()), 
+            symlink: Some(expect_symlink_at.clone().into_os_string().into_string().unwrap())
+        }).await?;
+
+        let overriden_symlink_dest = fs::read_link(&expect_symlink_at).unwrap();
+        assert_eq!(overriden_symlink_dest, PathBuf::from(&workdir_override).join("vars"), "Symlink destination is not as expected");
+
+        Ok(())
+    }
+
+    /**
+     * Ensure that a file/dir at symlink path result in failure
+     */
+    #[tokio::test]
+    async fn test_symlink_no_file_override() -> Result<(), anyhow::Error> {
+        let workdir = clean_and_setup_test_dir("test_symlink_no_file_override")?;
+
+        // create dummy file, we don't want it erased by symlink
+        let symlink_path = PathBuf::from(&workdir).join("file-dont-override");
+        fs::File::create(&symlink_path)?;
+        
+        // expect error as we cannot erase existing file
+        let result = load_environment(NovopsArgs { 
+            config: String::from(CONFIG_STANDALONE),
+            env: Some(String::from("dev")), 
+            working_directory: Some(workdir.clone().into_os_string().into_string().unwrap()), 
+            symlink: Some(symlink_path.clone().into_os_string().into_string().unwrap())
+        }).await;
+
+        result.expect_err("Expected an error when loading with symlink trying to override existing file, got OK.");
 
         Ok(())
     }

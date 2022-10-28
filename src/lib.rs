@@ -12,14 +12,15 @@ pub mod hashivault;
 use crate::core::{ResolveTo, NovopsEnvironmentInput, NovopsConfigFile, NovopsContext};
 use crate::files::FileOutput;
 use crate::variables::VariableOutput;
-use log::{info};
+use log::{info, debug};
 
+use std::os::linux::fs::MetadataExt;
 use std::os::unix::prelude::OpenOptionsExt;
 use std::{fs, io, io::prelude::*, os::unix::prelude::PermissionsExt};
 use text_io;
 use users;
 use anyhow::{self, Context};
-use std::os::unix::fs::symlink;
+use std::os::unix;
 use std::path::PathBuf;
 use std::env;
 
@@ -415,6 +416,18 @@ fn export_variable_outputs(vars: &Vec<VariableOutput>, working_dir: &PathBuf) ->
 }
 
 fn create_symlink(lnk: &PathBuf, target: &PathBuf) -> Result<(), anyhow::Error> {
-    symlink(&target, &lnk)
+    let attr_result = fs::symlink_metadata(&lnk);
+    if attr_result.is_ok() {
+        let attr = attr_result?;
+        if attr.is_symlink() && attr.st_uid() == users::get_current_uid(){
+            debug!("Deleting existing symlink {:?} before creating new one", &lnk);
+            fs::remove_file(&lnk).with_context(|| format!("Couldn't remove existing symlink {:?}", &lnk))?;
+        } else {
+            anyhow::bail!("Symlink creation error: {:?} already exists and is not a symlink you own.", &lnk);
+        }
+    } 
+    
+    unix::fs::symlink(&target, &lnk)
         .with_context(|| format!("Couldn't create symlink {:?} -> {:?}", &lnk, &target))
 }
+    
