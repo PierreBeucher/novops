@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.17](http://git.novadiscovery.net:4224/world/novops/compare/v0.1.16...v0.1.17) (2022-10-28)
+
+
+### Features
+
+* override existing symlink if any ([4df96b6](http://git.novadiscovery.net:4224/world/novops/commit/4df96b62b9c78e2043a8b628ce10719bdc49b382))
+
 ### [0.1.16](http://git.novadiscovery.net:4224/world/novops/compare/v0.1.15...v0.1.16) (2022-10-25)
 
 
