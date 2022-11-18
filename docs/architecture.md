@@ -2,14 +2,14 @@
 
 Novops relies around the following concepts:
 
-## Inputs, resolving & Outputs 
+## Modules, Inputs, resolving & Outputs 
 
 _Inputs_ are set in `.novops.yml` to describe how to load value. They usually reference an external secret/config provider or a clear-text value.
 
-
-Example: YAML Input for Hashivault Key Value secret
+_Modules_ are responsible for generating outputs from inputs by resolving them. For example, `hvault_kv2` module load secrets from Hashicorp Vault KV2 engine:
 
 ```yaml
+# hvault_k2 input: reference secrets to load
 hvault_kv2:
   path: myapp/creds
   key: password
@@ -19,7 +19,7 @@ _Outputs_ are objects based obtained from Inputs when they are _resolved_. Curre
 - Files
 - Environment variables (as a sourceable file)
 
-Example: above `hvault_kv2` would output as a `String` value such as 
+`hvault_kv2` example would output a `String` value such as
 
 ```
 myPassw0rd
@@ -82,4 +82,64 @@ impl ResolveTo<String> for HashiVaultKeyValueV2 {
 }
 ```
 
-See [`src/novops.rs`](src/novops.rs) for details.
+See [`src/core.rs`](src/core.rs) for details.
+
+## Novops config schema and internal structure
+
+Novops config is generated directly from internal Rust structure of Inputs deriving `JsonSchema` from the root `struct core::NovopsConfigFile`
+
+For instance:
+
+```rust
+#[derive(/* ... */ JsonSchema)]
+pub struct NovopsConfigFile {
+    pub name: String,
+    pub environments: HashMap<String, NovopsEnvironmentInput>,
+    pub config: Option<NovopsConfig>
+}
+```
+
+Define top-level Novops config schema:
+
+```yaml
+name: my-app
+
+environments:
+  dev: # ...
+  prod: # ...
+    
+config: # ...
+```
+
+Top level structure of config (leaf are plain values):
+
+```mermaid
+graph LR;
+  name;
+
+  
+
+  environments --> variables 
+  variables --> varName("name")
+  variables --> varValue("value")
+  varValue --> anyStringInputVar("<i>any String-resolvable input</i>")
+  
+  environments --> files 
+  files --> fileName(name)
+  files --> fileVar(variable)
+  files --> fileContent(content)
+
+  environments --> aws
+  aws --> awsmoduleinput(<i>AWS module input...</i>)
+
+  environments --> otherModule
+  otherModule("<i>Other module name...</i>") --> otherModuleInput(<i>Other module input...</i>)
+
+
+  fileContent --> anyStringInputFile("<i>any String-resolvable input</i>")
+
+  
+  config --> default
+  config --> hvaultconfig(hashivault)
+  config --> othermodconf2(Other modules config...)
+```
