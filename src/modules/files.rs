@@ -6,7 +6,7 @@ use anyhow;
 use schemars::JsonSchema;
 
 use crate::core::{ResolveTo, NovopsContext, StringResolvableInput};
-use crate::variables::{VariableOutput};
+use crate::modules::variables::{VariableOutput};
 
 /**
  * Content is any input
