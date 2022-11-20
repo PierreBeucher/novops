@@ -1,19 +1,45 @@
 # Novops
 
-A platform agnostic secret aggregator for CI and development environments.
+Platform agnostic secret and config manager for DevOps, CI and development environments.
+
+## Why Novops?
+
+Consider a typical Infra as Code project:
+- Terraform managing Cloud infrastructure and virtual machines
+- Ansible configuring virtual machines and deploying applications
+- GitLab for CI and GitOps implementation
+- Multiple environments: dev, preprod, prod...
+
+Maintainer have to manage configurations for:
+- Various environment-specific configs for deployment tools (Terraform workspace, Ansible inventory, etc.)
+- Various secrets used both during deployment (AWS creds, Hashicorp Vault tokens, etc.) and set-up secret configs for apps (passwords, tokens, etc.)
+
+![before Novops](docs/assets/novops-before.jpg)
+
+Most of the time managed as files, environment variables and/or through a config/secret manager (Hashicorp Vault, AWS Secret Manager...):
+- Maintainers need a local copy of each secrets (such as local as git-ignored _.env_, _.token_, etc. files **per environment**)
+- The same configs/secrets are duplicated on CI tools for each environments
+- Using a secret manager like Hashicorp Vault reduces load, but you often needs to call this external dependency in multiple places (current shell, Terraform provider, Ansible lookup...)
+
+Your team often ends-up with wieh either or both:
+- Frustration to setup and maintain local development environment
+- Depending solely on CI only to test IaC code change, with long and painful feedback loops (as it's too complex to setup the same environment locally)
+
+![after Novops](docs/assets/novops-after.jpg)
+
+Novops help reducing drift and ease reproducibility between local and CI context, and between environments by centralazing in a single config all secrets/configs your tools depend-on
+
 
 ## Features
 
-- Load secrets and config as file or environment variables in most shells
+- Securely load secrets and configs as files or environment variables
 - Integrate with various secret providers: 
  - Hashicorp Vault
-   - Key Value v2
  - AWS:
-   - IAM AssumeRole
  - BitWarden
  - _More to come..._
-- Manage multiple environments
-- Integrate with CI to help reduce drift between CI and local environment
+- Integrate seamlessly with most CI/CD tools (Gitlab, Github, Jenkins...)
+- Ease reproducibility between local dev environment and CI/CD environments
 
 ## Getting started
 
