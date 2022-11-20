@@ -111,10 +111,11 @@ env | grep APP_
 
 ## Documentation
 
-- [Integration with various DevOps tools: Docker, GitLab CI, Nix...](./docs/usage.md)
+- [Security - how safe is Novops?](./docs/security.md)
+- [Usage with DevOps tools: Docker, GitLab CI, Nix...](./docs/usage.md)
 - [Available modules: Hashivault, BitWarden, AWS...](./docs/modules.md)
-- [Internal architecture: Inputs, Outputs and resolving](./docs/architecture.md)
 - [`.novops.yml` configuration reference](./docs/schema.json)
+- [Internal architecture: Inputs, Outputs and resolving](./docs/architecture.md)
 - [Contribution guide](./docs/contributing.md)
 
 ## Contributing
