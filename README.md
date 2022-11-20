@@ -2,6 +2,13 @@
 
 Platform agnostic secret and config manager for DevOps, CI and development environments.
 
+  - [Why Novops?](#why-novops)
+  - [Features](#features)
+  - [Getting started](#getting-started)
+  - [Documentation](#documentation)
+  - [Contributing](#contributing)
+  - [License](#license)
+
 ## Why Novops?
 
 Consider a typical Infra as Code project:
@@ -74,13 +81,13 @@ environments:
 ```
 
 Load Novops config:
-  
+
 ```sh
 # Load dev config and source env variables in current shell
 novops load -e dev -s .myenvs && source .myenvs
 ```
 
-Though you can source manually, recommended usage is with [`direnv`](https://direnv.net/) installed:
+Though you can source manually, **recommended usage is with [`direnv`](https://direnv.net/)** for seamless integration:
 
 ```sh
 novops load -e dev -s .envrc
@@ -99,16 +106,17 @@ env | grep APP_
 
 ## Documentation
 
-- [Advanced usages and examples: Bash, Docker, CI...](./docs/usage.md)
+- [Integration with various DevOps tools: Docker, GitLab CI, Nix...](./docs/usage.md)
 - [Available modules: Hashivault, BitWarden, AWS...](./docs/modules.md)
 - [Internal architecture: Inputs, Outputs and resolving](./docs/architecture.md)
+- [`.novops.yml` configuration reference](./docs/schema.json)
 - [Contribution guide](./docs/contributing.md)
-- [Full JSON schema for `.novops.yml`](./docs/schema.json)
 
 ## Contributing
+
+We welcome contributions: bug reports/fixes, modules, proposals... :)
 
 See [contribution guide](./docs/contributing.md)
 
 ## License
 
-TODO add LICENSE.txt
