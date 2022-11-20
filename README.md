@@ -34,19 +34,16 @@ Your team often ends-up with wieh either or both:
 
 ![after Novops](docs/assets/novops-after.jpg)
 
-Novops help reducing drift and ease reproducibility between local and CI context, and between environments by centralazing in a single config all secrets/configs your tools depend-on
+Novops help reducing drift and ease reproducibility between local and CI context, and between environments by centralazing in a single config all secrets/configs your tools depend-on.
 
-
-## Features
+### Features
 
 - Securely load secrets and configs as files or environment variables
-- Integrate with various secret providers: 
- - Hashicorp Vault
- - AWS:
- - BitWarden
- - _More to come..._
-- Integrate seamlessly with most CI/CD tools (Gitlab, Github, Jenkins...)
-- Ease reproducibility between local dev environment and CI/CD environments
+- Integrate with various secret providers: Hashicorp Vault, BitWarden...
+  - _More to come! [Wanna contribute?](./CONTRIBUTING.md)_
+- Integrate seamlessly with any shell and most CI/CD tools: GitLab, Github, Jenkins...
+- Reduce drift between local dev context and CI/CD
+- Manage multi-environment (dev, preprod, prod...)
 
 ## Getting started
 
@@ -80,20 +77,28 @@ environments:
             field: notes
 ```
 
+Novops will generate a _secure_ sourceable file containing all your variables and references to files such as:
+
+```sh
+$ cat /run/user/1000/novops/example-app/local/vars
+# export APP_URL='127.0.0.1:8080'
+# export APP_PASSWORD='s3cret'
+# export APP_TOKEN='/run/user/1000/novops/myapp/dev/file_APP_TOKEN'
+```
+
 Load Novops config:
-
-```sh
-# Load dev config and source env variables in current shell
-novops load -e dev -s .myenvs && source .myenvs
-```
-
-Though you can source manually, **recommended usage is with [`direnv`](https://direnv.net/)** for seamless integration:
-
-```sh
-novops load -e dev -s .envrc
-# ...
-# direnv: loading ~/myproject/.envrc  
-```
+- **We strongly recommend using [`direnv`](https://direnv.net/)** for seamless shell integration
+  ```sh
+  # Load novops and create a symlink .envrc -> secure sourceable file
+  # direnv will source automatically in current shell
+  novops load -e dev -s .envrc
+  # ...
+  # direnv: loading ~/myproject/.envrc  
+  ```
+- Alternatively you can source manually:
+  ```sh
+  novops load -e dev -s .myenvs && source .myenvs
+  ```
 
 Your shell session is now loaded!
 
