@@ -7,7 +7,7 @@
 If possible, secrets are stored as files under secure directory `XDG_RUNTIME_DIR` . In short, this directory is:
 - Owned and read/writable only by current user
 - Bound to lifecycle of current user session (i.e. removed on logout or shutdown)
-  - Most implementation relies on a [`tmpfs` fileystem](https://www.kernel.org/doc/html/latest/filesystems/tmpfs.html)
+  - Usually mounted as a [`tmpfs`](https://www.kernel.org/doc/html/latest/filesystems/tmpfs.html) volume
 
 This ensures loaded secrets are **securely stored while being used and not persisted unnecessarily.**
 

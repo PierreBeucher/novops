@@ -28,7 +28,7 @@ Most of the time managed as files, environment variables and/or through a config
 - The same configs/secrets are duplicated on CI tools for each environments
 - Using a secret manager like Hashicorp Vault reduces load, but you often needs to call this external dependency in multiple places (current shell, Terraform provider, Ansible lookup...)
 
-Your team often ends-up with wieh either or both:
+Your team often ends-up with either or both:
 - Frustration to setup and maintain local development environment
 - Depending solely on CI only to test IaC code change, with long and painful feedback loops (as it's too complex to setup the same environment locally)
 
@@ -40,10 +40,10 @@ Novops help reducing drift and ease reproducibility between local and CI context
 
 - Securely load secrets and configs as files or environment variables
 - Integrate with various secret providers: Hashicorp Vault, BitWarden...
-  - _More to come! [Wanna contribute?](./CONTRIBUTING.md)_
-- Integrate seamlessly with any shell and most CI/CD tools: GitLab, Github, Jenkins...
+- Easily integrated within Gitlab, GitHub, Jenkins and most CI systems: Novops runs the same on CI as locally
 - Reduce drift between local dev context and CI/CD
 - Manage multi-environment (dev, preprod, prod...)
+- Quick and easy installation using static binary
 
 ## Getting started
 
@@ -95,6 +95,7 @@ Load Novops config:
   # ...
   # direnv: loading ~/myproject/.envrc  
   ```
+  See [Why is Novops + direnv strongly advised?](./docs/novops-direnv.md)
 - Alternatively you can source manually:
   ```sh
   novops load -e dev -s .myenvs && source .myenvs
@@ -112,6 +113,7 @@ env | grep APP_
 ## Documentation
 
 - [Security - how safe is Novops?](./docs/security.md)
+- [Why is Novops + direnv strongly advised?](./docs/novops-direnv.md)
 - [Usage with DevOps tools: Docker, GitLab CI, Nix...](./docs/usage.md)
 - [Available modules: Hashivault, BitWarden, AWS...](./docs/modules.md)
 - [`.novops.yml` configuration reference](./docs/schema.json)
