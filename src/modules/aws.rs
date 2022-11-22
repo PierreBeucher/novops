@@ -6,7 +6,7 @@ use rand::{distributions::Alphanumeric, Rng};
 use schemars::JsonSchema;
 
 use crate::core::{ResolveTo, NovopsContext};
-use crate::variables::VariableOutput;
+use crate::modules::variables::VariableOutput;
 
 const STS_ROLE_SESSION_NAME_MAX_LENGTH: usize = 64;
 

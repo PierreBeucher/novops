@@ -5,11 +5,11 @@ use anyhow;
 use std::path::PathBuf;
 use schemars::JsonSchema;
 
-use crate::hashivault;
-use crate::bitwarden;
-use crate::aws;
-use crate::files::{FileInput};
-use crate::variables::{VariableInput};
+use crate::modules::hashivault;
+use crate::modules::bitwarden;
+use crate::modules::aws;
+use crate::modules::files::{FileInput};
+use crate::modules::variables::{VariableInput};
 
 #[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
 pub struct NovopsConfigFile {

@@ -1,5 +1,10 @@
 ## Modules usage
 
+A module allow retrieval or generation of secrets/values within Novops. Two kind of module exists:
+
+- **Loader:** load values (secret or not) from external sources, such as Hashicorp Vault
+- **Generator:** generate values from provided input, such as AWS module generating credentials for IAM Roles
+
 Available modules:
 - Hashicorp Vault:
   - [Key Value Version 2](https://www.vaultproject.io/docs/secrets/kv/kv-v2) 
@@ -9,6 +14,7 @@ Available modules:
   - _More to come..._
 - BitWarden - _experimental and untested, use with care_
 
+Wanna add a module? See [contribution guide](../CONTRIBUTING.md) !
 
 ### Hashicorp Vault
 

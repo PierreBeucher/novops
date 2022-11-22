@@ -3,15 +3,11 @@ extern crate enum_dispatch;
 extern crate xdg;
 
 pub mod core;
-pub mod bitwarden;
-pub mod aws;
-pub mod files;
-pub mod variables;
-pub mod hashivault;
+pub mod modules;
 
 use crate::core::{ResolveTo, NovopsEnvironmentInput, NovopsConfigFile, NovopsContext};
-use crate::files::FileOutput;
-use crate::variables::VariableOutput;
+use crate::modules::files::FileOutput;
+use crate::modules::variables::VariableOutput;
 use log::{info, debug};
 
 use std::os::linux::fs::MetadataExt;
