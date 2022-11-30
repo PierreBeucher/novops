@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.19](http://git.novadiscovery.net:4224/world/novops/compare/v0.1.18...v0.1.19) (2022-11-30)
+
+
+### Features
+
+* licensed under GNU LGPLv3 ([927f000](http://git.novadiscovery.net:4224/world/novops/commit/927f000e5282cc5de70709879494526c90c1ded8))
+
 ### [0.1.18](http://git.novadiscovery.net:4224/world/novops/compare/v0.1.17...v0.1.18) (2022-11-22)
 
 ### [0.1.17](http://git.novadiscovery.net:4224/world/novops/compare/v0.1.16...v0.1.17) (2022-10-28)
