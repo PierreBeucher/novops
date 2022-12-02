@@ -10,20 +10,18 @@ services:
     environment:
       VAULT_DEV_ROOT_TOKEN_ID: novops
   
-  # Ease reproduction of CI integ tests
-  rust:
-    image: rust:1.64.0
-    environment:
-      # Keep Rust cache
-      CARGO_HOME: /cargo_home
-      VAULT_ADDR: http://vault:8200
-      VAULT_TOKEN: novops # Same as vault VAULT_DEV_ROOT_TOKEN_ID
-    working_dir: /novops
-    volumes:
-    - $PWD:/novops
-    - novops_cargo_home:/cargo_home
-    command: [ sleep, "9999" ]
-    stop_grace_period: 1s
-
-volumes:
-  novops_cargo_home: 
+  # # Container in which tests are run
+  # # Rust binary is mounted from host (hence alpine usage)
+  # rust:
+  #   image: rust:1.64.0-alpine3.16
+  #   environment:
+  #     VAULT_ADDR: http://vault:8200
+  #     VAULT_TOKEN: novops # == vault VAULT_DEV_ROOT_TOKEN_ID
+  #   working_dir: /novops
+  #   volumes:
+  #   - $PWD:/novops
+  #   - $HOME/.cargo:/root/.cargo
+  #   # Sleep by default, can be overriden to run tests directly
+  #   # Such as docker-compose run -f tests/docker-compose.yml cargo test
+  #   command: [ sleep, "9999" ]
+  #   stop_grace_period: 1s

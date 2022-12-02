@@ -2,6 +2,7 @@
 
 Platform agnostic secret and config manager for DevOps, CI and development environments.
 
+- [Novops](#novops)
   - [Why Novops?](#why-novops)
   - [Features](#features)
   - [Getting started](#getting-started)
@@ -36,7 +37,7 @@ Your team often ends-up with either or both:
 
 Novops help reducing drift and ease reproducibility between local and CI context, and between environments by centralazing in a single config all secrets/configs your tools depend-on.
 
-### Features
+## Features
 
 - Securely load secrets and configs as files or environment variables
 - Integrate with various secret providers: Hashicorp Vault, BitWarden...
@@ -118,13 +119,14 @@ env | grep APP_
 - [Available modules: Hashivault, BitWarden, AWS...](./docs/modules.md)
 - [`.novops.yml` configuration reference](./docs/schema.json)
 - [Internal architecture: Inputs, Outputs and resolving](./docs/architecture.md)
-- [Contribution guide](./docs/contributing.md)
+- [Development guide](./docs/development.md)
+- [Contribution guide](./CONTRIBUTING.md)
 
 ## Contributing
 
 We welcome contributions: bug reports/fixes, modules, proposals... :)
 
-See [contribution guide](./docs/contributing.md)
+See [contribution guide](./CONTRIBUTING.md)
 
 ## License
 

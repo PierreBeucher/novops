@@ -16,15 +16,15 @@ docker buildx build .
 
 ## Run test
 
-Integ tests are run within Docker to have a similar environment locally and on CI. 
+Integration tests are run using cargo and external dependencies as Docker containers (Hashicorp Vault, etc.)
 
-Run tests locally (via `docker exec` within a Rust container):
 
+```sh
+# Run Docker Compose stack and run tests
+make test
 ```
-make test-docker
-```
 
-Tests are run on CI for any non-`master` branch. 
+Tests are run on CI for any non-`master` branch using the same procedure. 
 
 ## Updating dependencies
 

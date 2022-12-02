@@ -1,0 +1,18 @@
+name: Tag release
+
+on: workflow_dispatch
+
+jobs:
+  changelog:
+    name: Push changelog
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.changelog.outputs.tag }}
+    steps:
+    - uses: actions/checkout@v3
+    - name: Conventional Changelog Action
+      uses: TriPSs/conventional-changelog-action@v3
+      with:
+        github-token: ${{ secrets.github_token }}
+        skip-ci: false # Keep CI to run publish on Git tag
+        skip-on-empty: false
