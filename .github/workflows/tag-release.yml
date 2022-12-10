@@ -16,3 +16,5 @@ jobs:
         github-token: ${{ secrets.github_token }}
         skip-ci: false # Keep CI to run publish on Git tag
         skip-on-empty: false
+        pre-commit: release/pre-commit-changelog.js
+        skip-version-file: true # Skip update of package.json
