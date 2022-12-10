@@ -9,19 +9,3 @@ services:
     - 8200:8200
     environment:
       VAULT_DEV_ROOT_TOKEN_ID: novops
-  
-  # # Container in which tests are run
-  # # Rust binary is mounted from host (hence alpine usage)
-  # rust:
-  #   image: rust:1.64.0-alpine3.16
-  #   environment:
-  #     VAULT_ADDR: http://vault:8200
-  #     VAULT_TOKEN: novops # == vault VAULT_DEV_ROOT_TOKEN_ID
-  #   working_dir: /novops
-  #   volumes:
-  #   - $PWD:/novops
-  #   - $HOME/.cargo:/root/.cargo
-  #   # Sleep by default, can be overriden to run tests directly
-  #   # Such as docker-compose run -f tests/docker-compose.yml cargo test
-  #   command: [ sleep, "9999" ]
-  #   stop_grace_period: 1s
