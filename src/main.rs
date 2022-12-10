@@ -1,17 +1,16 @@
 use std::{process::exit, io};
 
 use tokio;
-use clap::{Arg, Command, value_parser, ArgAction};
+use clap::{Arg, Command, value_parser, ArgAction, crate_version};
 use novops::{self, core::NovopsConfigFile};
 use schemars::schema_for;
 use clap_complete::{generate, Shell};
 
 fn build_cli() -> Command {
     let app = Command::new("novops")
-        .about("Platform agnostic secret aggregator")
-        .version("1.0")
+        .about("Platform agnostic secret manager")
+        .version(crate_version!())
         .author("Novadiscovery")
-        .after_help("See the documentation at ...")
         .subcommand(
             Command::new("load")
             .about("Load a Novops environment")
