@@ -1,0 +1,7 @@
+[default]
+region = eu-west-3
+output = json
+
+[profile novops-aws-test]
+region = eu-west-3
+output = json

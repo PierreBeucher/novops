@@ -51,7 +51,8 @@ mod tests {
                         default: Some(NovopsConfigDefault {
                              environment: Some(String::from("dev"))
                         }), 
-                        hashivault: None 
+                        hashivault: None,
+                        aws: None
                     })
                 },
                 env_var_filepath: workdir.join("vars")

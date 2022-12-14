@@ -11,6 +11,7 @@ use crate::modules::aws;
 use crate::modules::files::{FileInput};
 use crate::modules::variables::{VariableInput};
 
+
 #[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
 pub struct NovopsConfigFile {
     pub name: String,
@@ -21,14 +22,16 @@ pub struct NovopsConfigFile {
 #[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
 pub struct NovopsConfig {
     pub default: Option<NovopsConfigDefault>,
-    pub hashivault: Option<hashivault::HashivaultConfig>
+    pub hashivault: Option<hashivault::HashivaultConfig>,
+    pub aws: Option<aws::config::AwsConfig>
 }
 
 impl Default for NovopsConfig {
     fn default() -> NovopsConfig {
         NovopsConfig {
             default: None,
-            hashivault: None
+            hashivault: None,
+            aws: None
         }
     }
 }
@@ -59,7 +62,7 @@ impl Default for NovopsConfigDefault {
 pub struct NovopsEnvironmentInput {
     pub variables: Option<Vec<VariableInput>>,
     pub files: Option<Vec<FileInput>>,
-    pub aws: Option<aws::AwsInput>
+    pub aws: Option<aws::config::AwsInput>
 }
 
 /**

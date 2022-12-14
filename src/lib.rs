@@ -69,6 +69,15 @@ pub async fn load_environment(args: NovopsArgs) -> Result<(), anyhow::Error> {
 }
 
 pub async fn load_context_and_resolve(args: &NovopsArgs) -> Result<NovopsOutputs, anyhow::Error> {
+
+    // Allow multiple invocation of logger
+    match env_logger::try_init() {
+        Ok(_) => {},
+        Err(e) => {debug!("env_logger::try_nit() error: {:?}", e)},
+    };
+
+    debug!("Loading context for {:?}", &args);
+
     let ctx = make_context(&args).await?;
     let novops_env = get_current_environment(&ctx).await?;
     

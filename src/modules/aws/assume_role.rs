@@ -1,4 +1,3 @@
-use aws_sdk_sts::Client as StsClient;
 use serde::Deserialize;
 use async_trait::async_trait;
 use anyhow::{self, Context};
@@ -7,33 +6,27 @@ use schemars::JsonSchema;
 
 use crate::core::{ResolveTo, NovopsContext};
 use crate::modules::variables::VariableOutput;
+use crate::modules::aws::config::{get_sts_client, build_mutable_client_config_from_context};
 
 const STS_ROLE_SESSION_NAME_MAX_LENGTH: usize = 64;
 
 #[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
-pub struct AwsInput {
-    pub assume_role: AwsAssumeRoleInput
-}
-
-#[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
 pub struct AwsAssumeRoleInput {
     pub role_arn: String,
-    pub source_profile: String
+    pub source_profile: Option<String>
 }
 
 #[async_trait]
 impl ResolveTo<Vec<VariableOutput>> for AwsAssumeRoleInput {
     async fn resolve(&self, ctx: &NovopsContext) -> Result<Vec<VariableOutput>, anyhow::Error> {
-        let config = aws_config::from_env()
-        .credentials_provider(
-            aws_config::profile::ProfileFileCredentialsProvider::builder()
-            .profile_name(&self.source_profile)
-            .build()
-        )
-        .load()
-        .await;
-    
-        let sts_client = StsClient::new(&config);
+        
+        let mut client_conf = build_mutable_client_config_from_context(ctx);
+
+        if self.source_profile.is_some() {
+            client_conf.profile(&self.source_profile.clone().unwrap());
+        }
+
+        let sts_client = get_sts_client(&client_conf).await?;
 
         let session_random_suffix: String = rand::thread_rng()
             .sample_iter(&Alphanumeric)

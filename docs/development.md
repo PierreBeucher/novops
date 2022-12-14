@@ -16,12 +16,16 @@ docker buildx build .
 
 ## Run test
 
-Integration tests are run using cargo and external dependencies as Docker containers (Hashicorp Vault, etc.)
+Use cargo and external dependencies as Docker containers: Hashicorp Vault, [LocalStack](https://localstack.cloud), ...
 
 
 ```sh
 # Run Docker Compose stack and run tests
 make test
+
+# Alternatively, run Docker stack and specific tests
+make test-docker
+RUST_LOG=novops=debug cargo test --test test_aws -- --nocapture
 ```
 
 Tests are run on CI for any non-`master` branch using the same procedure. 
