@@ -4,6 +4,6 @@ docker:
 build:
 	cargo build --release --target x86_64-unknown-linux-musl
 
-test-docker:
+test:
 	docker-compose -f tests/docker-compose.yml up -d
-	docker-compose -f tests/docker-compose.yml exec rust cargo test
+	cargo test

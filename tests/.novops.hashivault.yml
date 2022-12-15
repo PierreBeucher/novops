@@ -16,5 +16,7 @@ config:
   default:
     environment: dev
   hashivault:
-    # address: env var VAULT_ADDR
+    # Hashivault from docker-compose.yml service
+    # Alternatively, use VAULT_ADDR and VAULT_TOKEN env var
+    address: http://localhost:8200
     token: novops
