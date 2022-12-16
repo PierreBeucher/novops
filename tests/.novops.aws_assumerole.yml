@@ -1,0 +1,15 @@
+# Novops config used to test AWS modules with LocalStack
+name: test-aws
+
+environments:
+  dev:
+    aws:
+      assume_role: 
+        role_arn: arn:aws:iam::111122223333:role/NovopsTestAssumeRole
+        source_profile: default
+
+config:
+  default:
+    environment: dev
+  aws:
+    endpoint: "http://localhost:4566/" # LocalStack 

@@ -5,9 +5,9 @@ mod test_utils;
 mod tests {
     use novops::modules::aws::config::{get_iam_client, get_ssm_client, AwsClientConfig};
     use aws_sdk_ssm::model::ParameterType;
-    use crate::test_utils::load_env_for_module;
+    use crate::test_utils::load_env_for;
 
-    use log::info;
+    use log::{info, debug};
 
     #[tokio::test]
     async fn test_assume_role() -> Result<(), anyhow::Error> {
@@ -15,9 +15,9 @@ mod tests {
         setup_test_env().await?;
         ensure_test_role_exists("NovopsTestAwsAssumeRole").await?;        
 
-        let outputs = load_env_for_module("aws", "dev").await?;
+        let outputs = load_env_for("aws_assumerole", "dev").await?;
 
-        info!("Found variables: {:?}", outputs.variables);
+        info!("test_assume_role: Found variables: {:?}", outputs.variables);
 
         // STS temporary keys starts with ASIA https://docs.aws.amazon.com/STS/latest/APIReference/API_GetAccessKeyInfo.html
         assert!(outputs.variables.get("AWS_ACCESS_KEY_ID").unwrap().value.starts_with("ASIA"));
@@ -40,9 +40,9 @@ mod tests {
         let psecurestring_value = "novops-string-test-secure";
         ensure_test_ssm_param_exists("novops-test-ssm-param-secureString", psecurestring_value, ParameterType::SecureString).await?;
 
-        let outputs = load_env_for_module("aws", "dev").await?;
+        let outputs = load_env_for("aws_ssm", "dev").await?;
 
-        info!("Found variables: {:?}", outputs.variables);
+        info!("test_ssmparam: Found variables: {:?}", outputs.variables);
 
         assert_eq!(outputs.variables.get("SSM_PARAM_STORE_TEST_STRING").unwrap().value, pstring_value);
         assert_eq!(outputs.variables.get("SSM_PARAM_STORE_TEST_SECURE_STRING").unwrap().value, psecurestring_value);
@@ -88,17 +88,28 @@ mod tests {
     async fn ensure_test_ssm_param_exists(pname: &str, pvalue: &str, ptype: ParameterType) -> Result<(), anyhow::Error> {
         let client = get_ssm_client(&aws_test_config()).await?;
 
-        client.put_parameter()
+        info!("PUT SSM param: {}", pname);
+
+        let r = client.put_parameter()
             .name(pname)
             .overwrite(true)
             .value(pvalue)
             .r#type(ptype)
             .send().await?;
 
+        info!("SSM param PUT {} response: {:?}", pname, r);
+
         Ok(())
     }
 
     async fn setup_test_env() -> Result<(), anyhow::Error> {
+
+        // Allow multiple invocation of logger
+        match env_logger::try_init() {
+            Ok(_) => {},
+            Err(e) => {debug!("env_logger::try_nit() error: {:?}", e)},
+        };
+        
         // use known AWS config
         let aws_config = std::env::current_dir()?.join("tests/aws/config");
         let aws_creds = std::env::current_dir()?.join("tests/aws/credentials");

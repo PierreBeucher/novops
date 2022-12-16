@@ -20,12 +20,7 @@ environments:
         aws_ssm_parameter:
           name: novops-test-ssm-param-secureString
           with_decryption: false
-
-    aws:
-      assume_role: 
-        role_arn: arn:aws:iam::111122223333:role/NovopsTestAssumeRole
-        source_profile: default
-
+          
 config:
   default:
     environment: dev
