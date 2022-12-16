@@ -3,7 +3,6 @@ mod test_utils;
 
 #[cfg(test)]
 mod tests {
-    use novops::{load_context_and_resolve, NovopsArgs};
     use novops::modules::aws::config::{get_iam_client, get_ssm_client, AwsClientConfig};
     use aws_sdk_ssm::model::ParameterType;
     use crate::test_utils::load_env_for_module;
@@ -18,9 +17,12 @@ mod tests {
 
         let outputs = load_env_for_module("aws", "dev").await?;
 
-        assert_eq!(outputs.variables[3].name, "AWS_ACCESS_KEY_ID");
-        assert_eq!(outputs.variables[4].name, "AWS_SECRET_ACCESS_KEY");
-        assert_eq!(outputs.variables[5].name, "AWS_SESSION_TOKEN");
+        info!("Found variables: {:?}", outputs.variables);
+
+        // STS temporary keys starts with ASIA https://docs.aws.amazon.com/STS/latest/APIReference/API_GetAccessKeyInfo.html
+        assert!(outputs.variables.get("AWS_ACCESS_KEY_ID").unwrap().value.starts_with("ASIA"));
+        assert!(outputs.variables.get("AWS_SECRET_ACCESS_KEY").unwrap().value.len() > 0);
+        assert!(outputs.variables.get("AWS_SESSION_TOKEN").unwrap().value.len() > 0);
 
         Ok(())
     }
@@ -31,28 +33,21 @@ mod tests {
         setup_test_env().await?;
 
         // String
-        let pstring_name = "novops-test-ssm-param-string";
         let pstring_value = "novops-string-test";
-        ensure_test_ssm_param_exists(pstring_name, pstring_value, ParameterType::String).await?;
+        ensure_test_ssm_param_exists("novops-test-ssm-param-string", pstring_value, ParameterType::String).await?;
 
         // SecureString
-        let psecurestring_name = "novops-test-ssm-param-secureString";
         let psecurestring_value = "novops-string-test-secure";
-        ensure_test_ssm_param_exists(psecurestring_name, psecurestring_value, ParameterType::SecureString).await?;
+        ensure_test_ssm_param_exists("novops-test-ssm-param-secureString", psecurestring_value, ParameterType::SecureString).await?;
 
         let outputs = load_env_for_module("aws", "dev").await?;
 
         info!("Found variables: {:?}", outputs.variables);
 
-        assert_eq!(outputs.variables[0].name, "SSM_PARAM_STORE_TEST_STRING");
-        assert_eq!(outputs.variables[0].value, pstring_value);
+        assert_eq!(outputs.variables.get("SSM_PARAM_STORE_TEST_STRING").unwrap().value, pstring_value);
+        assert_eq!(outputs.variables.get("SSM_PARAM_STORE_TEST_SECURE_STRING").unwrap().value, psecurestring_value);
+        assert_ne!(outputs.variables.get("SSM_PARAM_STORE_TEST_SECURE_STRING_NO_DECRYPT").unwrap().value, psecurestring_value);
 
-        assert_eq!(outputs.variables[1].name, "SSM_PARAM_STORE_TEST_SECURE_STRING");
-        assert_eq!(outputs.variables[1].value, psecurestring_value);
-
-        assert_eq!(outputs.variables[2].name, "SSM_PARAM_STORE_TEST_SECURE_STRING_NO_DECRYPT");
-        assert_ne!(outputs.variables[2].value, psecurestring_value);
-        
         Ok(())
 
     }
@@ -61,11 +56,7 @@ mod tests {
      * create test IAM role to impersonate, delete it first if already exists
      */
     async fn ensure_test_role_exists(role_name: &str) -> Result<(), anyhow::Error> {
-        let mut aws_conf = AwsClientConfig::default();
-        aws_conf.endpoint("http://localhost:4566/");
-        
-        let client = get_iam_client(&aws_conf).await?;
-
+        let client = get_iam_client(&aws_test_config()).await?;
         let existing_role_result = client.get_role().role_name(role_name).send().await;
 
         match existing_role_result {
@@ -95,10 +86,7 @@ mod tests {
     }
 
     async fn ensure_test_ssm_param_exists(pname: &str, pvalue: &str, ptype: ParameterType) -> Result<(), anyhow::Error> {
-        let mut aws_conf = AwsClientConfig::default();
-        aws_conf.endpoint("http://localhost:4566/");
-        
-        let client = get_ssm_client(&aws_conf).await?;
+        let client = get_ssm_client(&aws_test_config()).await?;
 
         client.put_parameter()
             .name(pname)
@@ -119,6 +107,12 @@ mod tests {
         std::env::set_var("AWS_SHARED_CREDENTIALS_FILE", &aws_creds.to_str().unwrap());
 
         Ok(())
+    }
+
+    fn aws_test_config() -> AwsClientConfig{
+        let mut aws_conf = AwsClientConfig::default();
+        aws_conf.endpoint("http://localhost:4566/");
+        return aws_conf;
     }
 
 }

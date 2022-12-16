@@ -9,8 +9,8 @@ use schemars::JsonSchema;
  */
 #[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
 pub struct VariableInput {
-    name: String,
-    value: StringResolvableInput
+    pub name: String,
+    pub value: StringResolvableInput
 }
     
 /**

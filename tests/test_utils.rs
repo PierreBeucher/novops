@@ -25,6 +25,8 @@ pub fn clean_and_setup_test_dir(test_name: &str) -> Result<PathBuf, anyhow::Erro
 /**
  * Load Novops environment for given module, considering a test file name like .novops.<module>.yml exists
  */
+#[cfg(test)]
+#[allow(dead_code)]
 pub async fn load_env_for_module(module: &str, env: &str) -> Result<NovopsOutputs, anyhow::Error> {
   let args = NovopsArgs { 
     config: format!("tests/.novops.{}.yml", module), 
