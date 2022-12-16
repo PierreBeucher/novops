@@ -105,7 +105,8 @@ pub trait ResolveTo<T> {
 pub enum StringResolvableInput {
     String(String),
     BitwardeItemInput(bitwarden::BitwardenItemInput),
-    HashiVaultKeyValueV2Input(hashivault::HashiVaultKeyValueV2Input)
+    HashiVaultKeyValueV2Input(hashivault::HashiVaultKeyValueV2Input),
+    AwsSSMParamStoreInput(aws::ssm::AwsSSMParamStoreInput)
 }
 
 /**
@@ -125,6 +126,7 @@ impl ResolveTo<String> for StringResolvableInput {
             &StringResolvableInput::String(s) => Ok(s.clone()),
             &StringResolvableInput::BitwardeItemInput(bw) => bw.resolve(ctx).await,
             &StringResolvableInput::HashiVaultKeyValueV2Input(hv) => hv.resolve(ctx).await,
+            &StringResolvableInput::AwsSSMParamStoreInput(p) => p.resolve(ctx).await,
         }
     }
 }

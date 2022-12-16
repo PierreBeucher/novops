@@ -4,7 +4,11 @@ mod test_utils;
 #[cfg(test)]
 mod tests {
     use novops::{load_context_and_resolve, NovopsArgs};
-    use novops::modules::aws::config::{get_iam_client, AwsClientConfig};
+    use novops::modules::aws::config::{get_iam_client, get_ssm_client, AwsClientConfig};
+    use aws_sdk_ssm::model::ParameterType;
+    use crate::test_utils::load_env_for_module;
+
+    use log::info;
 
     #[tokio::test]
     async fn test_assume_role() -> Result<(), anyhow::Error> {
@@ -12,21 +16,45 @@ mod tests {
         setup_test_env().await?;
         ensure_test_role_exists("NovopsTestAwsAssumeRole").await?;        
 
-        // Load config and expect temporary credentials
-        let args = NovopsArgs { 
-            config: "tests/.novops.aws.yml".to_string(), 
-            env: Some("dev".to_string()), 
-            working_directory: None,
-            symlink: None
-        };
+        let outputs = load_env_for_module("aws", "dev").await?;
 
-        let outputs = load_context_and_resolve(&args).await?;
-
-        assert_eq!(outputs.variables[0].name, "AWS_ACCESS_KEY_ID");
-        assert_eq!(outputs.variables[1].name, "AWS_SECRET_ACCESS_KEY");
-        assert_eq!(outputs.variables[2].name, "AWS_SESSION_TOKEN");
+        assert_eq!(outputs.variables[3].name, "AWS_ACCESS_KEY_ID");
+        assert_eq!(outputs.variables[4].name, "AWS_SECRET_ACCESS_KEY");
+        assert_eq!(outputs.variables[5].name, "AWS_SESSION_TOKEN");
 
         Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_ssm_param() -> Result<(), anyhow::Error> {
+
+        setup_test_env().await?;
+
+        // String
+        let pstring_name = "novops-test-ssm-param-string";
+        let pstring_value = "novops-string-test";
+        ensure_test_ssm_param_exists(pstring_name, pstring_value, ParameterType::String).await?;
+
+        // SecureString
+        let psecurestring_name = "novops-test-ssm-param-secureString";
+        let psecurestring_value = "novops-string-test-secure";
+        ensure_test_ssm_param_exists(psecurestring_name, psecurestring_value, ParameterType::SecureString).await?;
+
+        let outputs = load_env_for_module("aws", "dev").await?;
+
+        info!("Found variables: {:?}", outputs.variables);
+
+        assert_eq!(outputs.variables[0].name, "SSM_PARAM_STORE_TEST_STRING");
+        assert_eq!(outputs.variables[0].value, pstring_value);
+
+        assert_eq!(outputs.variables[1].name, "SSM_PARAM_STORE_TEST_SECURE_STRING");
+        assert_eq!(outputs.variables[1].value, psecurestring_value);
+
+        assert_eq!(outputs.variables[2].name, "SSM_PARAM_STORE_TEST_SECURE_STRING_NO_DECRYPT");
+        assert_ne!(outputs.variables[2].value, psecurestring_value);
+        
+        Ok(())
+
     }
 
     /**
@@ -63,6 +91,22 @@ mod tests {
             }"#)
             .send().await.expect("Valid create role response");
         
+        Ok(())
+    }
+
+    async fn ensure_test_ssm_param_exists(pname: &str, pvalue: &str, ptype: ParameterType) -> Result<(), anyhow::Error> {
+        let mut aws_conf = AwsClientConfig::default();
+        aws_conf.endpoint("http://localhost:4566/");
+        
+        let client = get_ssm_client(&aws_conf).await?;
+
+        client.put_parameter()
+            .name(pname)
+            .overwrite(true)
+            .value(pvalue)
+            .r#type(ptype)
+            .send().await?;
+
         Ok(())
     }
 
