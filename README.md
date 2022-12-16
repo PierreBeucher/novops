@@ -7,6 +7,14 @@ Platform agnostic secret and config manager for DevOps, CI and development envir
   - [Install](#install)
   - [Getting started](#getting-started)
   - [Documentation](#documentation)
+    - [Security - how safe is Novops?](#security---how-safe-is-novops)
+    - [Why is Novops + direnv strongly advised?](#why-is-novops--direnv-strongly-advised)
+    - [Usage with DevOps tools: Docker, GitLab CI, Nix...](#usage-with-devops-tools-docker-gitlab-ci-nix)
+    - [Available modules: Hashivault, BitWarden, AWS...](#available-modules-hashivault-bitwarden-aws)
+    - [`.novops.yml` configuration reference](#novopsyml-configuration-reference)
+    - [Internal architecture: Inputs, Outputs and resolving](#internal-architecture-inputs-outputs-and-resolving)
+    - [Development guide](#development-guide)
+    - [Contribution guide](#contribution-guide)
   - [Contributing](#contributing)
 
 ## Features
@@ -96,14 +104,14 @@ env | grep APP_
 
 ## Documentation
 
-- [Security - how safe is Novops?](./docs/security.md)
-- [Why is Novops + direnv strongly advised?](./docs/novops-direnv.md)
-- [Usage with DevOps tools: Docker, GitLab CI, Nix...](./docs/usage.md)
-- [Available modules: Hashivault, BitWarden, AWS...](./docs/modules.md)
-- [`.novops.yml` configuration reference](./docs/schema.json)
-- [Internal architecture: Inputs, Outputs and resolving](./docs/architecture.md)
-- [Development guide](./docs/development.md)
-- [Contribution guide](./CONTRIBUTING.md)
+### [Security - how safe is Novops?](./docs/security.md)
+### [Why is Novops + direnv strongly advised?](./docs/novops-direnv.md)
+### [Usage with DevOps tools: Docker, GitLab CI, Nix...](./docs/usage.md)
+### [Available modules: Hashivault, BitWarden, AWS...](./docs/modules.md)
+### [`.novops.yml` configuration reference](./docs/schema.json)
+### [Internal architecture: Inputs, Outputs and resolving](./docs/architecture.md)
+### [Development guide](./docs/development.md)
+### [Contribution guide](./CONTRIBUTING.md)
 
 ## Contributing
 
