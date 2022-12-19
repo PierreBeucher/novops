@@ -67,6 +67,13 @@ pub async fn get_ssm_client(novops_aws: &AwsClientConfig) -> Result<aws_sdk_ssm:
     return Ok(aws_sdk_ssm::Client::new(&conf));
 }
 
+pub async fn get_secretsmanager_client(novops_aws: &AwsClientConfig) -> Result<aws_sdk_secretsmanager::Client, Error>{
+    let conf = get_sdk_config(novops_aws).await?;
+
+    debug!("Creating AWS Secrets Manager client with config {:?}", conf);
+    return Ok(aws_sdk_secretsmanager::Client::new(&conf));
+}
+
 /**
  * Generic AWS Client config xrapped around builder pattern
  * for easy loading from Novops config and per-module override

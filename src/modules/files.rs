@@ -5,7 +5,7 @@ use serde::Deserialize;
 use anyhow;
 use schemars::JsonSchema;
 
-use crate::core::{ResolveTo, NovopsContext, StringResolvableInput};
+use crate::core::{ResolveTo, NovopsContext, BytesResolvableInput};
 use crate::modules::variables::{VariableOutput};
 
 /**
@@ -43,7 +43,7 @@ pub struct FileInput {
     
     pub variable: Option<String>,
     
-    pub content: StringResolvableInput
+    pub content: BytesResolvableInput
 }
 
 /**
@@ -53,7 +53,7 @@ pub struct FileInput {
 pub struct FileOutput {
     pub dest: PathBuf,
     pub variable: VariableOutput,
-    pub content: String // TODO buffer? content may be long
+    pub content: Vec<u8> // TODO buffer? content may be long
 }
 
 /**

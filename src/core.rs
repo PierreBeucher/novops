@@ -97,16 +97,20 @@ pub trait ResolveTo<T> {
 
 /**
  * Enum with Input that will always resolve to String
- * i.e. <impl ResolveTo<String>>
+ * Centralize ResolveTo<String> to reduce boiler-plate code on other inputs
+ * like FileInput and VariableInput
+ * 
+ * Most modules Inputs will resolve to a String which can be used either
+ * as Variable or File. See [BytesResolvableInput] if you need to handle binary data.
  */
 #[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
 #[serde(untagged)]
-#[enum_dispatch(ResolveTo<String>)]
 pub enum StringResolvableInput {
     String(String),
     BitwardeItemInput(bitwarden::BitwardenItemInput),
     HashiVaultKeyValueV2Input(hashivault::HashiVaultKeyValueV2Input),
-    AwsSSMParamStoreInput(aws::ssm::AwsSSMParamStoreInput)
+    AwsSSMParamStoreInput(aws::ssm::AwsSSMParamStoreInput),
+    AwsSecretsManagerSecretInput(aws::secretsmanager::AwsSecretsManagerSecretInput),
 }
 
 /**
@@ -122,11 +126,41 @@ impl ResolveTo<String> for String {
 #[async_trait]
 impl ResolveTo<String> for StringResolvableInput {
     async fn resolve(&self, ctx: &NovopsContext) -> Result<String, anyhow::Error> {
-        return match &self {
-            &StringResolvableInput::String(s) => Ok(s.clone()),
-            &StringResolvableInput::BitwardeItemInput(bw) => bw.resolve(ctx).await,
-            &StringResolvableInput::HashiVaultKeyValueV2Input(hv) => hv.resolve(ctx).await,
-            &StringResolvableInput::AwsSSMParamStoreInput(p) => p.resolve(ctx).await,
+        return match self {
+            StringResolvableInput::String(s) => Ok(s.clone()),
+            StringResolvableInput::BitwardeItemInput(bw) => bw.resolve(ctx).await,
+            StringResolvableInput::HashiVaultKeyValueV2Input(hv) => hv.resolve(ctx).await,
+            StringResolvableInput::AwsSSMParamStoreInput(p) => p.resolve(ctx).await,
+            StringResolvableInput::AwsSecretsManagerSecretInput(s) => s.resolve(ctx).await
         }
+    }
+}
+
+
+/**
+ * Enum for all Inputs resolving to a Byte Vector (including [StringResolvableInput]
+ * as Rust internal structure represents String as Byte vector)
+ * This input is used by [FileInput] to resolve file content whic is not always a String but may also 
+ * be binary or blob data. 
+ */
+#[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
+#[serde(untagged)]
+pub enum BytesResolvableInput {
+    AwsSecretsManagerSecretInput(aws::secretsmanager::AwsSecretsManagerSecretInput),
+    StringResolvableInput(StringResolvableInput),
+    ByteVec(Vec<u8>)
+}
+
+#[async_trait]
+impl ResolveTo<Vec<u8>> for BytesResolvableInput {
+    async fn resolve(&self, ctx: &NovopsContext) -> Result<Vec<u8>, anyhow::Error> {
+
+        let result = match self {
+            BytesResolvableInput::ByteVec(z) => Ok(z.clone()),
+            BytesResolvableInput::AwsSecretsManagerSecretInput(z) => z.resolve(ctx).await,
+            BytesResolvableInput::StringResolvableInput(z) => z.resolve(ctx).await.map(|x| x.into_bytes()),
+        };
+        
+        return result;
     }
 }
