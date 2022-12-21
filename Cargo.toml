@@ -18,8 +18,10 @@ users = "0.11"
 aws-sdk-sts = "0.21.0"
 aws-sdk-iam = "0.21.0"
 aws-sdk-ssm = "0.21.0"
+aws-sdk-secretsmanager = "0.21.0"
 aws-config = "0.51.0"
 aws-smithy-http = "0.51.0"
+aws-smithy-types = "0.51.0"
 aws-types = "0.51.0"
 tracing-subscriber = { version = "0.3.15", features = ["env-filter"] }
 tokio = { version = "1", features = ["full"] }

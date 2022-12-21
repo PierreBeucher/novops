@@ -1,7 +1,3 @@
-#[macro_use]
-extern crate enum_dispatch;
-extern crate xdg;
-
 pub mod core;
 pub mod modules;
 
@@ -35,6 +31,7 @@ pub struct NovopsArgs {
 /**
  * Structure containing all Outputs after resolving
  */
+#[derive(Debug, Clone)]
 pub struct NovopsOutputs {
     pub context: NovopsContext,
     pub variables: HashMap<String, VariableOutput>,
@@ -377,7 +374,7 @@ fn export_file_outputs(files: &Vec<FileOutput>){
             .mode(0o600)
             .open(&f.dest)
             .unwrap();
-        fd.write_all(f.content.as_bytes()).unwrap();
+        fd.write_all(&f.content).unwrap();
     }
 }
 
