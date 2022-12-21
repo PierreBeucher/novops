@@ -12,4 +12,4 @@ config:
   default:
     environment: dev
   aws:
-    endpoint: "http://localhost:4566/"
+    endpoint: "http://localhost:4566/" # LocalStack 

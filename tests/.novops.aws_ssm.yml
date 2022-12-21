@@ -1,0 +1,28 @@
+# Novops config used to test AWS modules with LocalStack
+name: test-aws
+
+environments:
+  dev:
+    variables:
+    - name: SSM_PARAM_STORE_TEST_STRING
+      value:
+        aws_ssm_parameter:
+          name: novops-test-ssm-param-string
+    
+    - name: SSM_PARAM_STORE_TEST_SECURE_STRING
+      value:
+        aws_ssm_parameter:
+          name: novops-test-ssm-param-secureString
+          with_decryption: true
+
+    - name: SSM_PARAM_STORE_TEST_SECURE_STRING_NO_DECRYPT
+      value:
+        aws_ssm_parameter:
+          name: novops-test-ssm-param-secureString
+          with_decryption: false
+          
+config:
+  default:
+    environment: dev
+  aws:
+    endpoint: "http://localhost:4566/" # LocalStack 

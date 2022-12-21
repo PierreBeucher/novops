@@ -26,8 +26,7 @@ mod tests {
 
         let outputs = load_context_and_resolve(&args).await?;
 
-        assert_eq!(outputs.variables[0].name, "HASHIVAULT_KV_V2_TEST");
-        assert_eq!(outputs.variables[0].value, "s3cret");
+        assert_eq!(outputs.variables.get("HASHIVAULT_KV_V2_TEST").unwrap().value, "s3cret");
 
         Ok(())
     }

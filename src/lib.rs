@@ -19,6 +19,7 @@ use anyhow::{self, Context};
 use std::os::unix;
 use std::path::PathBuf;
 use std::env;
+use std::collections::HashMap;
 
 #[derive(Debug)]
 pub struct NovopsArgs {
@@ -36,8 +37,8 @@ pub struct NovopsArgs {
  */
 pub struct NovopsOutputs {
     pub context: NovopsContext,
-    pub variables: Vec<VariableOutput>,
-    pub files: Vec<FileOutput>
+    pub variables: HashMap<String, VariableOutput>,
+    pub files: HashMap<String, FileOutput>
 }
 
 // pub async fn parse_arg_and_run() -> Result<(), anyhow::Error> {
@@ -133,30 +134,39 @@ pub async fn get_current_environment(ctx: &NovopsContext) -> Result<NovopsEnviro
  * Depending on Input types, external systems will be called-upon (such as BitWarden, Hashicorp Vault...)
  */
 pub async fn resolve_environment_inputs(ctx: &NovopsContext, inputs: NovopsEnvironmentInput) 
-        -> Result<(Vec<VariableOutput>, Vec<FileOutput>), anyhow::Error>
+        -> Result<(HashMap<String, VariableOutput>, HashMap<String, FileOutput>), anyhow::Error>
     {
 
-    let mut variable_outputs: Vec<VariableOutput> = Vec::new();
-    let mut file_outputs: Vec<FileOutput> = Vec::new();
+    let mut variable_outputs: HashMap<String, VariableOutput> = HashMap::new();
+    let mut file_outputs: HashMap<String, FileOutput> = HashMap::new();
     
     for v in &inputs.variables.unwrap_or(vec![]) {
         let val = v.resolve(&ctx).await
             .with_context(|| format!("Could not resolve variable input {:?}", v))?;
-        variable_outputs.push(val);
+        
+        variable_outputs.insert(v.name.clone(), val);
     };
 
     for f in &inputs.files.unwrap_or(vec![]) {
         let r = f.resolve(&ctx).await
             .with_context(|| format!("Could not resolve file input {:?}", f))?;
-        file_outputs.push(r.clone());
-        variable_outputs.push(r.variable.clone())
+        
+        let fpath_str = r.dest.clone().to_str().unwrap().to_string();
+
+        // FileInput generates both var and file output
+        variable_outputs.insert(fpath_str.clone(), r.variable.clone());
+        file_outputs.insert(fpath_str.clone(), r.clone());
     };
 
     match &inputs.aws {
         Some(aws) => {
-            let mut r = aws.assume_role.resolve(&ctx).await
+            let r = aws.assume_role.resolve(&ctx).await
                 .with_context(|| format!("Could not resolve AWS input {:?}", aws))?;
-            variable_outputs.append(&mut r);
+
+            for vo in r {
+                variable_outputs.insert(vo.name.clone(), vo);
+            }
+            
         },
         None => (),
     }
@@ -167,8 +177,11 @@ pub async fn resolve_environment_inputs(ctx: &NovopsContext, inputs: NovopsEnvir
 
 pub async fn export_outputs(outputs: &NovopsOutputs) {
     
-    export_file_outputs(&outputs.files);
-    export_variable_outputs(&outputs.variables, &outputs.context.workdir);
+    let foutputs: Vec<FileOutput> = outputs.files.clone().into_iter().map(|(_, f)| f).collect();
+    export_file_outputs(&foutputs);
+
+    let voutputs: Vec<VariableOutput> = outputs.variables.clone().into_iter().map(|(_, v)| v).collect();
+    export_variable_outputs(&voutputs, &outputs.context.workdir);
 }
 
 fn read_config_file(config_path: &str) -> Result<NovopsConfigFile, serde_yaml::Error> {

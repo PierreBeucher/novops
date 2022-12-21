@@ -60,6 +60,13 @@ pub async fn get_sts_client(novops_aws: &AwsClientConfig) -> Result<aws_sdk_sts:
     return Ok(aws_sdk_sts::Client::new(&conf));
 }
 
+pub async fn get_ssm_client(novops_aws: &AwsClientConfig) -> Result<aws_sdk_ssm::Client, Error>{
+    let conf = get_sdk_config(novops_aws).await?;
+
+    debug!("Creating AWS SSM client with config {:?}", conf);
+    return Ok(aws_sdk_ssm::Client::new(&conf));
+}
+
 /**
  * Generic AWS Client config xrapped around builder pattern
  * for easy loading from Novops config and per-module override
