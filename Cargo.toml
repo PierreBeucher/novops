@@ -34,6 +34,9 @@ vaultrs = { git = "https://github.com/jmgilman/vaultrs", rev="823c44b898a2990f09
 url = "2.3.1"
 schemars = "0.8.10"
 http = "0.2"
+google-secretmanager1 = "4.0.1+20220226"
+base64 = "0.20.0"
+crc32c = "0.6"
 
 [dependencies.uuid]
 version = "1.1.2"
