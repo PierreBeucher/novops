@@ -16,8 +16,9 @@ docker buildx build .
 
 ## Run test
 
-Use cargo and external dependencies as Docker containers: Hashicorp Vault, [LocalStack](https://localstack.cloud), ...
-
+Integration tests are run when possible real service, falling back to emulator or dry-run when not practical:
+- AWS: [LocalStack](https://localstack.cloud) server
+- Hashivault: [Vault Docker image](https://hub.docker.com/_/vault)
 
 ```sh
 # Run Docker Compose stack and run tests

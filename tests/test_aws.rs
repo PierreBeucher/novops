@@ -3,7 +3,8 @@ mod test_utils;
 
 #[cfg(test)]
 mod tests {
-    use novops::modules::aws::config::{get_iam_client, get_ssm_client, get_secretsmanager_client, AwsClientConfig};
+    use novops::modules::aws::client::{get_iam_client, get_ssm_client, get_secretsmanager_client};
+    use novops::modules::aws::config::AwsClientConfig;
     use aws_sdk_ssm::model::ParameterType;
     use aws_smithy_types::Blob;
     use crate::test_utils::load_env_for;

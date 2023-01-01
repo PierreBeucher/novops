@@ -27,7 +27,8 @@ mod tests {
             config: String::from(CONFIG_EMPTY),
             env: Some(String::from("dev")),
             working_directory: Some(workdir.clone().into_os_string().into_string().unwrap()),
-            symlink: None
+            symlink: None,
+            dry_run: None
         };
         let result = make_context(&args).await?;
 
@@ -55,7 +56,8 @@ mod tests {
                         aws: None
                     })
                 },
-                env_var_filepath: workdir.join("vars")
+                env_var_filepath: workdir.join("vars"),
+                dry_run: false
             }
         );
 
@@ -76,7 +78,8 @@ mod tests {
             config: String::from(CONFIG_STANDALONE),
             env: Some(String::from("dev")), 
             working_directory: Some(workdir.clone().into_os_string().into_string().unwrap()), 
-            symlink: None 
+            symlink: None,
+            dry_run: None
         }).await?;   
 
         let expected_var_file = PathBuf::from(&workdir).join("vars");
@@ -122,7 +125,8 @@ mod tests {
             config: String::from(CONFIG_STANDALONE),
             env: Some(String::from("dev")), 
             working_directory: Some(workdir.clone().into_os_string().into_string().unwrap()), 
-            symlink: Some(expect_symlink_at.clone().into_os_string().into_string().unwrap())
+            symlink: Some(expect_symlink_at.clone().into_os_string().into_string().unwrap()),
+            dry_run: None
         }).await?;
 
         let symlink_metadata = fs::symlink_metadata(&expect_symlink_at)?;
@@ -139,7 +143,8 @@ mod tests {
             config: String::from(CONFIG_STANDALONE),
             env: Some(String::from("staging")), 
             working_directory: Some(workdir_override.clone().into_os_string().into_string().unwrap()), 
-            symlink: Some(expect_symlink_at.clone().into_os_string().into_string().unwrap())
+            symlink: Some(expect_symlink_at.clone().into_os_string().into_string().unwrap()),
+            dry_run: None
         }).await?;
 
         let overriden_symlink_dest = fs::read_link(&expect_symlink_at).unwrap();
@@ -164,7 +169,8 @@ mod tests {
             config: String::from(CONFIG_STANDALONE),
             env: Some(String::from("dev")), 
             working_directory: Some(workdir.clone().into_os_string().into_string().unwrap()), 
-            symlink: Some(symlink_path.clone().into_os_string().into_string().unwrap())
+            symlink: Some(symlink_path.clone().into_os_string().into_string().unwrap()),
+            dry_run: None
         }).await;
 
         result.expect_err("Expected an error when loading with symlink trying to override existing file, got OK.");

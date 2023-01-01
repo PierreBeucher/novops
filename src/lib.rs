@@ -25,7 +25,9 @@ pub struct NovopsArgs {
 
     pub working_directory: Option<String>,
 
-    pub symlink: Option<String>
+    pub symlink: Option<String>,
+
+    pub dry_run: Option<bool>
 }
 
 /**
@@ -71,7 +73,7 @@ pub async fn load_context_and_resolve(args: &NovopsArgs) -> Result<NovopsOutputs
     // Allow multiple invocation of logger
     match env_logger::try_init() {
         Ok(_) => {},
-        Err(e) => {debug!("env_logger::try_nit() error: {:?}", e)},
+        Err(e) => {debug!("env_logger::try_init() error: {:?}", e)},
     };
 
     debug!("Loading context for {:?}", &args);
@@ -107,13 +109,19 @@ pub async fn make_context(args: &NovopsArgs) -> Result<NovopsContext, anyhow::Er
     // environment variable file which will contain variable output the user can export
     let env_var_filepath = workdir.join("vars");
 
-    Ok(NovopsContext {
+    let ctx = NovopsContext {
         env_name: env_name.clone(),
         app_name: app_name.clone(),
         workdir: workdir.clone(),
         config_file_data: config.clone(),
-        env_var_filepath
-    })
+        env_var_filepath,
+        dry_run: args.dry_run.unwrap_or(false)
+    };
+
+    debug!("Prepared context: {:?}", &ctx);
+
+    Ok(ctx)
+
 }
 
 /**

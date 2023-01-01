@@ -46,6 +46,13 @@ fn build_cli() -> Command {
                 .value_name("SYMLINK_PATH")
                 .required(false)
             )
+            .arg(Arg::new("dry_run")
+                .help("Perform a dry-run: not external service is be called and dummy outputs is written to disk. Used for testing purposes.")
+                .long("dry-run")
+                .value_name("DRY_RUN")
+                .action(ArgAction::SetTrue)
+                .required(false)
+            )
         )
         .subcommand(
             Command::new("completion")
@@ -80,7 +87,8 @@ async fn main() -> () {
             config: load_subc.get_one::<String>("config").unwrap().clone(),
             env: load_subc.get_one::<String>("environment").map(String::from),
             working_directory: load_subc.get_one::<String>("working_dir").map(String::from),
-            symlink: load_subc.get_one::<String>("symlink").map(String::from)
+            symlink: load_subc.get_one::<String>("symlink").map(String::from),
+            dry_run: load_subc.get_one::<bool>("dry_run").map(|e| *e)
         };
 
         novops::load_environment(args).await.unwrap();
