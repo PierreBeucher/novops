@@ -1,0 +1,46 @@
+# Use all modules at once
+name: test-all
+
+environments:
+  dev:
+    variables:
+      - name: VAR
+        value: "foo"
+        
+      # AWS
+      - name: AWS_SECRETMANAGER
+        value:
+          aws_secret:
+            id: novops-test-secretsmanager-string
+      - name: AWS_SSM_PARAMETER
+        value:
+          aws_ssm_parameter:
+            name: novops-test-ssm-param-string
+      
+      # Hashivault
+      - name: HASHIVAULT_KV_V2
+        value:
+          hvault_kv2:
+            path: test_hashivault
+            key: novops_secret
+
+      # BitWarden
+      - name: BITWARDEN
+        value:
+          bitwarden:
+            entry: "Novops test - login.password entry"
+            field: login.password
+    
+    files:
+      - dest: /tmp/novopsfile
+        name: file
+        content: foo
+
+    aws:
+      assume_role: 
+        role_arn: arn:aws:iam::111122223333:role/NovopsTestAssumeRole
+        source_profile: default
+          
+config:
+  default:
+    environment: dev
