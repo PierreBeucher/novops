@@ -6,7 +6,7 @@ use schemars::JsonSchema;
 use std::default::Default;
 
 use crate::core::{ResolveTo, NovopsContext};
-use crate::modules::aws::config::{build_mutable_client_config_from_context, get_secretsmanager_client};
+use crate::modules::aws::client::get_client;
 
 #[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
 pub struct AwsSecretsManagerSecretInput {
@@ -90,14 +90,13 @@ impl ResolveTo<String> for AwsSecretsManagerSecretInput {
 }
 
 async fn retrieve_secret(ctx: &NovopsContext, input: &AwsSecretsManagerSecretInput) -> Result<GetSecretValueOutput, anyhow::Error>{
-    let client_conf = build_mutable_client_config_from_context(ctx);
-    let ssm_client = get_secretsmanager_client(&client_conf).await?;
+    let client = get_client(ctx).await;
 
-    let output = ssm_client.get_secret_value()
-        .secret_id(input.aws_secret.id.clone())
-        .set_version_id(input.aws_secret.version_id.clone())
-        .set_version_stage(input.aws_secret.version_stage.clone())
-        .send().await?;
-
+    let output = client.get_secret_value(
+        &input.aws_secret.id.as_str(), 
+        input.aws_secret.version_id.clone(), 
+        input.aws_secret.version_stage.clone()
+    ).await?;
+    
     return Ok(output);
 }

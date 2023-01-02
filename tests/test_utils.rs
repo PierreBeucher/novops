@@ -28,16 +28,26 @@ pub fn clean_and_setup_test_dir(test_name: &str) -> Result<PathBuf, anyhow::Erro
 #[cfg(test)]
 #[allow(dead_code)]
 pub async fn load_env_for(conf_name: &str, env: &str) -> Result<NovopsOutputs, anyhow::Error> {
+  _load_env_for(conf_name, env, false).await
+}
+
+#[cfg(test)]
+#[allow(dead_code)]
+pub async fn load_env_dryrun_for(conf_name: &str, env: &str) -> Result<NovopsOutputs, anyhow::Error> {
+  _load_env_for(conf_name, env, true).await
+}
+
+async fn _load_env_for(conf_name: &str, env: &str, dry_run: bool) -> Result<NovopsOutputs, anyhow::Error> {
   let args = NovopsArgs { 
     config: format!("tests/.novops.{}.yml", conf_name), 
     env: Some(env.to_string()), 
     working_directory: None,
-    symlink: None
+    symlink: None,
+    dry_run: Some(dry_run)
   };
 
   let outputs = load_context_and_resolve(&args).await?;
 
   return Ok(outputs);
-
 }
 

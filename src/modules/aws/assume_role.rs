@@ -6,7 +6,7 @@ use schemars::JsonSchema;
 
 use crate::core::{ResolveTo, NovopsContext};
 use crate::modules::variables::VariableOutput;
-use crate::modules::aws::config::{get_sts_client, build_mutable_client_config_from_context};
+use crate::modules::aws::client::get_client_with_profile;
 
 const STS_ROLE_SESSION_NAME_MAX_LENGTH: usize = 64;
 
@@ -20,13 +20,7 @@ pub struct AwsAssumeRoleInput {
 impl ResolveTo<Vec<VariableOutput>> for AwsAssumeRoleInput {
     async fn resolve(&self, ctx: &NovopsContext) -> Result<Vec<VariableOutput>, anyhow::Error> {
         
-        let mut client_conf = build_mutable_client_config_from_context(ctx);
-
-        if self.source_profile.is_some() {
-            client_conf.profile(&self.source_profile.clone().unwrap());
-        }
-
-        let sts_client = get_sts_client(&client_conf).await?;
+        let client = get_client_with_profile(ctx, &self.source_profile).await;
 
         let session_random_suffix: String = rand::thread_rng()
             .sample_iter(&Alphanumeric)
@@ -55,27 +49,19 @@ impl ResolveTo<Vec<VariableOutput>> for AwsAssumeRoleInput {
 
         }
 
-        let assumed_role = sts_client.assume_role()
-            .role_arn(&self.role_arn)
-            .role_session_name(role_session_name)
-            .send().await;
-        
-        let aso = match assumed_role {
-            Ok(c) => {c},
-            Err(e) => return Err(e.into())
-        };
-
-        let creds = &aso.credentials.clone()
-            .with_context(|| format!("Can't assume role: returned Credentials Option was None for {:?}", &aso))?;
+        let assumed_role = client.assume_role(&self.role_arn, &role_session_name).await?;
+    
+        let creds = &assumed_role.credentials.clone()
+            .with_context(|| format!("Can't assume role: returned Credentials Option was None for {:?}", &assumed_role))?;
 
         let access_key = creds.access_key_id.as_ref()
-            .with_context(|| format!("Can't assume role: Returned access key Option was None for {:?}", &aso))?;
+            .with_context(|| format!("Can't assume role: Returned access key Option was None for {:?}", &assumed_role))?;
 
         let secret_key = creds.secret_access_key.as_ref()
-            .with_context(|| format!("Can't assume role: returned secret key Option was None for {:?}", &aso))?;
+            .with_context(|| format!("Can't assume role: returned secret key Option was None for {:?}", &assumed_role))?;
 
         let session_token = creds.session_token.as_ref()
-            .with_context(|| format!("Can't assume role: returned access key Option was None for {:?}", &aso))?;
+            .with_context(|| format!("Can't assume role: returned access key Option was None for {:?}", &assumed_role))?;
         
         return Ok(
             vec![

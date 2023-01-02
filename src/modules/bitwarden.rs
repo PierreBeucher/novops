@@ -30,7 +30,12 @@ pub struct BitwardenItemInput {
 
 #[async_trait]
 impl core::ResolveTo<String> for BitwardenItemInput {
-    async fn resolve(&self, _: &core::NovopsContext) -> Result<String, Error> {
+    async fn resolve(&self, ctx: &core::NovopsContext) -> Result<String, Error> {
+
+        if ctx.dry_run {
+          return Ok(format!("RESULT:{:}.{:}", self.bitwarden.entry, self.bitwarden.field));
+        }
+
         let json_result = get_item(&self.bitwarden.entry);
 
         let json_value = match json_result {

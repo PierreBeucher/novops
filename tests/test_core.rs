@@ -10,7 +10,8 @@ mod tests {
     use std::path::PathBuf;
     use std::fs;
     use std::os::unix::fs::PermissionsExt;
-    use crate::test_utils::{clean_and_setup_test_dir, TEST_DIR};
+    use log::info;
+    use crate::test_utils::{clean_and_setup_test_dir, TEST_DIR, load_env_dryrun_for};
 
     const CONFIG_EMPTY: &str = "tests/.novops.empty.yml";
     const CONFIG_STANDALONE: &str = "tests/.novops.standalone.yml";
@@ -27,7 +28,8 @@ mod tests {
             config: String::from(CONFIG_EMPTY),
             env: Some(String::from("dev")),
             working_directory: Some(workdir.clone().into_os_string().into_string().unwrap()),
-            symlink: None
+            symlink: None,
+            dry_run: None
         };
         let result = make_context(&args).await?;
 
@@ -55,7 +57,8 @@ mod tests {
                         aws: None
                     })
                 },
-                env_var_filepath: workdir.join("vars")
+                env_var_filepath: workdir.join("vars"),
+                dry_run: false
             }
         );
 
@@ -76,7 +79,8 @@ mod tests {
             config: String::from(CONFIG_STANDALONE),
             env: Some(String::from("dev")), 
             working_directory: Some(workdir.clone().into_os_string().into_string().unwrap()), 
-            symlink: None 
+            symlink: None,
+            dry_run: None
         }).await?;   
 
         let expected_var_file = PathBuf::from(&workdir).join("vars");
@@ -122,7 +126,8 @@ mod tests {
             config: String::from(CONFIG_STANDALONE),
             env: Some(String::from("dev")), 
             working_directory: Some(workdir.clone().into_os_string().into_string().unwrap()), 
-            symlink: Some(expect_symlink_at.clone().into_os_string().into_string().unwrap())
+            symlink: Some(expect_symlink_at.clone().into_os_string().into_string().unwrap()),
+            dry_run: None
         }).await?;
 
         let symlink_metadata = fs::symlink_metadata(&expect_symlink_at)?;
@@ -139,7 +144,8 @@ mod tests {
             config: String::from(CONFIG_STANDALONE),
             env: Some(String::from("staging")), 
             working_directory: Some(workdir_override.clone().into_os_string().into_string().unwrap()), 
-            symlink: Some(expect_symlink_at.clone().into_os_string().into_string().unwrap())
+            symlink: Some(expect_symlink_at.clone().into_os_string().into_string().unwrap()),
+            dry_run: None
         }).await?;
 
         let overriden_symlink_dest = fs::read_link(&expect_symlink_at).unwrap();
@@ -164,10 +170,38 @@ mod tests {
             config: String::from(CONFIG_STANDALONE),
             env: Some(String::from("dev")), 
             working_directory: Some(workdir.clone().into_os_string().into_string().unwrap()), 
-            symlink: Some(symlink_path.clone().into_os_string().into_string().unwrap())
+            symlink: Some(symlink_path.clone().into_os_string().into_string().unwrap()),
+            dry_run: None
         }).await;
 
         result.expect_err("Expected an error when loading with symlink trying to override existing file, got OK.");
+
+        Ok(())
+    }
+
+    /**
+     * Check all modules with dry run
+     * Having non-empty values and no errors is enough
+     */
+    #[tokio::test]
+    async fn test_dry_run() -> Result<(), anyhow::Error> {
+        let result = load_env_dryrun_for("all", "dev").await?;
+
+        info!("test_dry_run: Found variables: {:?}", &result.variables);
+        info!("test_dry_run: Found files: {:?}", &result.files);
+
+
+        assert!(result.variables.get("VAR").unwrap().value.len() > 0);
+        assert!(result.variables.get("AWS_SECRETMANAGER").unwrap().value.len() > 0);
+        assert!(result.variables.get("AWS_SSM_PARAMETER").unwrap().value.len() > 0);
+        assert!(result.variables.get("HASHIVAULT_KV_V2").unwrap().value.len() > 0);
+        assert!(result.variables.get("BITWARDEN").unwrap().value.len() > 0);
+        assert!(result.files.get("/tmp/novopsfile").unwrap().content.len() > 0);
+    
+        // aws.assumerole
+        assert!(result.variables.get("AWS_ACCESS_KEY_ID").unwrap().value.len() > 0);
+        assert!(result.variables.get("AWS_SESSION_TOKEN").unwrap().value.len() > 0);
+        assert!(result.variables.get("AWS_SECRET_ACCESS_KEY").unwrap().value.len() > 0);
 
         Ok(())
     }

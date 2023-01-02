@@ -1,78 +1,13 @@
-
-use std::str::FromStr;
-
 use crate::{modules::aws::assume_role::AwsAssumeRoleInput};
-use crate::core::{NovopsContext};
 
 use schemars::JsonSchema;
 use serde::Deserialize;
-use aws_smithy_http::endpoint::Endpoint;
-use http::Uri;
-use anyhow::Error;
-use log::debug;
 
 #[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
 pub struct AwsInput {
     pub assume_role: AwsAssumeRoleInput
 }
 
-/**
- * Create an SdkConfig using optional overrides 
- */
-pub async fn get_sdk_config(client_conf: &AwsClientConfig) -> Result<aws_config::SdkConfig, Error> {
-
-    let mut aws_config = aws_config::from_env();
- 
-    match &client_conf.endpoint {
-        Some(endpoint) => {
-            let ep_uri = Uri::from_str(endpoint).unwrap();
-            aws_config = aws_config.endpoint_resolver(Endpoint::immutable(ep_uri));
-        },
-        None => {},
-    }
-
-    match &client_conf.profile {
-        Some(profile) => {
-            aws_config = aws_config.credentials_provider(
-                aws_config::profile::ProfileFileCredentialsProvider::builder()
-                    .profile_name(profile)
-                    .build()
-            );
-        },
-        None => {},
-    }
-
-    return Ok(aws_config.load().await);
-    
-}
-
-pub async fn get_iam_client(novops_aws: &AwsClientConfig) -> Result<aws_sdk_iam::Client, Error>{
-    let conf = get_sdk_config(novops_aws).await?;
-    
-    debug!("Creating AWS IAM client with config {:?}", conf);
-    return Ok(aws_sdk_iam::Client::new(&conf));
-}
-
-pub async fn get_sts_client(novops_aws: &AwsClientConfig) -> Result<aws_sdk_sts::Client, Error>{
-    let conf = get_sdk_config(novops_aws).await?;
-
-    debug!("Creating AWS STS client with config {:?}", conf);
-    return Ok(aws_sdk_sts::Client::new(&conf));
-}
-
-pub async fn get_ssm_client(novops_aws: &AwsClientConfig) -> Result<aws_sdk_ssm::Client, Error>{
-    let conf = get_sdk_config(novops_aws).await?;
-
-    debug!("Creating AWS SSM client with config {:?}", conf);
-    return Ok(aws_sdk_ssm::Client::new(&conf));
-}
-
-pub async fn get_secretsmanager_client(novops_aws: &AwsClientConfig) -> Result<aws_sdk_secretsmanager::Client, Error>{
-    let conf = get_sdk_config(novops_aws).await?;
-
-    debug!("Creating AWS Secrets Manager client with config {:?}", conf);
-    return Ok(aws_sdk_secretsmanager::Client::new(&conf));
-}
 
 /**
  * Generic AWS Client config xrapped around builder pattern
@@ -111,22 +46,6 @@ impl AwsClientConfig {
         self.endpoint = Some(endpoint.to_string());
         self
     }
-}
-
-pub fn build_mutable_client_config_from_context(ctx: &NovopsContext) -> AwsClientConfig {
-    let client_conf = match &ctx.config_file_data.config {
-        Some(config) => {
-            match &config.aws {
-                Some(aws) => {
-                    AwsClientConfig::from(aws)
-                },
-                None => AwsClientConfig::default(),
-            }
-        },
-        None => AwsClientConfig::default()
-    };
-
-    return client_conf;
 }
 
 /**

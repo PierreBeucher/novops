@@ -5,7 +5,7 @@ use anyhow;
 use std::path::PathBuf;
 use schemars::JsonSchema;
 
-use crate::modules::hashivault;
+use crate::modules::hashivault::{config::HashivaultConfig, kv2::HashiVaultKeyValueV2Input};
 use crate::modules::bitwarden;
 use crate::modules::aws;
 use crate::modules::files::{FileInput};
@@ -22,7 +22,7 @@ pub struct NovopsConfigFile {
 #[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
 pub struct NovopsConfig {
     pub default: Option<NovopsConfigDefault>,
-    pub hashivault: Option<hashivault::HashivaultConfig>,
+    pub hashivault: Option<HashivaultConfig>,
     pub aws: Option<aws::config::AwsConfig>
 }
 
@@ -84,7 +84,10 @@ pub struct NovopsContext {
     pub config_file_data: NovopsConfigFile,
 
     /// path to sourceable environment variable file
-    pub env_var_filepath: PathBuf
+    pub env_var_filepath: PathBuf,
+
+    // enable dry run mode
+    pub dry_run: bool
 }
 
 /**
@@ -108,7 +111,7 @@ pub trait ResolveTo<T> {
 pub enum StringResolvableInput {
     String(String),
     BitwardeItemInput(bitwarden::BitwardenItemInput),
-    HashiVaultKeyValueV2Input(hashivault::HashiVaultKeyValueV2Input),
+    HashiVaultKeyValueV2Input(HashiVaultKeyValueV2Input),
     AwsSSMParamStoreInput(aws::ssm::AwsSSMParamStoreInput),
     AwsSecretsManagerSecretInput(aws::secretsmanager::AwsSecretsManagerSecretInput),
 }
