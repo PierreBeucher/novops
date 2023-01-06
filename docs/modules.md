@@ -1,22 +1,20 @@
-## Modules usage
+# Modules reference
 
-A module allow retrieval or generation of secrets/values within Novops. Two kind of module exists:
-
-- **Loader:** load values (secret or not) from external sources, such as Hashicorp Vault
-- **Generator:** generate values from provided input, such as AWS module generating credentials for IAM Roles
-
-Available modules:
-- Hashicorp Vault:
-  - [Key Value Version 2](https://www.vaultproject.io/docs/secrets/kv/kv-v2) 
-  - _More to come..._
-- AWS
-  - [IAM AssumeRole](https://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRole.html)
-  - _More to come..._
-- BitWarden - _experimental and untested, use with care_
+- [Hashicorp Vault](#hashicorp-vault)
+  - [Key Value Version 2](#key-value-v2)
+- [AWS](#aws)
+  - [SSM Parameter Store](#systems-manager-ssm-parameter-store)
+  - [Secrets Manager](#secrets-manager)
+  - [IAM AssumeRole](#sts-assume-role)
+- [Google Cloud](#google-cloud)
+  - [Secret Manager](#secret-manager)
+- [BitWarden](#bitwarden) - _experimental and untested, use with care_
 
 Wanna add a module? See [contribution guide](../CONTRIBUTING.md) !
 
-### Hashicorp Vault
+## Hashicorp Vault
+
+### Key Value v2
 
 [Key Value Version 2](https://www.vaultproject.io/docs/secrets/kv/kv-v2) with variables and files:
 
@@ -40,7 +38,10 @@ environment:
           entry: "token"
 ```
 
-### AWS
+## AWS
+
+
+### STS Assume Role
 
 Generate temporary [IAM Role credentials with AssumeRole](https://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRole.html):
 
@@ -57,7 +58,71 @@ environments:
         source_profile: novops
 ```
 
-### BitWarden
+### Systems Manager (SSM) Parameter Store
+
+Retrieve key/values from [AWS SSM Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html) as env variables or files:
+
+```yaml
+environments:
+  dev:
+    variables:
+    - name: MY_SSM_PARAM_STORE_VAR
+      value:
+        aws_ssm_parameter:
+          name: some-param
+          # with_decryption: true/false
+    
+    files:
+    - name: MY_SSM_PARAM_STORE_FILE
+      content:
+        aws_ssm_parameter:
+          name: some-var-in-file
+```
+
+### Secrets Manager
+
+Retrieve secrets from [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/) as env var or files:
+
+```yaml
+environments:
+  dev:
+    variables:
+    - name: MY_SECRETSMANAGER_VAR
+      value:
+        aws_secret:
+          id: my-string-secret
+
+    files:
+    - name: MY_SECRETSMANAGER_FILE
+      content:
+        aws_secret:
+          id: my-binary-secret
+```
+
+## Google Cloud
+
+### Secret Manager
+
+Retrieve secrets from [GCloud Secret Manager](https://cloud.google.com/secret-manager/docs) as env var or files:
+
+```yaml
+environments:
+  dev:
+    variables:
+    - name: SECRETMANAGER_VAR_STRING
+      value:
+        gcloud_secret:
+          name: projects/my-project/secrets/SomeSecret/versions/latest
+          # validate_crc32c: true
+  
+    files:
+    - name: SECRETMANAGER_VAR_FILE
+      content:
+        gcloud_secret:
+          name: projects/my-project/secrets/SomeSecret/versions/latest
+```
+
+## BitWarden
 
 _Experimental module, requires BitWarden CLI installed locally_
 

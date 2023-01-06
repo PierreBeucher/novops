@@ -28,6 +28,8 @@ Platform agnostic secret and config manager for DevOps, CI and development envir
 - Manage multi-environment (dev, preprod, prod...)
 - Quick and easy installation using static binary
 
+[See all available modules](docs/modules.md) for AWS, Google Cloud, Hashicorp vault and more !
+
 ## Install
 
 
