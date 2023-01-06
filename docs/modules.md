@@ -1,18 +1,42 @@
 # Modules reference
 
 - [Hashicorp Vault](#hashicorp-vault)
+  - [Configuration](#configuration)
   - [Key Value Version 2](#key-value-v2)
 - [AWS](#aws)
+  - [Configuration](#configuration-1)
   - [SSM Parameter Store](#systems-manager-ssm-parameter-store)
   - [Secrets Manager](#secrets-manager)
   - [IAM AssumeRole](#sts-assume-role)
 - [Google Cloud](#google-cloud)
+  - [Configuration](#configuration-2)
   - [Secret Manager](#secret-manager)
 - [BitWarden](#bitwarden) - _experimental and untested, use with care_
 
 Wanna add a module? See [contribution guide](../CONTRIBUTING.md) !
 
 ## Hashicorp Vault
+
+### Configuration
+
+Specify your Vault instance in config:
+
+```yaml
+environments:
+# ...
+
+config:
+  hashivault:
+    address: http://localhost:8200
+    # token: xxx # token can be set in config for testing
+```
+
+Or set [Vault built-in environment variables](https://developer.hashicorp.com/vault/docs/commands#environment-variables) prior to running `novops`:
+
+```sh
+export VAULT_TOKEN=xxx
+export VAULT_ADDR=https://vault.mycompany.org:8200
+```
 
 ### Key Value v2
 
@@ -40,6 +64,13 @@ environment:
 
 ## AWS
 
+### Configuration
+
+Specify your AWS credentials as usual (see [AWS Programmatic access](https://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-types.html#access-keys-and-secret-access-keys) or [Credentials quickstart](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html#cli-configure-quickstart-creds)):
+
+- Environment variables `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, etc.
+- Config file `.aws/config` and `.aws/credentials`
+- Use IAM Role attached from ECS or EC2 instance
 
 ### STS Assume Role
 
@@ -100,6 +131,14 @@ environments:
 ```
 
 ## Google Cloud
+
+### Configuration
+
+Provide credentials using [Application Default Credentials](https://cloud.google.com/docs/authentication/application-default-credentials):
+
+- Set `GOOGLE_APPLICATION_CREDENTIALS` to a credential JSON file
+- Setup creds using `gcloud` CLI
+- Attached service account
 
 ### Secret Manager
 
