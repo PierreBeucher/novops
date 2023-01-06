@@ -34,9 +34,9 @@ Platform agnostic secret and config manager for DevOps, CI and development envir
 
 
 ```
-curl -L "https://github.com/novadiscovery/novops/releases/download/v0.1.20/x86_64-unknown-linux-musl.zip" -o "novops.zip"
+curl -L "https://github.com/novadiscovery/novops/releases/latest/download/x86_64-unknown-linux-musl.zip" -o novops.zip
 unzip novops.zip
-sudo mv novops/novops /usr/local/bin/novops
+sudo mv novops /usr/local/bin/novops
 ```
 
 ## Getting started
