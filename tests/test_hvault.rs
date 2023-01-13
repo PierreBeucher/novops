@@ -5,12 +5,13 @@ mod tests {
     use anyhow::Context;
     use vaultrs::client::{VaultClient, VaultClientSettingsBuilder};
     use vaultrs::{kv2, kv1};
-    use log::{info, debug};
+    use log::info;
     use std::collections::HashMap;
-    use crate::test_utils::load_env_for;
+    use crate::test_utils::{load_env_for, test_setup};
 
     #[tokio::test]
     async fn test_hashivault_kv2() -> Result<(), anyhow::Error> {
+        test_setup();
         let client = hashivault_test_client();
 
         // enable kv2 engine
@@ -33,6 +34,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_hashivault_kv1() -> Result<(), anyhow::Error> {
+        test_setup();
+        
         let client = hashivault_test_client();
         enable_engine(&client, "kv1", "generic", None).await?;
 
@@ -64,11 +67,6 @@ mod tests {
     }
 
     async fn enable_engine(client: &VaultClient, path: &str, engine_type: &str, opts: Option<HashMap<String, String>>) -> Result<(), anyhow::Error> {
-        match env_logger::try_init() {
-            Ok(_) => {},
-            Err(e) => {debug!("env_logger::try_nit() error: {:?}", e)},
-        };
-        
         let mounts = vaultrs::sys::mount::list(client).await
             .with_context(|| "Couldn't list secret engines")?;
         
