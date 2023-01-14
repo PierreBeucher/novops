@@ -43,7 +43,7 @@ mod tests {
             &client,
             "kv1",
             "test_hashivault_kv1",
-            &HashMap::from([("novops_secret".to_string(), "s3cret_kv1".to_string())])
+            &HashMap::from([("novops_secret", "s3cret_kv1")])
         ).await.with_context(|| "Error when setting test secret for kv1")?;
 
         let outputs = load_env_for("hvault_kv1", "dev").await?;

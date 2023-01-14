@@ -2122,7 +2122,7 @@ checksum = "830b7e5d4d90034032940e4ace0d9a9a057e7a45cd94e6c007832e39edb82f6d"
 [[package]]
 name = "vaultrs"
 version = "0.6.2"
-source = "git+https://github.com/PierreBeucher/vaultrs?branch=api-kv#9dee4fa432a7e8fca47a9adbab3d32d9348ad29d"
+source = "git+https://github.com/jmgilman/vaultrs?rev=823c44b898a2990f099cc8737a36a618ae209385#823c44b898a2990f099cc8737a36a618ae209385"
 dependencies = [
  "async-trait",
  "bytes",
