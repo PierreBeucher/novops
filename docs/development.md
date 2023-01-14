@@ -19,6 +19,7 @@ docker buildx build .
 Integration tests are run when possible real service, falling back to emulator or dry-run when not practical:
 - AWS: [LocalStack](https://localstack.cloud) server
 - Hashivault: [Vault Docker image](https://hub.docker.com/_/vault)
+- Google Cloud: `--dry-run` mode 
 
 ```sh
 # Run Docker Compose stack and run tests

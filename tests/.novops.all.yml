@@ -24,6 +24,12 @@ environments:
             path: test_hashivault
             key: novops_secret
 
+      # GCloud
+      - name: GCLOUD_SECRETMANAGER
+        value:
+          gcloud_secret:
+            name: projects/some-porject/secrets/TestSecret/versions/latest
+
       # BitWarden
       - name: BITWARDEN
         value:

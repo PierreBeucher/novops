@@ -205,6 +205,7 @@ mod tests {
         assert!(result.variables.get("AWS_SSM_PARAMETER").unwrap().value.len() > 0);
         assert!(result.variables.get("HASHIVAULT_KV_V2").unwrap().value.len() > 0);
         assert!(result.variables.get("BITWARDEN").unwrap().value.len() > 0);
+        assert!(result.variables.get("GCLOUD_SECRETMANAGER").unwrap().value.len() > 0);
         assert!(result.files.get("/tmp/novopsfile").unwrap().content.len() > 0);
     
         // aws.assumerole
