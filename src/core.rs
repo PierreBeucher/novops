@@ -5,7 +5,7 @@ use anyhow;
 use std::path::PathBuf;
 use schemars::JsonSchema;
 
-use crate::modules::hashivault::{config::HashivaultConfig, kv2::HashiVaultKeyValueV2Input};
+use crate::modules::hashivault::{config::HashivaultConfig, kv2::HashiVaultKeyValueV2Input, kv1::HashiVaultKeyValueV1Input};
 use crate::modules::bitwarden;
 use crate::modules::aws;
 use crate::modules::files::{FileInput};
@@ -112,6 +112,7 @@ pub enum StringResolvableInput {
     String(String),
     BitwardeItemInput(bitwarden::BitwardenItemInput),
     HashiVaultKeyValueV2Input(HashiVaultKeyValueV2Input),
+    HashiVaultKeyValueV1Input(HashiVaultKeyValueV1Input),
     AwsSSMParamStoreInput(aws::ssm::AwsSSMParamStoreInput),
     AwsSecretsManagerSecretInput(aws::secretsmanager::AwsSecretsManagerSecretInput),
 }
@@ -133,6 +134,7 @@ impl ResolveTo<String> for StringResolvableInput {
             StringResolvableInput::String(s) => Ok(s.clone()),
             StringResolvableInput::BitwardeItemInput(bw) => bw.resolve(ctx).await,
             StringResolvableInput::HashiVaultKeyValueV2Input(hv) => hv.resolve(ctx).await,
+            StringResolvableInput::HashiVaultKeyValueV1Input(hv) => hv.resolve(ctx).await,
             StringResolvableInput::AwsSSMParamStoreInput(p) => p.resolve(ctx).await,
             StringResolvableInput::AwsSecretsManagerSecretInput(s) => s.resolve(ctx).await
         }

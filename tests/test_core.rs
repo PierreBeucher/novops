@@ -11,7 +11,7 @@ mod tests {
     use std::fs;
     use std::os::unix::fs::PermissionsExt;
     use log::info;
-    use crate::test_utils::{clean_and_setup_test_dir, TEST_DIR, load_env_dryrun_for};
+    use crate::test_utils::{clean_and_setup_test_dir, TEST_DIR, load_env_dryrun_for, test_setup};
 
     const CONFIG_EMPTY: &str = "tests/.novops.empty.yml";
     const CONFIG_STANDALONE: &str = "tests/.novops.standalone.yml";
@@ -21,6 +21,7 @@ mod tests {
      */
     #[tokio::test]
     async fn test_load_simple_config() -> Result<(), anyhow::Error>{
+        test_setup();
 
         let workdir = clean_and_setup_test_dir("test_load_simple_config")?;
 
@@ -73,6 +74,8 @@ mod tests {
      */
     #[tokio::test]
     async fn test_simple_run() -> Result<(), anyhow::Error>{
+        test_setup();
+
         let workdir = clean_and_setup_test_dir("test_simple_run")?;
 
         load_environment(NovopsArgs { 
@@ -119,6 +122,8 @@ mod tests {
     
     #[tokio::test]
     async fn test_symlink_flag() -> Result<(), anyhow::Error> {
+        test_setup();
+
         let workdir = clean_and_setup_test_dir("test_symlink_flag")?;
 
         let expect_symlink_at = PathBuf::from(TEST_DIR).join("test-symlink");
@@ -159,6 +164,8 @@ mod tests {
      */
     #[tokio::test]
     async fn test_symlink_no_file_override() -> Result<(), anyhow::Error> {
+        test_setup();
+
         let workdir = clean_and_setup_test_dir("test_symlink_no_file_override")?;
 
         // create dummy file, we don't want it erased by symlink
@@ -185,6 +192,8 @@ mod tests {
      */
     #[tokio::test]
     async fn test_dry_run() -> Result<(), anyhow::Error> {
+        test_setup();
+        
         let result = load_env_dryrun_for("all", "dev").await?;
 
         info!("test_dry_run: Found variables: {:?}", &result.variables);

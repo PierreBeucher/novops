@@ -2,6 +2,7 @@ use std::path::PathBuf;
 use std::fs;
 use std::env;
 use novops::{NovopsOutputs, NovopsArgs, load_context_and_resolve};
+use log::debug;
 
 pub const TEST_DIR: &str = "tests/output";
 
@@ -51,3 +52,14 @@ async fn _load_env_for(conf_name: &str, env: &str, dry_run: bool) -> Result<Novo
   return Ok(outputs);
 }
 
+/**
+ * Perform test setup before running tests
+ */
+pub fn test_setup(){
+
+  // enable logger
+  match env_logger::try_init() {
+    Ok(_) => {},
+    Err(e) => {debug!("env_logger::try_init() error: {:?}", e)},
+  };
+}

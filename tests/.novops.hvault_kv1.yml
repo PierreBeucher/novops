@@ -4,12 +4,12 @@ name: test-app
 environments:
   dev:
     variables:
-      - name: HASHIVAULT_KV_V2_TEST
+      - name: HASHIVAULT_KV_V1_TEST
         value:
-          hvault_kv2:
-            path: test_hashivault
+          hvault_kv1:
+            mount: kv1
+            path: test_hashivault_kv1
             key: novops_secret
-    
     files: []
           
 config:

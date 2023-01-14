@@ -7,9 +7,9 @@ mod tests {
     use novops::modules::aws::config::AwsClientConfig;
     use aws_sdk_ssm::model::ParameterType;
     use aws_smithy_types::Blob;
-    use crate::test_utils::load_env_for;
+    use crate::test_utils::{load_env_for, test_setup};
 
-    use log::{info, debug};
+    use log::info;
 
     #[tokio::test]
     async fn test_assume_role() -> Result<(), anyhow::Error> {
@@ -174,12 +174,7 @@ mod tests {
     }
 
     async fn setup_test_env() -> Result<(), anyhow::Error> {
-
-        // Allow multiple invocation of logger
-        match env_logger::try_init() {
-            Ok(_) => {},
-            Err(e) => {debug!("env_logger::try_nit() error: {:?}", e)},
-        };
+        test_setup();
         
         // use known AWS config
         let aws_config = std::env::current_dir()?.join("tests/aws/config");
