@@ -20,5 +20,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           RUSTTARGET: ${{ matrix.target }}
-          EXTRA_FILES: "LICENSE"
           ARCHIVE_NAME: ${{ matrix.target }}.zip
