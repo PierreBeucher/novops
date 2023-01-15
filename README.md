@@ -23,7 +23,12 @@ Platform agnostic secret and config manager for DevOps, CI and development envir
 
 ### Modules: Hashicorp Vault, AWS, GCloud, Azure...
 
-[See all available modules](docs/modules.md)
+- [Files and Variables](./docs/modules.md#files-and-variables)
+- [Hashicorp Vault](./docs/modules.md#hashicorp-vault)
+- [AWS](./docs/modules.md#aws)
+- [Google Cloud](./docs/modules.md#google-cloud)
+- [Microsoft Azure](./docs/modules.md#microsoft-azure)
+- [BitWarden](./docs/modules.md#bitwarden)
 
 ## Install
 
@@ -99,18 +104,15 @@ $ cat $APP_TOKEN
 ```
 
 Load config:
-- **We strongly recommend using [`direnv`](https://direnv.net/)** for seamless shell integration
+- Using [`direnv`](https://direnv.net/) is [recommended for seamless shell integration](./docs/novops-direnv.md)
   ```sh
-  # Load novops and create a symlink .envrc -> secure sourceable file
+  # Load novops and create symlink .envrc
   # direnv will source automatically in current shell
   novops load -e dev -s .envrc
-  # ...
-  # direnv: loading ~/myproject/.envrc  
-  ```
-  See [Why is Novops + direnv strongly advised?](./docs/novops-direnv.md)
+  ```  
 - Alternatively you can source manually:
   ```sh
-  novops load -e dev -s .myenvs && source .myenvs
+  novops load -e dev -s .env && source .env
   ```
 
 Your shell session is now loaded!
@@ -124,11 +126,20 @@ env | grep APP_
 
 ## Documentation
 
+- [All modules](./docs/modules.md)
+  - [Files and Variables](./docs/modules.md#files-and-variables)
+  - [Hashicorp Vault](./docs/modules.md#hashicorp-vault)
+  - [AWS](./docs/modules.md#aws)
+  - [Google Cloud](./docs/modules.md#google-cloud)
+  - [Microsoft Azure](./docs/modules.md#microsoft-azure)
+  - [BitWarden](./docs/modules.md#bitwarden) 
+- [Usage](./docs/usage.md)
+  - [Shell](./docs/usage.md#shell)
+  - [Docker](./docs/usage.md#docker)
+  - [GitLab CI](./docs/usage.md#gitlab-ci)
 - [Security - how safe is Novops?](./docs/security.md)
-- [Why is Novops + direnv strongly advised?](./docs/novops-direnv.md)
-- [Usage with DevOps tools: Docker, GitLab CI, Nix...](./docs/usage.md)
-- [All modules: Hashicorp Vault, AWS, GCloud, Azure...](./docs/modules.md)
-- [`.novops.yml` configuration reference](./docs/schema.json)
+- [Why is Novops + direnv recommended?](./docs/novops-direnv.md)
+- [`.novops.yml` auto-generated schema](./docs/schema.json)
 - [Internal architecture: Inputs, Outputs and resolving](./docs/architecture.md)
 - [Development guide](./docs/development.md)
 

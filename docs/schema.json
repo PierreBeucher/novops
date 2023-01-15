@@ -31,15 +31,37 @@
     "AwsAssumeRoleInput": {
       "type": "object",
       "required": [
-        "role_arn",
-        "source_profile"
+        "role_arn"
       ],
       "properties": {
         "role_arn": {
           "type": "string"
         },
         "source_profile": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "AwsConfig": {
+      "description": "Global AWS config",
+      "type": "object",
+      "properties": {
+        "endpoint": {
+          "description": "Override endpoint for all AWS services Can be used with tools like LocalStack (http://localhost:4566/)",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "profile": {
+          "description": "AWS Profile to use when resolving inputs",
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     },
@@ -51,6 +73,109 @@
       "properties": {
         "assume_role": {
           "$ref": "#/definitions/AwsAssumeRoleInput"
+        }
+      }
+    },
+    "AwsSSMParamStoreInput": {
+      "type": "object",
+      "required": [
+        "aws_ssm_parameter"
+      ],
+      "properties": {
+        "aws_ssm_parameter": {
+          "$ref": "#/definitions/AwsSSMParameter"
+        }
+      }
+    },
+    "AwsSSMParameter": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "description": "Parameter name",
+          "type": "string"
+        },
+        "with_decryption": {
+          "description": "Return decrypted values for secure string parameters. This flag is ignored for String and StringList parameter types.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      }
+    },
+    "AwsSecretsManagerSecret": {
+      "description": "Structure to request a Secrets Manager secret\n\nSecret Manager content is either String or Binary so this Input implements ResolveTo<String> and ResolveTo<Vec<u8>> to represent both situations\n\nDepending on usage, resolving behavior is: - String for VariableInput: String is used for export - Binary for VariableInput: **Vec<u8> is encoded in UTF-8 for export** - String for FileInput: String's underlying Vec<u8> is written to file - Binary for FileInput: Vec<u8> data is written to file as-is\n\nSee https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html",
+      "type": "object",
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "description": "Secret ID",
+          "type": "string"
+        },
+        "version_id": {
+          "description": "The unique identifier of the version of the secret to retrieve.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "version_stage": {
+          "description": "The staging label of the version of the secret to retrieve.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "AwsSecretsManagerSecretInput": {
+      "type": "object",
+      "required": [
+        "aws_secret"
+      ],
+      "properties": {
+        "aws_secret": {
+          "$ref": "#/definitions/AwsSecretsManagerSecret"
+        }
+      }
+    },
+    "AzureKeyvaultSecret": {
+      "type": "object",
+      "required": [
+        "name",
+        "vault"
+      ],
+      "properties": {
+        "name": {
+          "description": "Secret name",
+          "type": "string"
+        },
+        "vault": {
+          "description": "Secret's vault name",
+          "type": "string"
+        },
+        "version": {
+          "description": "Secret's version (default: latest)",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "AzureKeyvaultSecretInput": {
+      "type": "object",
+      "required": [
+        "azure_keyvault_secret"
+      ],
+      "properties": {
+        "azure_keyvault_secret": {
+          "$ref": "#/definitions/AzureKeyvaultSecret"
         }
       }
     },
@@ -81,6 +206,28 @@
         }
       }
     },
+    "BytesResolvableInput": {
+      "description": "Enum for all Inputs resolving to a Byte Vector (including [StringResolvableInput] as Rust internal structure represents String as Byte vector) This input is used by [FileInput] to resolve file content whic is not always a String but may also be binary or blob data.",
+      "anyOf": [
+        {
+          "$ref": "#/definitions/AwsSecretsManagerSecretInput"
+        },
+        {
+          "$ref": "#/definitions/GCloudSecretManagerSecretInput"
+        },
+        {
+          "$ref": "#/definitions/StringResolvableInput"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "uint8",
+            "minimum": 0.0
+          }
+        }
+      ]
+    },
     "FileInput": {
       "description": "Content is any input File can also define a destination (by default, will use XDG Runtime directory, or a secure /tmp subfolder in XDG is not available) Dest will override default destination to a custom path Variable is an environment variable output pointing to generated file\n\nExample:\n\ndog: content: \"wouf\"\n\nWould generate Outputs: - a file such as /run/user/1000/novops/animals/dev/dog - an environment variable such as NOVOPS_ANIMALS_DEV_FILE_DOG=\"/run/user/1000/novops/animals/dev/dog\"\n\ncat: dest: /tmp/thecat variable: CAT_LOCATION content: \"meow\"\n\nWould generate Outputs: - a file such as /tmp/thecat - an environment variable such as CAT_LOCATION=\"/tmp/thecat\"",
       "type": "object",
@@ -89,7 +236,7 @@
       ],
       "properties": {
         "content": {
-          "$ref": "#/definitions/StringResolvableInput"
+          "$ref": "#/definitions/BytesResolvableInput"
         },
         "dest": {
           "type": [
@@ -109,6 +256,72 @@
             "string",
             "null"
           ]
+        }
+      }
+    },
+    "GCloudSecretManagerSecret": {
+      "description": "Structure to request a GCloud Secret Manager secret\n\nSee https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html",
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "description": "Name of the secret in the format projects/\\*\\/secrets/\\*\\/versions/\\* Such as `projects/my-org-project/secrets/my-secret/latest` Or `projects/my-org-project/secrets/my-secret/42` for a specific version",
+          "type": "string"
+        },
+        "validate_crc32c": {
+          "description": "Whether to validate crc32c checksum provided with secret (default: true)",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      }
+    },
+    "GCloudSecretManagerSecretInput": {
+      "type": "object",
+      "required": [
+        "gcloud_secret"
+      ],
+      "properties": {
+        "gcloud_secret": {
+          "$ref": "#/definitions/GCloudSecretManagerSecret"
+        }
+      }
+    },
+    "HashiVaultKeyValueV1": {
+      "type": "object",
+      "required": [
+        "key",
+        "path"
+      ],
+      "properties": {
+        "key": {
+          "description": "Secret key to retrieve",
+          "type": "string"
+        },
+        "mount": {
+          "description": "KV v1 mount point default to \"kv/\"",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "path": {
+          "description": "Path to secret",
+          "type": "string"
+        }
+      }
+    },
+    "HashiVaultKeyValueV1Input": {
+      "type": "object",
+      "required": [
+        "hvault_kv1"
+      ],
+      "properties": {
+        "hvault_kv1": {
+          "$ref": "#/definitions/HashiVaultKeyValueV1"
         }
       }
     },
@@ -176,6 +389,16 @@
     "NovopsConfig": {
       "type": "object",
       "properties": {
+        "aws": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/AwsConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "default": {
           "anyOf": [
             {
@@ -244,7 +467,7 @@
       }
     },
     "StringResolvableInput": {
-      "description": "Enum with Input that will always resolve to String i.e. <impl ResolveTo<String>>",
+      "description": "Enum with Input that will always resolve to String Centralize ResolveTo<String> to reduce boiler-plate code on other inputs like FileInput and VariableInput\n\nMost modules Inputs will resolve to a String which can be used either as Variable or File. See [BytesResolvableInput] if you need to handle binary data.",
       "anyOf": [
         {
           "type": "string"
@@ -254,6 +477,21 @@
         },
         {
           "$ref": "#/definitions/HashiVaultKeyValueV2Input"
+        },
+        {
+          "$ref": "#/definitions/HashiVaultKeyValueV1Input"
+        },
+        {
+          "$ref": "#/definitions/AwsSSMParamStoreInput"
+        },
+        {
+          "$ref": "#/definitions/AwsSecretsManagerSecretInput"
+        },
+        {
+          "$ref": "#/definitions/GCloudSecretManagerSecretInput"
+        },
+        {
+          "$ref": "#/definitions/AzureKeyvaultSecretInput"
         }
       ]
     },
