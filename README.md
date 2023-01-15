@@ -15,7 +15,7 @@ Platform agnostic secret and config manager for DevOps, CI and development envir
 ![novops-features](docs/assets/novops-features.jpg)
 
 - Securely load secrets and configs as files or environment variables
-- Reduce drift between local dev context and CI/CD
+- Reduce drift between local dev context and CI/CD (avoiding duplication between in-CI variables and local config)
 - Integrate with various secret providers: Hashicorp Vault, AWS GCloud, Azure...
 - Easily integrated within most shells and CI systems: Gitlab, GitHub, Jenkins...
 - Manage multi-environment (dev, preprod, prod...)
@@ -133,10 +133,15 @@ env | grep APP_
   - [Google Cloud](./docs/modules.md#google-cloud)
   - [Microsoft Azure](./docs/modules.md#microsoft-azure)
   - [BitWarden](./docs/modules.md#bitwarden) 
-- [Usage](./docs/usage.md)
-  - [Shell](./docs/usage.md#shell)
-  - [Docker](./docs/usage.md#docker)
-  - [GitLab CI](./docs/usage.md#gitlab-ci)
+- [Usage and examples](./docs/usage.md#usage-and-examples)
+  - [Run Novops from...](./docs/usage.md#run-novops-from)
+    - [Local shell](./docs/usage.md#local-shell)
+    - [Docker](./docs/usage.md#docker)
+    - [GitLab CI](./docs/usage.md#gitlab-ci)
+  - [Leverage Novops to configure and run...](./docs/usage.md#leverage-novops-to-configure-and-run)
+    - [Ansible](./docs/usage.md#ansible)
+    - [Terraform](./docs/usage.md#terraform)
+    - [Pulumi](./docs/usage.md#pulumi)
 - [Security - how safe is Novops?](./docs/security.md)
 - [Why is Novops + direnv recommended?](./docs/novops-direnv.md)
 - [`.novops.yml` auto-generated schema](./docs/schema.json)
