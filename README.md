@@ -40,41 +40,65 @@ Create a `.novops.yml` file:
 ```yaml
 name: myapp
 
+# Dictionary of environments user can choose from when running novops
+# Keys are environment name
+# Each environment defines inputs loaded as either files or variables
 environments:
+
+  # Dev environment definition
   dev:
+
+    # List of variables to load for dev
     variables:
+
       # Plain string
       - name: APP_URL
         value: "http://127.0.0.1:8080"
 
-      # Retrieve secret from Hashicorp Vault using KV v2 Secret Engine
+      # Use Hashicorp Vault KV2 module to set variable value
+      # `value` specify the module config, i.e. the reference to value we want to retrieve
       - name: APP_PASSWORD
         value:
           hvault_kv2:
-            mount: "secret"
-            path: "myapp/dev/creds"
-            entry: "password"
+            path: crafteo/app/dev
+            key: password
 
+      # Any module loading string value can be used with variable
+      # See docs/modules.md for a list of all modules
+      # And examples/ for full examples per modules
+      # - name: ANOTHER_SECRET
+      #   value:
+      #     module_name:
+      #       some_config: foo
+      #       aother_config: bar
+
+    # List of files to load for dev
+    # Modules and plain string can be specified as file content
     files: 
-      # Retrieve secret from BitWarden and save it to file
+
+      # Retrieve AWS Secrets Manager secret
       # File path will be exposed via env var APP_TOKEN
-      - name: APP_TOKEN
-        content: 
-          bitwarden:
-            entry: "Dev Secret Token"
-            field: notes
+      # APP_TOKEN variable will point to file containing secret
+      # Such as APP_TOKEN='/run/user/1000/novops/myapp/dev/file_APP_TOKEN'
+      - variable: APP_TOKEN
+        content:
+          aws_secret:
+            id: my-app-dev-token
 ```
 
-Novops will generate a _secure_ sourceable file containing all your variables and references to files such as:
+Novops will generate a **secure** sourceable file containing all your variables and references to files such as:
 
 ```sh
 $ cat /run/user/1000/novops/example-app/local/vars
 # export APP_URL='127.0.0.1:8080'
 # export APP_PASSWORD='s3cret'
 # export APP_TOKEN='/run/user/1000/novops/myapp/dev/file_APP_TOKEN'
+
+$ cat $APP_TOKEN
+# TheSecretToken
 ```
 
-Load Novops config:
+Load config:
 - **We strongly recommend using [`direnv`](https://direnv.net/)** for seamless shell integration
   ```sh
   # Load novops and create a symlink .envrc -> secure sourceable file
@@ -100,13 +124,13 @@ env | grep APP_
 
 ## Documentation
 
-- #### [Security - how safe is Novops?](./docs/security.md)
-- #### [Why is Novops + direnv strongly advised?](./docs/novops-direnv.md)
-- #### [Usage with DevOps tools: Docker, GitLab CI, Nix...](./docs/usage.md)
-- #### [All modules: Hashicorp Vault, AWS, GCloud, Azure...](./docs/modules.md)
-- #### [`.novops.yml` configuration reference](./docs/schema.json)
-- #### [Internal architecture: Inputs, Outputs and resolving](./docs/architecture.md)
-- #### [Development guide](./docs/development.md)
+- [Security - how safe is Novops?](./docs/security.md)
+- [Why is Novops + direnv strongly advised?](./docs/novops-direnv.md)
+- [Usage with DevOps tools: Docker, GitLab CI, Nix...](./docs/usage.md)
+- [All modules: Hashicorp Vault, AWS, GCloud, Azure...](./docs/modules.md)
+- [`.novops.yml` configuration reference](./docs/schema.json)
+- [Internal architecture: Inputs, Outputs and resolving](./docs/architecture.md)
+- [Development guide](./docs/development.md)
 
 ## Contributing
 
