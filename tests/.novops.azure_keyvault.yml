@@ -15,8 +15,7 @@ environments:
   
     # Can also be used with files
     files:
-      - name: azure_file
-        dest: /tmp/AZ_KEYVAULT_SECRET_FILE
+      - dest: /tmp/AZ_KEYVAULT_SECRET_FILE
         content:
           azure_keyvault_secret:
             vault: novops-test-kv

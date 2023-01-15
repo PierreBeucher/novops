@@ -89,7 +89,7 @@ mod tests {
         let expected_var_file = PathBuf::from(&workdir).join("vars");
         let expected_var_content = fs::read_to_string(expected_var_file)?;
         
-        let expected_file_dog_path = PathBuf::from(&workdir).join("file_dog");
+        let expected_file_dog_path = PathBuf::from(&workdir).join("file_1811bdd29f2cfe95e6e23402e2390fa1012708fc52ef8b8a29ee540b1c481534");
         let expected_file_dog_content = fs::read_to_string(&expected_file_dog_path)?;
         let file_dog_metadata = fs::metadata(&expected_file_dog_path)?;
         let file_dog_mode = file_dog_metadata.permissions().mode();
@@ -103,7 +103,7 @@ mod tests {
         // naïve but sufficient for our needs
         assert!(&expected_var_content.contains(r#"export SPECIAL_CHARACTERS='special_char_'"'"'!?`$abc_#~%*µ€{}[]-°+@à^ç=\'"#));
         assert!(&expected_var_content.contains( "export MY_APP_HOST='localhost'"));
-        assert!(&expected_var_content.contains( &format!("export NOVOPS_TEST_PLAIN_STRINGS_FILE_DOG='{:}'",
+        assert!(&expected_var_content.contains( &format!("export DOG_PATH='{:}'",
             &expected_file_dog_path.clone().into_os_string().into_string().unwrap())));
         assert!(&expected_var_content.contains( "export NOVOPS_CAT_VAR='/tmp/novops_cat'"));
 

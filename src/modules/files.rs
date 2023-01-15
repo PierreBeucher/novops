@@ -3,6 +3,7 @@ use convert_case::{Case, Casing};
 use async_trait::async_trait;
 use serde::Deserialize;
 use anyhow;
+use sha2::{Sha256, Digest};
 use schemars::JsonSchema;
 
 use crate::core::{ResolveTo, NovopsContext, BytesResolvableInput};
@@ -65,17 +66,20 @@ impl ResolveTo<FileOutput> for FileInput {
         
         // enforce either name or variable as name is used to auto-generate variable 
         // otherwise we can't affect a deterministic variable name from config
-        if self.name.is_none() && self.variable.is_none(){
-            panic!("You must specify at least a name or a variable for file {:?}, otherwise associated variable name won't be deterministic", self)
+        if self.dest.is_none() && self.variable.is_none(){
+            panic!("You must specify at least `dest` or `variable` for file {:?}.", self)
         }
-
-        // if name is provided, use it
-        // otherwise use dest as snake user
-        // and default a uuid
-        let fname = match &self.name {
-            Some(s) => s.clone(),
-            None => uuid::Uuid::new_v4().to_string()
+        
+        let content = match self.content.resolve(ctx).await {
+            Ok(c) => c,
+            Err(e) => return Err(e),
         };
+
+        // use content hash as file name to ensure the same content generates same file name
+        // useful for testing to know where to look for file
+        let mut hasher = Sha256::new();
+        hasher.update(&content);
+        let fname = format!("{:x}", hasher.finalize());
 
         // if dest provided, use it
         // otherwise use working directory and file name
@@ -94,10 +98,6 @@ impl ResolveTo<FileOutput> for FileInput {
                 fname.to_case(Case::Snake).to_uppercase()),
         };
 
-        let content = match self.content.resolve(ctx).await {
-            Ok(c) => c,
-            Err(e) => return Err(e),
-        };
 
         return Ok(
             FileOutput {

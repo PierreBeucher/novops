@@ -17,11 +17,10 @@ environments:
         value: "special_char_'!?`$abc_#~%*µ€{}[]-°+@à^ç=\\"
       
     files: 
-      - name: dog
+      - variable: DOG_PATH
         content: "woof"
 
-      - name: cat
-        content: meow
+      - content: meow
         dest: /tmp/novops_cat
         variable: NOVOPS_CAT_VAR
 
@@ -31,7 +30,8 @@ environments:
         value: staginghost
       
     files: 
-      - name: bird
+      - name: birdy
+        variable: BIRD_VAR
         content: "flapflap"
 
 config:

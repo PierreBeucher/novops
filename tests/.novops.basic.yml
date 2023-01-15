@@ -53,7 +53,7 @@ environments:
 
       # Any module with string or binary output can be used for file `content`
       # For example retrieve secret from Hashicorp Vault
-      - name: MY_APP_TOKEN
+      - variable: MY_APP_TOKEN
         content:
           hvault_kv2:
             path: crafteo/app/dev

@@ -15,7 +15,7 @@ environments:
     
     # Can be used for files as well
     files:
-      - name: HASHIVAULT_KV_V1_FILE
+      - variable: HASHIVAULT_KV_V1_FILE
         content:
           hvault_kv1:
             path: test_hashivault_kv1

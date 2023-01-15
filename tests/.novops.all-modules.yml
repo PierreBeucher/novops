@@ -63,12 +63,10 @@ environments:
     files:
       # Plain file content value
       - dest: /tmp/novopsfile
-        name: file
         content: foo
 
       # All modules can be used both in variable and files
-      - dest: /tmp/hvaultfile
-        name: hvault
+      - variable: HVAULT_SECRET
         content:
           hvault_kv2:
             path: test_hashivault
