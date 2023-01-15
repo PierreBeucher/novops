@@ -20,6 +20,7 @@ Integration tests are run when possible real service, falling back to emulator o
 - AWS: [LocalStack](https://localstack.cloud) server
 - Hashivault: [Vault Docker image](https://hub.docker.com/_/vault)
 - Google Cloud: `--dry-run` mode 
+- Azure: `--dry-run` mode 
 
 ```sh
 # Run Docker Compose stack and run tests
