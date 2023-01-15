@@ -1,17 +1,27 @@
-# The unique application name
-name: test-app
+# Hashicorp Vault Key Value v1
+name: hashivault-kv1
 
 environments:
   dev:
     variables:
+
+      # Get KV1 secret
       - name: HASHIVAULT_KV_V1_TEST
         value:
           hvault_kv1:
-            mount: kv1
             path: test_hashivault_kv1
             key: novops_secret
-    files: []
-          
+            mount: kv1 # Override secret engine mount (secret/ by default)
+    
+    # Can be used for files as well
+    files:
+      - name: HASHIVAULT_KV_V1_FILE
+        content:
+          hvault_kv1:
+            path: test_hashivault_kv1
+            key: novops_secret
+            mount: kv1
+    
 config:
   default:
     environment: dev

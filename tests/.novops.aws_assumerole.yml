@@ -1,12 +1,22 @@
-# Novops config used to test AWS modules with LocalStack
-name: test-aws
+# AWS Assume role
+name: aws-assumerole
 
 environments:
   dev:
+
+    # AWS Assume Role module
+    # 
+    # Output variables to assume IAM Role:
+    # - AWS_ACCESS_KEY_ID
+    # - AWS_SECRET_ACCESS_KEY
+    # - AWS_SESSION_TOKEN
+    #
+    # These variables are used natively by AWS CLI and SDKs for authentication
+    # See https://docs.aws.amazon.com/sdkref/latest/guide/settings-reference.html#EVarSettings
     aws:
       assume_role: 
         role_arn: arn:aws:iam::111122223333:role/NovopsTestAssumeRole
-        source_profile: default
+        # source_profile: default # optionally define source profile
 
 config:
   default:

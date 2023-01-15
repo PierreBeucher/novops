@@ -1,26 +1,36 @@
-# Novops config used to test AWS modules with LocalStack
-name: test-aws
+# AWS Systems Manager (SSM)
+name: aws-ssm
 
 environments:
   dev:
     variables:
-    - name: SSM_PARAM_STORE_TEST_STRING
-      value:
-        aws_ssm_parameter:
-          name: novops-test-ssm-param-string
-    
-    - name: SSM_PARAM_STORE_TEST_SECURE_STRING
-      value:
-        aws_ssm_parameter:
-          name: novops-test-ssm-param-secureString
-          with_decryption: true
+      # Get parameter as string
+      - name: SSM_PARAM_STORE_TEST_STRING
+        value:
+          aws_ssm_parameter:
+            name: novops-test-ssm-param-string
+            # with_decryption: true # Decryption is enabled by default, possible to disable
+      
+      # Get secure parameter as string
+      - name: SSM_PARAM_STORE_TEST_SECURE_STRING
+        value:
+          aws_ssm_parameter:
+            name: novops-test-ssm-param-secureString
 
-    - name: SSM_PARAM_STORE_TEST_SECURE_STRING_NO_DECRYPT
-      value:
-        aws_ssm_parameter:
-          name: novops-test-ssm-param-secureString
-          with_decryption: false
-          
+      # Get secure parameter as string without decryption
+      - name: SSM_PARAM_STORE_TEST_SECURE_STRING_NO_DECRYPT
+        value:
+          aws_ssm_parameter:
+            name: novops-test-ssm-param-secureString
+            with_decryption: false            
+
+    # Can be used for files as well      
+    files:
+      - variable: SSM_PARAM_FILE
+        content: 
+          aws_ssm_parameter:
+            name: novops-test-ssm-param-secureString
+
 config:
   default:
     environment: dev

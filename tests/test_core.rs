@@ -14,7 +14,7 @@ mod tests {
     use crate::test_utils::{clean_and_setup_test_dir, TEST_DIR, load_env_dryrun_for, test_setup};
 
     const CONFIG_EMPTY: &str = "tests/.novops.empty.yml";
-    const CONFIG_STANDALONE: &str = "tests/.novops.standalone.yml";
+    const CONFIG_STANDALONE: &str = "tests/.novops.plain-strings.yml";
 
     /**
      * Test a config is properly loaded into a NovopsContext
@@ -103,7 +103,7 @@ mod tests {
         // naïve but sufficient for our needs
         assert!(&expected_var_content.contains(r#"export SPECIAL_CHARACTERS='special_char_'"'"'!?`$abc_#~%*µ€{}[]-°+@à^ç=\'"#));
         assert!(&expected_var_content.contains( "export MY_APP_HOST='localhost'"));
-        assert!(&expected_var_content.contains( &format!("export NOVOPS_TEST_STANDALONE_FILE_DOG='{:}'",
+        assert!(&expected_var_content.contains( &format!("export NOVOPS_TEST_PLAIN_STRINGS_FILE_DOG='{:}'",
             &expected_file_dog_path.clone().into_os_string().into_string().unwrap())));
         assert!(&expected_var_content.contains( "export NOVOPS_CAT_VAR='/tmp/novops_cat'"));
 
@@ -194,7 +194,7 @@ mod tests {
     async fn test_dry_run() -> Result<(), anyhow::Error> {
         test_setup();
         
-        let result = load_env_dryrun_for("all", "dev").await?;
+        let result = load_env_dryrun_for("all-modules", "dev").await?;
 
         info!("test_dry_run: Found variables: {:?}", &result.variables);
         info!("test_dry_run: Found files: {:?}", &result.files);

@@ -1,0 +1,92 @@
+#
+# Basic configuration showing top-level configurations and usage
+#
+name: basic-config
+
+# Dictionary of environments user can choose from when running novops
+# Keys are environment name
+# Each environment defines inputs which resolves as either file or variable outputs
+environments:
+
+  # Dev environment
+  dev:
+    
+    # Variable inputs can use plain string and any modules
+    # name: variable name
+    # value: module input or plain string
+    variables:
+
+      # Plain string
+      - name: MY_APP_HOST
+        value: "localhost:8080"
+
+      # Use a module to set variable value (Hashicorp Vault KV2 as example)
+      # `value` specify the module config, such as secret we want to retrieve
+      # See modules examples .novops.<module>.yml for modules usage
+      - name: MY_APP_PASSWORD
+        value:
+          hvault_kv2:
+            path: crafteo/app/dev
+            key: password
+
+      # Any module outputting string can be used with variable
+      # such as
+      # - name: MY_APP_PASSWORD
+      #   value:
+      #     module_name:
+      #       some_config: foo
+      #       aother_config: bar
+
+      
+    # File inputs can use plain string and any modules
+    files: 
+
+      # Will generate a file at "/tmp/dog" containing "woof"
+      - content: woof
+        dest: /tmp/dog
+
+      # Will generate a file containing "meow"
+      # KITTY_FILE_PATH variable will point to file
+      # such as KITTY_FILE_PATH=/run/user/1000/novops/myapp/dev/file_cat
+      - content: meow
+        variable: KITTY_FILE_PATH
+
+      # Any module with string or binary output can be used for file `content`
+      # For example retrieve secret from Hashicorp Vault
+      - name: MY_APP_TOKEN
+        content:
+          hvault_kv2:
+            path: crafteo/app/dev
+            key: token
+
+  # Another environment with its own set of variables and files
+  prod:
+    variables:
+      - name: MY_APP_HOST
+        value: "https://novops.crafteo.io"
+      - name: MY_APP_PASSWORD
+        value:
+          hvault_kv2:
+            path: crafteo/app/prod
+            key: password
+
+    files: 
+      - name: MY_APP_TOKEN
+        content:
+          hvault_kv2:
+            path: crafteo/app/prod
+            key: token
+
+# Global configuration
+config:
+
+  # Set some default values
+  default:
+
+    # Default environment when running novops load
+    environment: dev
+
+  # Set global config for modules
+  # Seet module config for details
+  aws: # ...
+  hashivault: # ...

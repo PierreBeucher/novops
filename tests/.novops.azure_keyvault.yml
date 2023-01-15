@@ -1,23 +1,27 @@
-# GCloud Secret Manager test
+# Azure Key Vault
 name: test-azure-keyvault
 
 environments:
   dev:
     variables:
-    - name: AZ_KEYVAULT_SECRET_VAR
-      value:
-        azure_keyvault_secret:
-          vault: novops-test-kv
-          name: test-secret
+
+      # Get Azure Key Vault secret
+      - name: AZ_KEYVAULT_SECRET_VAR
+        value:
+          azure_keyvault_secret:
+            vault: novops-test-kv
+            name: test-secret
+            # version: xxx # Optionally specify value (use latest by default)
   
+    # Can also be used with files
     files:
-    - name: AZ_KEYVAULT_SECRET_FILE
-      dest: /tmp/AZ_KEYVAULT_SECRET_FILE
-      content:
-        azure_keyvault_secret:
-          vault: novops-test-kv
-          name: test-secret
-          version: 56ed118a41364a9e8a086e76c43629e4
+      - name: azure_file
+        dest: /tmp/AZ_KEYVAULT_SECRET_FILE
+        content:
+          azure_keyvault_secret:
+            vault: novops-test-kv
+            name: test-secret
+            version: 56ed118a41364a9e8a086e76c43629e4
 
 config:
   default:

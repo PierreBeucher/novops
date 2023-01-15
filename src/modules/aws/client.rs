@@ -71,7 +71,7 @@ impl AwsClient for DefaultAwsClient {
         let client = get_ssm_client(&self.config).await?;
         client.get_parameter()
             .name(name)
-            .set_with_decryption(decrypt)
+            .with_decryption(decrypt.unwrap_or(true))
             .send().await
             .with_context(|| format!("Couldn't request SSM parameter {:} (decrypt: {:?})", name, decrypt))
     }
