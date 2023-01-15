@@ -1,23 +1,27 @@
 # Modules reference
 
-- [Hashicorp Vault](#hashicorp-vault)
-  - [Configuration](#configuration)
-  - [Key Value Version 2](#key-value-v2)
-- [AWS](#aws)
-  - [Configuration](#configuration-1)
-  - [SSM Parameter Store](#systems-manager-ssm-parameter-store)
-  - [Secrets Manager](#secrets-manager)
-  - [IAM AssumeRole](#sts-assume-role)
-- [Google Cloud](#google-cloud)
-  - [Configuration](#configuration-2)
-  - [Secret Manager](#secret-manager)
-- [BitWarden](#bitwarden) - _experimental and untested, use with care_
+- [Modules reference](#modules-reference)
+  - [Hashicorp Vault](#hashicorp-vault)
+    - [Authentication & Configuration](#authentication--configuration)
+    - [Key Value v2](#key-value-v2)
+  - [AWS](#aws)
+    - [Authentication & Configuration](#authentication--configuration-1)
+    - [STS Assume Role](#sts-assume-role)
+    - [Systems Manager (SSM) Parameter Store](#systems-manager-ssm-parameter-store)
+    - [Secrets Manager](#secrets-manager)
+  - [Google Cloud](#google-cloud)
+    - [Authentication](#authentication)
+    - [Secret Manager](#secret-manager)
+  - [Microsoft Azure](#microsoft-azure)
+    - [Authentication](#authentication-1)
+    - [Key Vault](#key-vault)
+  - [BitWarden](#bitwarden)
 
 Wanna add a module? See [contribution guide](../CONTRIBUTING.md) !
 
 ## Hashicorp Vault
 
-### Configuration
+### Authentication & Configuration
 
 Specify your Vault instance in config:
 
@@ -64,13 +68,23 @@ environment:
 
 ## AWS
 
-### Configuration
+### Authentication & Configuration
 
 Specify your AWS credentials as usual (see [AWS Programmatic access](https://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-types.html#access-keys-and-secret-access-keys) or [Credentials quickstart](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html#cli-configure-quickstart-creds)):
 
 - Environment variables `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, etc.
 - Config file `.aws/config` and `.aws/credentials`
 - Use IAM Role attached from ECS or EC2 instance
+
+You can also set global AWS configuration to override certains configs (such as AWS endpoint), for example:
+
+```yaml
+environments:
+  # ...
+
+aws:
+  endpoint: "http://localhost:4566/" # Use LocalStack endpoint
+```
 
 ### STS Assume Role
 
@@ -132,7 +146,7 @@ environments:
 
 ## Google Cloud
 
-### Configuration
+### Authentication
 
 Provide credentials using [Application Default Credentials](https://cloud.google.com/docs/authentication/application-default-credentials):
 
@@ -159,6 +173,39 @@ environments:
       content:
         gcloud_secret:
           name: projects/my-project/secrets/SomeSecret/versions/latest
+```
+
+## Microsoft Azure
+
+### Authentication
+
+Novops use [`azure_identity`](https://crates.io/crates/azure_identity) `DefaultAzureCredential`. Provide credentials via:
+
+- [Environment variables](https://docs.rs/azure_identity/0.9.0/azure_identity/struct.EnvironmentCredential.html)
+- [Azure CLI](https://docs.rs/azure_identity/0.9.0/azure_identity/struct.AzureCliCredential.html)
+- [Managed Identity](https://docs.rs/azure_identity/0.9.0/azure_identity/struct.ImdsManagedIdentityCredential.html)
+
+### Key Vault
+
+Retrieve secrets from [Key Vaults](https://azure.microsoft.com/en-us/products/key-vault/) as files or variables:
+
+```yaml
+environments:
+  dev:
+    variables:
+    - name: AZ_KEYVAULT_SECRET_VAR
+      value:
+        azure_keyvault_secret:
+          vault: my-vault
+          name: some-secret
+  
+    files:
+    - name: AZ_KEYVAULT_SECRET_FILE
+      content:
+        azure_keyvault_secret:
+          vault: my-vault
+          name: some-secret
+          version: 1234118a41364a9e8a086e76c43629e4
 ```
 
 ## BitWarden

@@ -9,6 +9,7 @@ use crate::modules::hashivault::{config::HashivaultConfig, kv2::HashiVaultKeyVal
 use crate::modules::bitwarden;
 use crate::modules::aws;
 use crate::modules::gcloud;
+use crate::modules::azure;
 use crate::modules::files::{FileInput};
 use crate::modules::variables::{VariableInput};
 
@@ -116,7 +117,8 @@ pub enum StringResolvableInput {
     HashiVaultKeyValueV1Input(HashiVaultKeyValueV1Input),
     AwsSSMParamStoreInput(aws::ssm::AwsSSMParamStoreInput),
     AwsSecretsManagerSecretInput(aws::secretsmanager::AwsSecretsManagerSecretInput),
-    GCloudSecretManagerSecretInput(gcloud::secretmanager::GCloudSecretManagerSecretInput)
+    GCloudSecretManagerSecretInput(gcloud::secretmanager::GCloudSecretManagerSecretInput),
+    AzureKeyvaultSecretInput(azure::vault::AzureKeyvaultSecretInput)
 }
 
 /**
@@ -139,7 +141,8 @@ impl ResolveTo<String> for StringResolvableInput {
             StringResolvableInput::HashiVaultKeyValueV1Input(hv) => hv.resolve(ctx).await,
             StringResolvableInput::AwsSSMParamStoreInput(p) => p.resolve(ctx).await,
             StringResolvableInput::AwsSecretsManagerSecretInput(s) => s.resolve(ctx).await,
-            StringResolvableInput::GCloudSecretManagerSecretInput(s) => s.resolve(ctx).await
+            StringResolvableInput::GCloudSecretManagerSecretInput(s) => s.resolve(ctx).await,
+            StringResolvableInput::AzureKeyvaultSecretInput(z) => z.resolve(ctx).await,
         }
     }
 }

@@ -4,17 +4,10 @@ Platform agnostic secret and config manager for DevOps, CI and development envir
 
 - [Novops](#novops)
   - [Features](#features)
+    - [Modules: Hashicorp Vault, AWS, GCloud, Azure...](#modules-hashicorp-vault-aws-gcloud-azure)
   - [Install](#install)
   - [Getting started](#getting-started)
   - [Documentation](#documentation)
-    - [Security - how safe is Novops?](#security---how-safe-is-novops)
-    - [Why is Novops + direnv strongly advised?](#why-is-novops--direnv-strongly-advised)
-    - [Usage with DevOps tools: Docker, GitLab CI, Nix...](#usage-with-devops-tools-docker-gitlab-ci-nix)
-    - [Available modules: Hashivault, BitWarden, AWS...](#available-modules-hashivault-bitwarden-aws)
-    - [`.novops.yml` configuration reference](#novopsyml-configuration-reference)
-    - [Internal architecture: Inputs, Outputs and resolving](#internal-architecture-inputs-outputs-and-resolving)
-    - [Development guide](#development-guide)
-    - [Contribution guide](#contribution-guide)
   - [Contributing](#contributing)
 
 ## Features
@@ -23,15 +16,16 @@ Platform agnostic secret and config manager for DevOps, CI and development envir
 
 - Securely load secrets and configs as files or environment variables
 - Reduce drift between local dev context and CI/CD
-- Integrate with various secret providers: Hashicorp Vault, BitWarden...
+- Integrate with various secret providers: Hashicorp Vault, AWS GCloud, Azure...
 - Easily integrated within most shells and CI systems: Gitlab, GitHub, Jenkins...
 - Manage multi-environment (dev, preprod, prod...)
 - Quick and easy installation using static binary
 
-[See all available modules](docs/modules.md) for AWS, Google Cloud, Hashicorp vault and more !
+### Modules: Hashicorp Vault, AWS, GCloud, Azure...
+
+[See all available modules](docs/modules.md)
 
 ## Install
-
 
 ```
 curl -L "https://github.com/novadiscovery/novops/releases/latest/download/x86_64-unknown-linux-musl.zip" -o novops.zip
@@ -106,14 +100,13 @@ env | grep APP_
 
 ## Documentation
 
-### [Security - how safe is Novops?](./docs/security.md)
-### [Why is Novops + direnv strongly advised?](./docs/novops-direnv.md)
-### [Usage with DevOps tools: Docker, GitLab CI, Nix...](./docs/usage.md)
-### [Available modules: Hashivault, BitWarden, AWS...](./docs/modules.md)
-### [`.novops.yml` configuration reference](./docs/schema.json)
-### [Internal architecture: Inputs, Outputs and resolving](./docs/architecture.md)
-### [Development guide](./docs/development.md)
-### [Contribution guide](./CONTRIBUTING.md)
+- #### [Security - how safe is Novops?](./docs/security.md)
+- #### [Why is Novops + direnv strongly advised?](./docs/novops-direnv.md)
+- #### [Usage with DevOps tools: Docker, GitLab CI, Nix...](./docs/usage.md)
+- #### [All modules: Hashicorp Vault, AWS, GCloud, Azure...](./docs/modules.md)
+- #### [`.novops.yml` configuration reference](./docs/schema.json)
+- #### [Internal architecture: Inputs, Outputs and resolving](./docs/architecture.md)
+- #### [Development guide](./docs/development.md)
 
 ## Contributing
 
