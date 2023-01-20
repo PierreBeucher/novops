@@ -3,7 +3,7 @@
 
   inputs = {
     # cargo2nix is a more granular version of nixpkgs' buildRustPackage
-    cargo2nix.url = "github:cargo2nix/cargo2nix/release-0.11.0";
+    cargo2nix.url = "github:cargo2nix/cargo2nix/unstable";
     flake-utils.follows = "cargo2nix/flake-utils";
     nixpkgs.follows = "cargo2nix/nixpkgs";
   };
@@ -17,7 +17,7 @@
         };
 
         rustPkgs = pkgs.rustBuilder.makePackageSet {
-          rustVersion = "1.61.0";
+          rustVersion = "1.66.1";
           packageFun = import ./Cargo.nix;
         };
 
