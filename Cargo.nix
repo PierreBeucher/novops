@@ -24,7 +24,7 @@ args@{
   ignoreLockHash,
 }:
 let
-  nixifiedLockHash = "1ed9f53bc50b39edd1bcb72643d41c904bae7e38b7eefb56903a2b4dde02c2a7";
+  nixifiedLockHash = "6578482b302ee869524c7e1ac64b59e82e30cdc888b25b94605bd15b71d7ba9c";
   workspaceSrc = if args.workspaceSrc == null then ./. else args.workspaceSrc;
   currentLockHash = builtins.hashFile "sha256" (workspaceSrc + /Cargo.lock);
   lockHashIgnored = if ignoreLockHash
@@ -2205,6 +2205,7 @@ in
       clap_complete = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".clap_complete."4.0.3" { inherit profileName; }).out;
       convert_case = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".convert_case."0.5.0" { inherit profileName; }).out;
       crc32c = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".crc32c."0.6.3" { inherit profileName; }).out;
+      digest = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".digest."0.10.6" { inherit profileName; }).out;
       enum_dispatch = (buildRustPackages."registry+https://github.com/rust-lang/crates.io-index".enum_dispatch."0.3.8" { profileName = "__noProfile"; }).out;
       env_logger = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".env_logger."0.10.0" { inherit profileName; }).out;
       google_secretmanager1 = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".google-secretmanager1."4.0.1+20220226" { inherit profileName; }).out;
@@ -2216,6 +2217,7 @@ in
       serde = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde."1.0.147" { inherit profileName; }).out;
       serde_json = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde_json."1.0.87" { inherit profileName; }).out;
       serde_yaml = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde_yaml."0.8.26" { inherit profileName; }).out;
+      sha2 = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".sha2."0.10.6" { inherit profileName; }).out;
       text_io = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".text_io."0.1.12" { inherit profileName; }).out;
       time = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".time."0.3.17" { inherit profileName; }).out;
       tokio = (rustPackages."registry+https://github.com/rust-lang/crates.io-index".tokio."1.21.2" { inherit profileName; }).out;
