@@ -40,3 +40,8 @@ This command regenerates the Cargo.nix and as such should be run everytime Cargo
 ```sh
 nix run github:cargo2nix/cargo2nix/unstable
 ```
+
+## Releasing
+
+- Run Github Action workflow `Tag release` to push new tag with changelogs
+- Manually create a release from Git tag. Workflow `Publish release` will automatically add `novops` assets.
