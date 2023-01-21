@@ -32,6 +32,48 @@ It's also possible to source manually when using `direnv` is not practical or ne
 novops -e dev -s .env && source .env
 ```
 
+### Nix
+
+Setup a development shell with [Nix Flakes](https://nixos.wiki/wiki/Flakes):
+
+```nix
+{
+  description = "Example Flake using Novops";
+
+  inputs = {
+    novops.url = "github:novadiscovery/novops";
+    flake-utils.url = "github:numtide/flake-utils";
+  };
+
+  outputs = { self, nixpkgs, novops, flake-utils }:
+    flake-utils.lib.eachDefaultSystem (system:
+      let 
+        pkgs = nixpkgs.legacyPackages.${system};
+        novopsPackage = novops.packages.${system}.novops;
+      in {
+        devShells = {
+          default = pkgs.mkShell {
+            packages = [ 
+              novopsPackage
+            ];
+            shellHook = ''
+              novops load -s .envrc
+              source .envrc
+            '';
+          };
+        };
+      }
+    );    
+}
+
+```
+
+Run with:
+
+```sh
+nix develop
+```
+
 ### Docker
 
 _NOTE: Novops Docker image is not yet published but [Dockerfile is available at root](../Dockerfile)_
