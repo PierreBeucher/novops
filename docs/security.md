@@ -25,10 +25,10 @@ To read more about XDG Runtime Dir, see:
 
 ### Without XDG_RUNTIME_DIR
 
-If `XDG_RUNTIME_DIR` is not available, Novops will issue a warning and try to emulate a XDG-lke behavior under a `/tmp` sub-folder. There's not guarantee it will fully implement [XDG speficiations](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html), but directory is created such as:
+If `XDG_RUNTIME_DIR` is not available, Novops will issue a warning and try to emulate a XDG-lke behavior under a `/tmp` sub-folder. There's not guarantee it will fully implement [XDG specs](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html), but directory is created such as:
 
 - Owned and read/writable only by current user
-- By using a `/tmp` sub-folder, we reasonnably assume content won't persist between reboot and logout
+- By using a `/tmp` sub-folder, we reasonably assume content won't persist between reboot and logout
 
 See `prepare_working_directory()` in [`src/lib.rs`](../src/lib.rs)
 

@@ -2,6 +2,8 @@
 
 Platform agnostic secret and config manager for DevOps, CI and development environments.
 
+Novops setup secrets and configs in multi-environment context without having to manually set `.env` files, CI variables, etc.
+
 - [Novops](#novops)
   - [Features](#features)
     - [Modules: Hashicorp Vault, AWS, GCloud, Azure...](#modules-hashicorp-vault-aws-gcloud-azure)

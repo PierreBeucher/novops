@@ -1,6 +1,6 @@
 # Why Novops?
 
-## A story you've probaly heard or lived
+## A story you've probably heard or lived
 
 Consider a typical Infra as Code project:
 - Deployment tool (Terraform, Ansible...) managing Cloud infrastructure / machines configurations

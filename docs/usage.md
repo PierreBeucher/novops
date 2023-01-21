@@ -1,6 +1,6 @@
 # Usage and examples
 
-Novops main purpose is to provide a way to manage multi-environment context without having to manage local `.env` and CI variables boilerplate config. Following examples show su h usage with various tools. 
+Novops main purpose is to manage secrets and config in multi-environment context without having to rely on local `.env`, CI variables config, etc. Following examples show usage with various tools. 
 
 - [Usage and examples](#usage-and-examples)
   - [Run Novops from...](#run-novops-from)
@@ -11,7 +11,6 @@ Novops main purpose is to provide a way to manage multi-environment context with
     - [Ansible](#ansible)
     - [Terraform](#terraform)
     - [Pulumi](#pulumi)
-- [Where are secret files stored?](#where-are-secret-files-stored)
 
 ## Run Novops from...
 
