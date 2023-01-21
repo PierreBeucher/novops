@@ -1,3 +1,14 @@
+# [0.3.0](https://github.com/novadiscovery/novops/compare/v0.2.0...v0.3.0) (2023-01-21)
+
+
+### Features
+
+* Azure Keyvault Secret module ([f392182](https://github.com/novadiscovery/novops/commit/f392182fe4ebb15ee54cdc32dbad40b8e87f6622))
+* GCloud Secret Manager module ([44c8c88](https://github.com/novadiscovery/novops/commit/44c8c880657da777a59854bb7f61f858975370a9))
+* Hashicorp Vault KV1 module ([d35aa55](https://github.com/novadiscovery/novops/commit/d35aa5597fb614f31129f7d0e7e79f03f66be66f))
+
+
+
 # [0.2.0](https://github.com/novadiscovery/novops/compare/v0.1.19...v0.2.0) (2023-01-06)
 
 
@@ -28,15 +39,6 @@
 ### Features
 
 * override existing symlink if any ([4df96b6](https://github.com/novadiscovery/novops/commit/4df96b62b9c78e2043a8b628ce10719bdc49b382))
-
-
-
-## [0.1.16](https://github.com/novadiscovery/novops/compare/v0.1.15...v0.1.16) (2022-10-25)
-
-
-### Features
-
-* add 'completion' subcommand ([072a54a](https://github.com/novadiscovery/novops/commit/072a54a328bca03b797427f70109ab001f918418))
 
 
 
