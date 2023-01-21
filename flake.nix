@@ -26,6 +26,8 @@
           default = self.packages.${system}.novops.overrideAttrs(oa: {
             buildInputs = oa.buildInputs ++ [ 
               cargo2nix.packages.${system}.cargo2nix
+              pkgs.pkg-config
+              pkgs.openssl.dev # required by openssl crate (transitive dep) for cargo build
             ];
           });
         };
