@@ -9,6 +9,7 @@ Novops setup secrets and configs in multi-environment context without having to 
     - [Modules: Hashicorp Vault, AWS, GCloud, Azure...](#modules-hashicorp-vault-aws-gcloud-azure)
   - [Install](#install)
   - [Getting started](#getting-started)
+  - [Usage and examples](#usage-and-examples)
   - [Documentation](#documentation)
   - [Contributing](#contributing)
 
@@ -125,6 +126,9 @@ env | grep APP_
 # APP_PASSWORD=s3cret
 # APP_TOKEN=/run/user/1000/novops/myapp/dev/file_APP_TOKEN
 ```
+## Usage and examples
+
+See [Usage and examples](./docs/usage.md#usage-and-examples)
 
 ## Documentation
 
