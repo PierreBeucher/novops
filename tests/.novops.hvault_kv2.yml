@@ -4,13 +4,23 @@ name: test-app
 environments:
   dev:
     variables:
+
+      # Get KV2 secret
       - name: HASHIVAULT_KV_V2_TEST
         value:
           hvault_kv2:
             mount: kv2
             path: test_hashivault_kv2
             key: novops_secret
-    files: []
+    
+    # Can be used for files as well
+    files:
+      - content:
+          hvault_kv2:
+            mount: kv2
+            path: test_hashivault_kv2
+            key: novops_secret
+        variable: HVAULT_SECRET_PATH
           
 config:
   default:

@@ -1,10 +1,22 @@
-# Usage
+# Usage and examples
 
-## Possible usages and examples
+Novops main purpose is to manage secrets and config in multi-environment context without having to rely on local `.env`, CI variables config, etc. Following examples show usage with various tools. 
 
-### Bash / Shell
+- [Usage and examples](#usage-and-examples)
+  - [Run Novops from...](#run-novops-from)
+    - [Local shell](#local-shell)
+    - [Docker](#docker)
+    - [GitLab CI](#gitlab-ci)
+  - [Leverage Novops to configure and run...](#leverage-novops-to-configure-and-run)
+    - [Ansible](#ansible)
+    - [Terraform](#terraform)
+    - [Pulumi](#pulumi)
 
-With [`direnv`](https://direnv.net/) 
+## Run Novops from...
+
+### Local shell
+
+For local usage, [`direnv`](https://direnv.net/) usage is [recommended for security reasons](./novops-direnv.md). 
 
 ```sh
 # Generate env file at .envrc
@@ -12,15 +24,17 @@ With [`direnv`](https://direnv.net/)
 novops -e dev -s .envrc
 ```
 
-It's also possible to source manually:
+It's also possible to source manually when using `direnv` is not practical or necessary (such as in a Docker container or CI job):
 
 ```sh
 # Source manually
 # But variables won't be unset unless done manually
-novops -e dev -s .myenvfile && source .myenvfile
+novops -e dev -s .env && source .env
 ```
 
 ### Docker
+
+_NOTE: Novops Docker image is not yet published but [Dockerfile is available at root](../Dockerfile)_
 
 Include in your Dockerfile with:
 
@@ -31,17 +45,153 @@ FROM alpine
 COPY --from=novops /usr/local/bin/novops /usr/local/bin/novops
 ```
 
-Then use with bash/shell in container:
+Then run a container with your `.novops.yml` such as:
 
 ```sh
-docker run -it -v $PWD/.novops.yml:/novops-config.yml
-$ novops -c /novops-config.yml -w /tmp/.novops; source /tmp/.novops/vars
+# Mount novops config in container and run novops
+docker run -it -v $PWD/.novops.yml:/novops-config.yml IMAGE
+$ novops -c /novops-config.yml && source /tmp/.novops/vars
+
+# Alternatively mount entire directory
+docker run -it -v $PWD:/myapp -w /myapp IMAGE
+$ novops && source /tmp/.novops/vars
 ```
 
-## Where are secret files stored?
+### GitLab CI
 
-Secret files will be stored under [`XDG_RUNTIME_DIR`](https://askubuntu.com/questions/872792/what-is-xdg-runtime-dir), a user-specific folder in which to store small temporary files available on most Linux distributions. It provides a basic layer of security as only the current Linux user can access it and files are usually stored in-memory. 
+Load Novops at beginning of job:
 
-If `XDG_RUNTIME_DIR` is not available, a user-specific folder in `/tmp` will be created and used instead (and a warning issued). This alternative is less secure but still better than a word-readable file. 
+```yaml
+job-using-novops:
+  # ...
+  script:
+    - novops load -e dev -s .env && source .env
+    # Variables will be available for subsequent commands
+    - make test 
+```
 
-Alternatively, you can specify `-w PATH` flag to use a custom directory. The directory must exists, and it's advised to ensure user-only permissions on it (i.e. `0600`/`-rw------`)
+## Leverage Novops to configure and run...
+
+Use Novops with built-in variables from your favorite tool for easy switch between environments
+
+### Ansible
+
+Use [Ansible built-in variables](https://docs.ansible.com/ansible/latest/reference_appendices/config.html#environment-variables):
+
+```yaml
+environments:
+  dev:
+    variables:
+      # Comma separated list of Ansible inventory sources
+      - name: ANSIBLE_INVENTORY
+        value: inventories/dev
+      # Add more as needed
+      # - name: ANSIBLE_*
+      #   value: ...
+
+    files:
+      # Connect to hosts using a certificate or key file
+      - variable: ANSIBLE_PRIVATE_KEY_FILE
+        content: 
+          hvault_kv2:
+            path: myapp/dev
+            key: ssh_key
+
+      # Vault password file
+      - variable: ANSIBLE_VAULT_PASSWORD_FILE
+        content: 
+          hvault_kv2:
+            path: myapp/dev
+            key: inventory_password
+  
+  prod:
+    variables:
+      - name: ANSIBLE_INVENTORY
+        value: inventories/prod
+      # ...
+```
+
+### Terraform
+
+Use [Terraform built-in environment variables](https://developer.hashicorp.com/terraform/cli/config/environment-variables):
+
+```yaml
+environments:
+  dev:
+    variables:
+      # Set workspace instead of running 
+      # terraform workspace select (workspace]
+      - name: TF_WORKSPACE
+        value: dev_workspace
+
+      # Use TF_VAR_* to set declared variables
+      # See https://developer.hashicorp.com/terraform/language/values/variables#environment-variables
+      # and https://developer.hashicorp.com/terraform/cli/config/environment-variables#tf_var_name
+      - name: TF_VAR_region
+        value: eu-central-1
+      - name: TF_VAR_some_list
+        value: '[1,2,3]'
+      # - name: TF_VAR_[varname]
+      #   value: ...
+
+    files:
+      # Terraform CLI configuration file
+      - variable: TF_CLI_CONFIG_FILE
+        content: |
+          ...
+      
+  prod:
+    variables:
+      - name: TF_WORKSPACE
+        value: prod_workspace
+  # ...
+```
+
+### Pulumi
+
+Use [Pulumi built-in environment variables](https://www.pulumi.com/docs/reference/cli/environment-variables/):
+
+```yaml
+environments:
+  dev:
+    variables:
+      
+      # Authenticate into the Pulumi Service backend 
+      # and bypass access token prompt when running pulumi login
+      - name: PULUMI_ACCESS_TOKEN
+        value:
+          hvault_kv2:
+            path: myapp/dev
+            key: pulumi_access_token
+
+      # Specify backend instead of the default backend
+      # See https://www.pulumi.com/docs/intro/concepts/state/#using-a-self-managed-backend
+      - name: PULUMI_BACKEND_URL
+        value: "s3://crafteo-pulumi-backend"
+
+      # Passphrase for configuration
+      - name: PULUMI_CONFIG_PASSPHRASE
+        value:
+          hvault_kv2:
+            path: myapp/dev
+            key: pulumi_passphrase
+
+    files:  
+      # Alternative to PULUMI_CONFIG_PASSPHRASE
+      - variable: PULUMI_CONFIG_PASSPHRASE_FILE
+        content: 
+          hvault_kv2:
+            path: myapp/dev
+            key: pulumi_passphrase
+      
+  prod:
+    variables:
+      - name: PULUMI_ACCESS_TOKEN
+        value:
+          hvault_kv2:
+            path: myapp/prod
+            key: pulumi_access_token
+    # ...
+```
+
+

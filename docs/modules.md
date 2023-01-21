@@ -1,6 +1,7 @@
 # Modules reference
 
 - [Modules reference](#modules-reference)
+  - [Files and Variables](#files-and-variables)
   - [Hashicorp Vault](#hashicorp-vault)
     - [Authentication & Configuration](#authentication--configuration)
     - [Key Value v2](#key-value-v2)
@@ -18,6 +19,59 @@
   - [BitWarden](#bitwarden)
 
 Wanna add a module? See [contribution guide](../CONTRIBUTING.md) !
+
+## Files and Variables
+
+`files` and `variables` lists are primay way to configure Novops. 
+- `variables` element generate a single environment variable from `value`
+- `files` elements generate a file using defined `content`
+
+When loaded an environment variable is generated which can be [automatically sourced with `direnv`](./novops-direnv.md) or sourced manually with `source`
+
+```yaml
+environments:
+  dev:
+    
+    # Variables to load
+    # name and value are required keys
+    # value can take a plain string or a module
+    variables:
+      # Plain string
+      - name: APP_URL
+        value: "http://127.0.0.1:8080"
+
+      # Use Hashicorp Vault KV2 module to set variable value
+      - name: APP_PASSWORD
+        value:
+          hvault_kv2:
+            path: crafteo/app/dev
+            key: password
+
+      # Any module loading string value can be used with variable
+      # See below for available modules
+      - name: APP_SECRET
+        value:
+          module_name:
+            some_config: foo
+            aother_config: bar
+    
+    # List of files to load for dev
+    # Each files must define either dest, variable or both
+    files:
+
+      # File will be created at /tmp/myfile with content "foo"
+      - dest: /tmp/myfile
+        content: foo
+
+      # Fille will be generated in a secure folder
+      # APP_TOKEN variable will point to file
+      # Such as APP_TOKEN=/run/user/1000/novops/.../file_VAR_NAME
+      - variable: APP_TOKEN
+        content:
+          hvault_kv2:
+            path: "myapp/dev/creds"
+            entry: "token"
+```
 
 ## Hashicorp Vault
 
@@ -89,6 +143,8 @@ aws:
 ### STS Assume Role
 
 Generate temporary [IAM Role credentials with AssumeRole](https://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRole.html):
+
+Note that `aws` is an `environment` key rather than a `files` or `variables`. That's because it will output multiple variables.
 
 ```yaml
 environments:

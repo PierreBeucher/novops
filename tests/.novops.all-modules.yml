@@ -1,36 +1,59 @@
-# Use all modules at once
+# Show simple example for all modules
 name: test-all
 
 environments:
   dev:
     variables:
+      # Plain string Variable
       - name: VAR
         value: "foo"
         
-      # AWS
+      #
+      # AWS Variable inputs
+      #
+
+      # Secret Manager
       - name: AWS_SECRETMANAGER
         value:
           aws_secret:
             id: novops-test-secretsmanager-string
+
+      # System Manager (SSM)
       - name: AWS_SSM_PARAMETER
         value:
           aws_ssm_parameter:
             name: novops-test-ssm-param-string
       
-      # Hashivault
+      #
+      # Hashicorp Vault inputs
+      #
+
+      # KV2
       - name: HASHIVAULT_KV_V2
         value:
           hvault_kv2:
             path: test_hashivault
             key: novops_secret
 
-      # GCloud
+      # KV1
+      - name: HASHIVAULT_KV_V1_TEST
+        value:
+          hvault_kv1:
+            mount: kv1
+            path: test_hashivault_kv1
+            key: novops_secret
+      
+      #
+      # Google Cloud
+      #
       - name: GCLOUD_SECRETMANAGER
         value:
           gcloud_secret:
             name: projects/some-porject/secrets/TestSecret/versions/latest
 
-      # BitWarden
+      #
+      # BitWarden (experimental)
+      # 
       - name: BITWARDEN
         value:
           bitwarden:
@@ -38,15 +61,27 @@ environments:
             field: login.password
     
     files:
+      # Plain file content value
       - dest: /tmp/novopsfile
-        name: file
         content: foo
 
+      # All modules can be used both in variable and files
+      - variable: HVAULT_SECRET
+        content:
+          hvault_kv2:
+            path: test_hashivault
+            key: novops_secret
+
+    #
+    # AWS Assume Role
+    #
+    # Output AWS_* variables compatible for authentication with officiel AWS CLI and most SDKs
+    #
     aws:
       assume_role: 
         role_arn: arn:aws:iam::111122223333:role/NovopsTestAssumeRole
         source_profile: default
-          
+     
 config:
   default:
     environment: dev
