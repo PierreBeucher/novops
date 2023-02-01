@@ -5,6 +5,7 @@ Novops main purpose is to manage secrets and config in multi-environment context
 - [Usage and examples](#usage-and-examples)
   - [Run Novops from...](#run-novops-from)
     - [Local shell](#local-shell)
+    - [Nix](#nix)
     - [Docker](#docker)
     - [GitLab CI](#gitlab-ci)
   - [Leverage Novops to configure and run...](#leverage-novops-to-configure-and-run)
@@ -30,6 +31,48 @@ It's also possible to source manually when using `direnv` is not practical or ne
 # Source manually
 # But variables won't be unset unless done manually
 novops -e dev -s .env && source .env
+```
+
+### Nix
+
+Setup a development shell with [Nix Flakes](https://nixos.wiki/wiki/Flakes):
+
+```nix
+{
+  description = "Example Flake using Novops";
+
+  inputs = {
+    novops.url = "github:novadiscovery/novops";
+    flake-utils.url = "github:numtide/flake-utils";
+  };
+
+  outputs = { self, nixpkgs, novops, flake-utils }:
+    flake-utils.lib.eachDefaultSystem (system:
+      let 
+        pkgs = nixpkgs.legacyPackages.${system};
+        novopsPackage = novops.packages.${system}.novops;
+      in {
+        devShells = {
+          default = pkgs.mkShell {
+            packages = [ 
+              novopsPackage
+            ];
+            shellHook = ''
+              novops load -s .envrc
+              source .envrc
+            '';
+          };
+        };
+      }
+    );    
+}
+
+```
+
+Run with:
+
+```sh
+nix develop
 ```
 
 ### Docker

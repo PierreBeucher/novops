@@ -56,9 +56,13 @@ fn build_cli() -> Command {
         )
         .subcommand(
             Command::new("completion")
-            .about("Output completion code for the shells support by clap_complete::\
-                    - For bash, run `source <(novops completion bash)` \
-                    - For zsh, run `novops completion zsh > _novops && fpath+=($PWD) && compinit`"
+            .about("Output completion code for various shells.")
+            .long_about("Output completion code for various shells. Examples: \n\
+                    - bash: `source <(novops completion bash)` \n\
+                    - zsh: `novops completion zsh > _novops && fpath+=($PWD) && compinit` \n\
+                    \n\
+                    See https://docs.rs/clap_complete/latest/clap_complete/enum.Shell.html for supported shells
+                "
             )
             .arg(Arg::new("shell")
                 .action(ArgAction::Set)

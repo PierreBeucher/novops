@@ -3,5 +3,7 @@
 
 # Tests output
 tests/output/
-
 tests/localconfig
+
+# vscode 
+.vscode/settings.json

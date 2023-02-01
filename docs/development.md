@@ -38,5 +38,10 @@ Tests are run on CI for any non-`master` branch using the same procedure.
 This command regenerates the Cargo.nix and as such should be run everytime Cargo.lock is changed. It will fail on CI if not done. 
 
 ```sh
-nix run github:cargo2nix/cargo2nix/release-0.11.0
+nix run github:cargo2nix/cargo2nix/unstable
 ```
+
+## Releasing
+
+- Run Github Action workflow `Tag release` to push new tag with changelogs
+- Manually create a release from Git tag. Workflow `Publish release` will automatically add `novops` assets.
