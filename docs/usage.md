@@ -5,6 +5,7 @@ Novops main purpose is to manage secrets and config in multi-environment context
 - [Usage and examples](#usage-and-examples)
   - [Run Novops from...](#run-novops-from)
     - [Local shell](#local-shell)
+    - [Nix](#nix)
     - [Docker](#docker)
     - [GitLab CI](#gitlab-ci)
   - [Leverage Novops to configure and run...](#leverage-novops-to-configure-and-run)

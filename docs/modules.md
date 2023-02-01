@@ -5,6 +5,7 @@
   - [Hashicorp Vault](#hashicorp-vault)
     - [Authentication & Configuration](#authentication--configuration)
     - [Key Value v2](#key-value-v2)
+    - [Key Value v1](#key-value-v1)
   - [AWS](#aws)
     - [Authentication & Configuration](#authentication--configuration-1)
     - [STS Assume Role](#sts-assume-role)
@@ -98,7 +99,7 @@ export VAULT_ADDR=https://vault.mycompany.org:8200
 
 ### Key Value v2
 
-[Key Value Version 2](https://www.vaultproject.io/docs/secrets/kv/kv-v2) with variables and files:
+Hashicorp Vault [Key Value Version 2](https://www.vaultproject.io/docs/secrets/kv/kv-v2) with variables and files:
 
 ```yaml
 environment:
@@ -118,6 +119,29 @@ environment:
         hvault_kv2:
           path: "myapp/dev/creds"
           entry: "token"
+```
+
+### Key Value v1
+
+Hashicorp Vault [Key Value Version 1](https://www.vaultproject.io/docs/secrets/kv/kv-v1) with variables and files:
+
+```yaml
+environments:
+  dev:
+    variables:
+      - name: APP_PASSWORD
+        value:
+          hvault_kv1:
+            path: app/dev
+            key: password
+            mount: kv1 # Override secret engine mount ('secret' by default)
+    
+    files:
+      - variable: APP_TOKEN
+        content:
+          hvault_kv1:
+            path: app/dev
+            key: token
 ```
 
 ## AWS
