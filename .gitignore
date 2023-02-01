@@ -4,6 +4,7 @@
 # Tests output
 tests/output/
 tests/localconfig
+.envrc
 
 # vscode 
 .vscode/settings.json

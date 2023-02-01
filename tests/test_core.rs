@@ -34,7 +34,7 @@ mod tests {
         };
         let result = make_context(&args).await?;
 
-        println!("Result: {:?}", result);
+        info!("Result: {:?}", result);
 
         assert_eq!(result, 
             NovopsContext {

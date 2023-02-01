@@ -3,13 +3,13 @@
  * Keep it simple as we intend to remove/deprecated Bitwarden usage in the future
 */
 
-use std::{process::{Command, Output}, fmt};
+use std::process::{Command, Output};
 use std;
 use serde_json;
 use std::option::Option;
 use serde::Deserialize;
 use async_trait::async_trait;
-use anyhow::{Context, Error, anyhow};
+use anyhow::{Context, anyhow};
 use schemars::JsonSchema;
 
 use crate::core;
@@ -30,7 +30,7 @@ pub struct BitwardenItemInput {
 
 #[async_trait]
 impl core::ResolveTo<String> for BitwardenItemInput {
-    async fn resolve(&self, ctx: &core::NovopsContext) -> Result<String, Error> {
+    async fn resolve(&self, ctx: &core::NovopsContext) -> Result<String, anyhow::Error> {
 
         if ctx.dry_run {
           return Ok(format!("RESULT:{:}.{:}", self.bitwarden.entry, self.bitwarden.field));
@@ -69,27 +69,10 @@ pub struct BitwardenCommandContext {
   pub command: String
 }
 
-impl fmt::Display for BitwardenCommandContext {
-  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-
-    let r = write!(f, "\nCommand: {:}", self.command);
-
-    match &self.output {
-        Some(o) => return write!(f, "\n\tExit status: {:?}\n\tstdout: {:?}\n\tstderr: {:?}", 
-          o.status.code(), 
-          String::from_utf8(o.stdout.clone()).unwrap(), 
-          String::from_utf8(o.stderr.clone()).unwrap()
-        ),
-        None => r,
-    }
-  }
-}
-
-
 /**
  * Retrieve a Bitwarden item as a JSON value
  */
-pub fn get_item(item: &String) -> Result<serde_json::Value, Error> {
+pub fn get_item(item: &String) -> Result<serde_json::Value, anyhow::Error> {
   let command_str = format!("bw get item '{}'", item);
 
   let mut command_context = BitwardenCommandContext{command: command_str, output: None};
@@ -99,19 +82,19 @@ pub fn get_item(item: &String) -> Result<serde_json::Value, Error> {
     .arg("item")
     .arg(item)
     .output()
-    .with_context(|| format!("Error running Bitwarden command {}", command_context))?;
+    .with_context(|| format!("Error running Bitwarden command {:?}", command_context))?;
 
   command_context.output = Some(output.clone());
 
   let stdout = std::str::from_utf8(&output.stdout)
-    .with_context(|| format!("Couldn't decode stdout as UTF-8 for command: {:}", command_context))?;
+    .with_context(|| format!("Couldn't decode stdout as UTF-8 for command: {:?}", command_context))?;
   
   if ! output.status.success() {
-    return Err(anyhow!("Bitwarden command returned non-0 exit code, stderr probably has more details. For command: {:}", command_context));
+    return Err(anyhow!("Bitwarden command returned non-0 exit code, stderr probably has more details. For command: {:?}", command_context));
   };
 
   let json: serde_json::Value = serde_json::from_str(stdout)
-    .with_context(|| format!("Couldn't parse Bitwarden stdout as JSON. {:}", command_context))?;
+    .with_context(|| format!("Couldn't parse Bitwarden stdout as JSON. {:?}", command_context))?;
 
 
   return Ok(json);
@@ -125,7 +108,7 @@ pub fn get_item(item: &String) -> Result<serde_json::Value, Error> {
  * get_string_in_value(myJson, ["item", "foo"]) ==> "bar"
  * This is a wrapper for Novops config where client provide a string like "login.password" for the desired Bitwarden entry
  */
-pub fn get_string_in_value(value: &serde_json::Value, mut fields: Vec<String>) -> Result<String, Error>{
+pub fn get_string_in_value(value: &serde_json::Value, mut fields: Vec<String>) -> Result<String, anyhow::Error>{
   let field = fields.remove(0);
 
   let found_value = value.get(&field)

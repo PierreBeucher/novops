@@ -1,3 +1,4 @@
+use anyhow::Context;
 use async_trait::async_trait;
 
 use crate::core::NovopsContext;
@@ -21,10 +22,10 @@ impl AzureClient for DefaultAzureClient{
     async fn get_keyvault_secret(&self, vault: &str, name: &str, version: &Option<String>) -> Result<KeyVaultGetSecretResponse, anyhow::Error> {
 
         let credential = DefaultAzureCredential::default();
-        let client = KeyvaultClient::new(
-            &format!("https://{}.vault.azure.net", vault), 
-            std::sync::Arc::new(credential)
-        ).unwrap().secret_client(); 
+        let url = &format!("https://{}.vault.azure.net", vault);
+        let client = KeyvaultClient::new(&url, std::sync::Arc::new(credential))
+            .with_context(|| format!("Couldn't create Azure Vault client for {:}", url))?
+            .secret_client();
 
         let secret = client.get(name).version(version.clone().unwrap_or_default()).await?;
         Ok(secret)

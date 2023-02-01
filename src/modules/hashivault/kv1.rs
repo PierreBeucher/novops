@@ -29,7 +29,7 @@ pub struct HashiVaultKeyValueV1 {
 impl ResolveTo<String> for HashiVaultKeyValueV1Input {
   async fn resolve(&self, ctx: &NovopsContext) -> Result<String, anyhow::Error> {
     
-    let client = get_client(ctx);
+    let client = get_client(ctx)?;
     let kv1 = &self.hvault_kv1;
 
     // retrieve secret using "secret" mount by default

@@ -3,6 +3,7 @@ use async_trait::async_trait;
 use anyhow::{self, Context};
 use rand::{distributions::Alphanumeric, Rng};
 use schemars::JsonSchema;
+use log::warn;
 
 use crate::core::{ResolveTo, NovopsContext};
 use crate::modules::variables::VariableOutput;
@@ -43,7 +44,7 @@ impl ResolveTo<Vec<VariableOutput>> for AwsAssumeRoleInput {
 
            role_session_name = format!("{:}-{:}", truncated_rsname, &session_random_suffix);
 
-           println!("WARNING: Role session name {:} truncated to {:} as length > 64 characters. \
+           warn!("WARNING: Role session name {:} truncated to {:} as length > 64 characters. \
            Consider using shorter application or environment name to avoid losing information with truncation.", 
            &original_role_session_name, &role_session_name);
 

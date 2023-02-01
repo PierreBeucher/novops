@@ -42,8 +42,11 @@ impl GCloudClient for DefaultGCloudClient{
             let (_, secret) = hub.projects()
                 .secrets_versions_access(name)
                 .doit().await?;
-
-            return Ok(secret.payload.unwrap());
+            
+            let result = secret.payload
+                .ok_or(anyhow::anyhow!("No secret value found for '{}'", name))?;
+                
+            Ok(result)
             
     }
 }

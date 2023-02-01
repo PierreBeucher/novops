@@ -38,7 +38,10 @@ impl ResolveTo<String> for AwsSSMParamStoreInput {
             self.aws_ssm_parameter.with_decryption
         ).await?;
         
-        let value = result.parameter().unwrap().value().unwrap();
-        return Ok(value.to_string())
+        let value = result.parameter().ok_or(anyhow::anyhow!("Couldn't unwrap parameter object"))?
+            .value().ok_or(anyhow::anyhow!("Couldn't unwrap parameter value"))?
+            .to_string();
+        
+        Ok(value)
     }
 }
