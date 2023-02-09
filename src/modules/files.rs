@@ -98,13 +98,15 @@ impl ResolveTo<FileOutput> for FileInput {
                 fname.to_case(Case::Snake).to_uppercase()),
         };
 
+        let file_path_str = dest.clone().into_os_string().into_string()
+            .map_err(|o| anyhow::anyhow!("Couldn't convert OsString '{:?}' to String", o))?;
 
         return Ok(
             FileOutput {
                 dest:  PathBuf::from(&dest),
                 variable: VariableOutput {
                     name: variable_name,
-                    value: dest.into_os_string().into_string().unwrap()
+                    value: file_path_str
                 },
                 content: content
             }

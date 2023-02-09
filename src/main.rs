@@ -1,10 +1,12 @@
 use std::{process::exit, io};
 
+use anyhow::Context;
 use tokio;
 use clap::{Arg, Command, value_parser, ArgAction, crate_version};
-use novops::{self, core::NovopsConfigFile};
+use novops::{self, core::NovopsConfigFile, init_logger};
 use schemars::schema_for;
 use clap_complete::{generate, Shell};
+use log::error;
 
 fn build_cli() -> Command {
     let app = Command::new("novops")
@@ -79,7 +81,9 @@ fn build_cli() -> Command {
 }
 
 #[tokio::main]
-async fn main() -> () {
+async fn main() -> Result<(), anyhow::Error> {
+    
+    init_logger(); // first things first
 
     let mut app = build_cli();
 
@@ -88,29 +92,37 @@ async fn main() -> () {
     if let Some(load_subc) = m.subcommand_matches("load") {
 
         let args = novops::NovopsArgs{ 
-            config: load_subc.get_one::<String>("config").unwrap().clone(),
+            config: load_subc.get_one::<String>("config")
+                .ok_or(anyhow::anyhow!("Config is None. This is probably a bug."))?.clone(),
             env: load_subc.get_one::<String>("environment").map(String::from),
             working_directory: load_subc.get_one::<String>("working_dir").map(String::from),
             symlink: load_subc.get_one::<String>("symlink").map(String::from),
             dry_run: load_subc.get_one::<bool>("dry_run").map(|e| *e)
         };
 
-        novops::load_environment(args).await.unwrap();
+        novops::load_environment(args).await
+            .with_context(|| "Failed to load environment. Set environment variable RUST_LOG=[trace|debug|info|warn] or RUST_BACKTRACE=1 for more verbosity.")?;
+
         exit(0)
     };
 
     if let Some(cmd) = m.subcommand_matches("completion") {
         let name = app.get_name().to_string();
-        generate(*cmd.get_one::<Shell>("shell").unwrap(), &mut app, name, &mut io::stdout());
+        let shell_arg = cmd.get_one::<Shell>("shell")
+            .ok_or(anyhow::anyhow!("Shell is required"))?;
+        
+        generate(*shell_arg, &mut app, name, &mut io::stdout());
         exit(0)
     };
 
     if let Some(_cmd) = m.subcommand_matches("schema") {
         let schema = schema_for!(NovopsConfigFile);
-        println!("{}", serde_json::to_string_pretty(&schema).unwrap());
+        let output = serde_json::to_string_pretty(&schema)
+            .with_context(|| "Couldn't convert JSON schema to pretty string.")?;
+        println!("{}", output);
         exit(0)
     }
     
-    println!("Please provide a subcommand. Use --help to see available commands.");
+    error!("Please provide a subcommand. Use --help to see available commands.");
     exit(1)
 }

@@ -51,18 +51,16 @@ pub struct AwsSecretsManagerSecret {
 impl ResolveTo<Vec<u8>> for AwsSecretsManagerSecretInput {
     async fn resolve(&self, ctx: &NovopsContext) -> Result<Vec<u8>, anyhow::Error> {
 
-        let output = retrieve_secret(ctx, self).await?;
+        let output = retrieve_secret(ctx, self).await
+            .with_context(|| format!("Couldn't retrieve secret {:}", &self.aws_secret.id))?;
 
-        if output.secret_string().is_some(){
-            return Ok(output.secret_string().unwrap().to_string().into_bytes());
+        return if let Some(s) =  output.secret_string() {
+            Ok(s.to_string().into_bytes())
+        } else if let Some(s) = output.secret_binary() {
+            Ok(s.clone().into_inner())
+        } else {
+            Err(anyhow::format_err!("Secret value was neither string nor binary, got response: {:?}", output))
         }
-
-        if output.secret_binary().is_some(){
-            return Ok(output.secret_binary().unwrap().clone().into_inner());
-        }
-
-        return Err(anyhow::format_err!("Secret value was neither string nor binary, got response: {:?}", output));
-        
     }
 }
 
@@ -72,19 +70,17 @@ impl ResolveTo<String> for AwsSecretsManagerSecretInput {
 
         let output = retrieve_secret(ctx, self).await?;
 
-        if output.secret_string().is_some(){
-            return Ok(output.secret_string().unwrap().to_string());
-        }
-
-        if output.secret_binary().is_some(){
-            let binary = output.secret_binary().unwrap().clone().into_inner();
+        return if let Some(s) = output.secret_string() {
+            Ok(s.to_string())
+        } else if let Some (s) = output.secret_binary() {
+            let binary = s.clone().into_inner();
             let result = String::from_utf8(binary)
                 .with_context(|| format!("Couldn't convert bytes from Secrets Manager secret '{}' to UTF-8 String. \
                 Non-UTF-8 binary data can't be used as Variable input yet. Either use File input for binary data or make sure it's a valid UTF-8 string.", self.aws_secret.id))?;
-            return Ok(result);
-        }
-
-        return Err(anyhow::format_err!("Secret value was neither string nor binary, got response: {:?}", output));        
+            Ok(result)
+        } else {
+            Err(anyhow::format_err!("Secret value was neither string nor binary, got response: {:?}", output))
+        };
         
     }
 }
