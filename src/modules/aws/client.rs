@@ -44,7 +44,7 @@ pub async fn get_client_with_profile(ctx: &NovopsContext, profile: &Option<Strin
         }
         
         return Box::new(DefaultAwsClient{
-            config: build_mutable_client_config_from_context(ctx)
+            config: config
         })
     }
 }
