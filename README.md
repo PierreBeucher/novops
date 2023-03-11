@@ -36,7 +36,7 @@ Novops setup secrets and configs in multi-environment context without having to 
 ## Install
 
 ```
-curl -L "https://github.com/novadiscovery/novops/releases/latest/download/x86_64-unknown-linux-musl.zip" -o novops.zip
+curl -L "https://github.com/novadiscovery/novops/releases/latest/download/novops-X64-Linux.zip" -o novops.zip
 unzip novops.zip
 sudo mv novops /usr/local/bin/novops
 ```

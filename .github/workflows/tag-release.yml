@@ -2,6 +2,7 @@ name: Tag release
 
 on: workflow_dispatch
 
+# Create a tag on-demand with changelog
 jobs:
   changelog:
     name: Push changelog
