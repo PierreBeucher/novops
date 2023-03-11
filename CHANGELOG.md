@@ -1,3 +1,18 @@
+# [0.4.0](https://github.com/novadiscovery/novops/compare/v0.3.0...v0.4.0) (2023-03-11)
+
+
+### Bug Fixes
+
+* assume_role profile is ignored ([0073b51](https://github.com/novadiscovery/novops/commit/0073b514345b27a5c9b7004baa7f445ad5915920))
+* fully static build with Docker BuildKit ([c8d2a42](https://github.com/novadiscovery/novops/commit/c8d2a42c412c7b92847d436a0387b1aafb026593))
+
+
+### Features
+
+* better error handling and context messages ([e9e083f](https://github.com/novadiscovery/novops/commit/e9e083f587aa2219a84a92f30aadbf40a4e6af18))
+
+
+
 # [0.3.0](https://github.com/novadiscovery/novops/compare/v0.2.0...v0.3.0) (2023-01-21)
 
 
@@ -30,15 +45,6 @@
 
 
 ## [0.1.18](https://github.com/novadiscovery/novops/compare/v0.1.17...v0.1.18) (2022-11-22)
-
-
-
-## [0.1.17](https://github.com/novadiscovery/novops/compare/v0.1.16...v0.1.17) (2022-10-28)
-
-
-### Features
-
-* override existing symlink if any ([4df96b6](https://github.com/novadiscovery/novops/commit/4df96b62b9c78e2043a8b628ce10719bdc49b382))
 
 
 
