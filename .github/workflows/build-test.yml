@@ -22,16 +22,17 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
+      
+      # Deploy services used for test (Hashicorp Vault, etc.)
       - uses: isbang/compose-action@v1.4.1
         with:
           compose-file: "./tests/docker-compose.yml"
           down-flags: "--volumes"
-      - uses: actions-rs/cargo@v1
-        with:
-          command: test
+      
+      - run: cargo test
 
   docker_build:
     name: Docker build
