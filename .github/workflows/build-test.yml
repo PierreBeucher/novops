@@ -8,8 +8,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  build_and_test:
-    name: Rust build
+  cargo_test:
+    name: Cargo tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -22,13 +22,37 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
+      
+      # Deploy services used for test (Hashicorp Vault, etc.)
       - uses: isbang/compose-action@v1.4.1
         with:
           compose-file: "./tests/docker-compose.yml"
           down-flags: "--volumes"
-      - uses: actions-rs/cargo@v1
+      
+      - run: cargo test
+
+  docker_build:
+    name: Docker build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+    
+      - name: Build
+        uses: docker/build-push-action@v4
         with:
-          command: test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          outputs: "type=local,dest=novops-build"
+
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: novops
+          path: |
+            novops-build/novops

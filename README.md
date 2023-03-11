@@ -22,7 +22,7 @@ Novops setup secrets and configs in multi-environment context without having to 
 - Integrate with various secret providers: Hashicorp Vault, AWS GCloud, Azure...
 - Easily integrated within most shells and CI systems: Gitlab, GitHub, Jenkins...
 - Manage multi-environment (dev, preprod, prod...)
-- Quick and easy installation using static binary
+- Quick and easy installation with fully static binary
 
 ### Modules: Hashicorp Vault, AWS, GCloud, Azure...
 
@@ -36,7 +36,7 @@ Novops setup secrets and configs in multi-environment context without having to 
 ## Install
 
 ```
-curl -L "https://github.com/novadiscovery/novops/releases/latest/download/x86_64-unknown-linux-musl.zip" -o novops.zip
+curl -L "https://github.com/novadiscovery/novops/releases/latest/download/novops-X64-Linux.zip" -o novops.zip
 unzip novops.zip
 sudo mv novops /usr/local/bin/novops
 ```
@@ -160,3 +160,7 @@ See [Usage and examples](./docs/usage.md#usage-and-examples)
 We welcome contributions: bug reports/fixes, modules, proposals... :)
 
 See [contribution guide](./CONTRIBUTING.md)
+
+
+https://users.rust-lang.org/t/building-executable-for-alpine-linux/13568/3
+https://github.com/clux/muslrust

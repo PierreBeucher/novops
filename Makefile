@@ -4,7 +4,7 @@ docker:
 
 .PHONY: build
 build:
-	cargo build --release --target x86_64-unknown-linux-musl
+	docker buildx build . -o type=local,dest=build
 
 .PHONY: test-docker
 test-docker:

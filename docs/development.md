@@ -2,16 +2,11 @@
 
 ## Build
 
-Plain binary:
+Novops is built with Docker BuildKit. Built binary is fully static. See [Dockerfile](../Dockerfile).
 
 ```sh
-carbo build 
-```
-
-Docker image (using BuildKit):
-
-```sh
-docker buildx build .
+# Result in ./build/novops
+make build
 ```
 
 ## Run test
