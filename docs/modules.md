@@ -71,7 +71,7 @@ environments:
         content:
           hvault_kv2:
             path: "myapp/dev/creds"
-            entry: "token"
+            key: "token"
 ```
 
 ## Hashicorp Vault
@@ -110,7 +110,7 @@ environment:
         hvault_kv2:
           mount: "secret"
           path: "myapp/dev/creds"
-          entry: "password"
+          key: "password"
 
     files:
     - name: SECRET_TOKEN
@@ -118,7 +118,7 @@ environment:
       content:
         hvault_kv2:
           path: "myapp/dev/creds"
-          entry: "token"
+          key: "token"
 ```
 
 ### Key Value v1
