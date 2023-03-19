@@ -24,7 +24,7 @@ args@{
   ignoreLockHash,
 }:
 let
-  nixifiedLockHash = "b31afcc168ea3a364671667322d8226cc6eaae1935c94109ad3b45e62176f131";
+  nixifiedLockHash = "f47659ee8498b5007c9d5f2f7df4e5d9c7bc849227759ad3fd041da91b22ae63";
   workspaceSrc = if args.workspaceSrc == null then ./. else args.workspaceSrc;
   currentLockHash = builtins.hashFile "sha256" (workspaceSrc + /Cargo.lock);
   lockHashIgnored = if ignoreLockHash
@@ -46,7 +46,7 @@ in
 {
   cargo2nixVersion = "0.11.0";
   workspace = {
-    novops = rustPackages.unknown.novops."0.3.0";
+    novops = rustPackages.unknown.novops."0.4.0";
   };
   "registry+https://github.com/rust-lang/crates.io-index".addr2line."0.17.0" = overridableMkRustCrate (profileName: rec {
     name = "addr2line";
@@ -2181,9 +2181,9 @@ in
     };
   });
   
-  "unknown".novops."0.3.0" = overridableMkRustCrate (profileName: rec {
+  "unknown".novops."0.4.0" = overridableMkRustCrate (profileName: rec {
     name = "novops";
-    version = "0.3.0";
+    version = "0.4.0";
     registry = "unknown";
     src = fetchCrateLocal workspaceSrc;
     dependencies = {
