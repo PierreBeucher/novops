@@ -3,11 +3,10 @@ mod test_utils;
 
 #[cfg(test)]
 mod tests {
-    use novops::modules::aws::client::{get_iam_client, get_ssm_client, get_secretsmanager_client};
-    use novops::modules::aws::config::AwsClientConfig;
+    use novops::modules::aws::client::{get_ssm_client, get_secretsmanager_client};
     use aws_sdk_ssm::model::ParameterType;
     use aws_smithy_types::Blob;
-    use crate::test_utils::{load_env_for, test_setup};
+    use crate::test_utils::{load_env_for, test_setup, aws_ensure_role_exists, aws_test_config};
 
     use log::info;
 
@@ -15,7 +14,7 @@ mod tests {
     async fn test_assume_role() -> Result<(), anyhow::Error> {
 
         setup_test_env().await?;
-        ensure_test_role_exists("NovopsTestAwsAssumeRole").await?;        
+        aws_ensure_role_exists("NovopsTestAwsAssumeRole").await?;        
 
         let outputs = load_env_for("aws_assumerole", "dev").await?;
 
@@ -96,39 +95,6 @@ mod tests {
         Ok(())
     }
 
-    /**
-     * create test IAM role to impersonate, delete it first if already exists
-     */
-    async fn ensure_test_role_exists(role_name: &str) -> Result<(), anyhow::Error> {
-        let client = get_iam_client(&aws_test_config()).await?;
-        let existing_role_result = client.get_role().role_name(role_name).send().await;
-
-        match existing_role_result {
-            Ok(_) => {  // role exists, clean before running test
-                client.delete_role().role_name(role_name).send().await?;
-            }
-            Err(_) => {}, // role do not exists, do nothing
-        }
-
-        client.create_role()
-            .role_name(role_name)
-            .assume_role_policy_document(r#"{
-                "Version": "2012-10-17",
-                "Statement": [
-                    {
-                        "Effect": "Allow",
-                        "Principal": {
-                            "AWS": "111122223333"
-                        },
-                        "Action": "sts:AssumeRole"
-                    }
-                ]
-            }"#)
-            .send().await.expect("Valid create role response");
-        
-        Ok(())
-    }
-
     async fn ensure_test_ssm_param_exists(pname: &str, pvalue: &str, ptype: ParameterType) -> Result<(), anyhow::Error> {
         let client = get_ssm_client(&aws_test_config()).await?;
 
@@ -184,12 +150,6 @@ mod tests {
         std::env::set_var("AWS_SHARED_CREDENTIALS_FILE", &aws_creds.to_str().unwrap());
 
         Ok(())
-    }
-
-    fn aws_test_config() -> AwsClientConfig{
-        let mut aws_conf = AwsClientConfig::default();
-        aws_conf.endpoint("http://localhost:4566/");
-        return aws_conf;
     }
 
 }

@@ -3,6 +3,7 @@ use std::fs;
 use std::env;
 use novops::{NovopsOutputs, NovopsArgs, load_context_and_resolve};
 use log::debug;
+use novops::modules::aws::{client::get_iam_client, config::AwsClientConfig};
 
 pub const TEST_DIR: &str = "tests/output";
 
@@ -62,4 +63,47 @@ pub fn test_setup(){
     Ok(_) => {},
     Err(e) => {debug!("env_logger::try_init() error: {:?}", e)},
   };
+}
+
+#[cfg(test)]
+#[allow(dead_code)]
+pub fn aws_test_config() -> AwsClientConfig{
+  let mut aws_conf = AwsClientConfig::default();
+  aws_conf.endpoint("http://localhost:4566/");
+  return aws_conf;
+}
+
+/**
+ * create test IAM role to impersonate, delete it first if already exists
+ */
+#[cfg(test)]
+#[allow(dead_code)]
+pub async fn aws_ensure_role_exists(role_name: &str) -> Result<(), anyhow::Error> {
+  let client = get_iam_client(&aws_test_config()).await?;
+  let existing_role_result = client.get_role().role_name(role_name).send().await;
+
+  match existing_role_result {
+      Ok(_) => {  // role exists, clean before running test
+          client.delete_role().role_name(role_name).send().await?;
+      }
+      Err(_) => {}, // role do not exists, do nothing
+  }
+
+  client.create_role()
+      .role_name(role_name)
+      .assume_role_policy_document(r#"{
+          "Version": "2012-10-17",
+          "Statement": [
+              {
+                  "Effect": "Allow",
+                  "Principal": {
+                      "AWS": "111122223333"
+                  },
+                  "Action": "sts:AssumeRole"
+              }
+          ]
+      }"#)
+      .send().await.expect("Valid create role response");
+  
+  Ok(())
 }

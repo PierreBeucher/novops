@@ -1,6 +1,13 @@
 use serde::Deserialize;
 use schemars::JsonSchema;
 
+use super::aws::HashiVaultAWSInput;
+
+#[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
+pub struct HashiVaultInput {
+    pub aws: HashiVaultAWSInput
+}
+
 
 #[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]  
 pub struct HashivaultConfig {

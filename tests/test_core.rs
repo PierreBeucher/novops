@@ -47,7 +47,8 @@ mod tests {
                         (String::from("dev"), NovopsEnvironmentInput {
                             variables: None,
                             files: None,
-                            aws: None
+                            aws: None,
+                            hashivault: None,
                         })
                     ]),
                     config: Some(NovopsConfig { 

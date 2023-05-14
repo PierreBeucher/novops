@@ -1,0 +1,23 @@
+# The unique application name
+name: test-app
+
+environments:
+  dev:
+    # Generate AWS creds
+    # Output variables AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY and AWS_SESSION_TOKEN
+    hashivault:
+      aws:
+        mount: test_aws
+        name: test_role
+        role_arn: arn:aws:iam::111122223333:role/test_role
+        role_session_name: test-session
+        ttl: 2h
+        
+config:
+  default:
+    environment: dev
+  hashivault:
+    # Hashivault from docker-compose.yml service
+    # Alternatively, use VAULT_ADDR and VAULT_TOKEN env var
+    address: http://localhost:8200
+    token: novops
