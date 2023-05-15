@@ -24,7 +24,7 @@ args@{
   ignoreLockHash,
 }:
 let
-  nixifiedLockHash = "48aa34cc07eb59f85d53b4258724ecacce794aa34fa4b35a84c9e713a0126310";
+  nixifiedLockHash = "16eb28d1fae98c27cc5edc7cc613d8b9c2ad0b14ef6a1cc2f41ae3e8ad164303";
   workspaceSrc = if args.workspaceSrc == null then ./. else args.workspaceSrc;
   currentLockHash = builtins.hashFile "sha256" (workspaceSrc + /Cargo.lock);
   lockHashIgnored = if ignoreLockHash
@@ -4049,8 +4049,7 @@ in
       url = https://github.com/PierreBeucher/vaultrs;
       name = "vaultrs";
       version = "0.7.0";
-      rev = "809de3eee0880e6dfb5e7c64784eeb6308a3a11a";
-      ref = "aws-se"; };
+      rev = "809de3eee0880e6dfb5e7c64784eeb6308a3a11a";};
     features = builtins.concatLists [
       [ "default" ]
       [ "rustls" ]

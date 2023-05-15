@@ -2914,7 +2914,7 @@ checksum = "830b7e5d4d90034032940e4ace0d9a9a057e7a45cd94e6c007832e39edb82f6d"
 [[package]]
 name = "vaultrs"
 version = "0.7.0"
-source = "git+https://github.com/PierreBeucher/vaultrs?rev=809de3eee0880e6dfb5e7c64784eeb6308a3a11a#809de3eee0880e6dfb5e7c64784eeb6308a3a11a"
+source = "git+https://github.com/PierreBeucher/vaultrs?rev=aws-se-2023-05-15#809de3eee0880e6dfb5e7c64784eeb6308a3a11a"
 dependencies = [
  "async-trait",
  "bytes",
