@@ -55,21 +55,32 @@ async fn _load_env_for(conf_name: &str, env: &str, dry_run: bool) -> Result<Novo
 
 /**
  * Perform test setup before running tests
+ * - Use common logging
+ * - Use test AWS config 
  */
-pub fn test_setup(){
+pub async fn test_setup() -> Result<(), anyhow::Error>{
 
   // enable logger
   match env_logger::try_init() {
     Ok(_) => {},
     Err(e) => {debug!("env_logger::try_init() error: {:?}", e)},
   };
+   
+  // use known AWS config
+  let aws_config = std::env::current_dir()?.join("tests/aws/config");
+  let aws_creds = std::env::current_dir()?.join("tests/aws/credentials");
+
+  std::env::set_var("AWS_CONFIG_FILE", aws_config.to_str().unwrap());
+  std::env::set_var("AWS_SHARED_CREDENTIALS_FILE", &aws_creds.to_str().unwrap());
+
+  Ok(())
 }
 
 #[cfg(test)]
 #[allow(dead_code)]
 pub fn aws_test_config() -> AwsClientConfig{
   let mut aws_conf = AwsClientConfig::default();
-  aws_conf.endpoint("http://localhost:4566/");
+  aws_conf.endpoint("http://localhost:4566/"); // Localstack
   return aws_conf;
 }
 

@@ -19,7 +19,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_hashivault_kv2() -> Result<(), anyhow::Error> {
-        test_setup();
+        test_setup().await?;
         let client = hashivault_test_client();
 
         // enable kv2 engine
@@ -42,7 +42,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_hashivault_kv1() -> Result<(), anyhow::Error> {
-        test_setup();
+        test_setup().await?;
         
         let client = hashivault_test_client();
         enable_engine(&client, "kv1", "generic", None).await?;
@@ -63,7 +63,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_hashivault_aws() -> Result<(), anyhow::Error> {
-        test_setup();
+        test_setup().await?;
         
         // Setup Vault AWS SE for Localstack and create Hashivault role
         let client = hashivault_test_client();

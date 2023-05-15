@@ -21,7 +21,7 @@ mod tests {
      */
     #[tokio::test]
     async fn test_load_simple_config() -> Result<(), anyhow::Error>{
-        test_setup();
+        test_setup().await?;
 
         let workdir = clean_and_setup_test_dir("test_load_simple_config")?;
 
@@ -75,7 +75,7 @@ mod tests {
      */
     #[tokio::test]
     async fn test_simple_run() -> Result<(), anyhow::Error>{
-        test_setup();
+        test_setup().await?;
 
         let workdir = clean_and_setup_test_dir("test_simple_run")?;
 
@@ -123,7 +123,7 @@ mod tests {
     
     #[tokio::test]
     async fn test_symlink_flag() -> Result<(), anyhow::Error> {
-        test_setup();
+        test_setup().await?;
 
         let workdir = clean_and_setup_test_dir("test_symlink_flag")?;
 
@@ -165,7 +165,7 @@ mod tests {
      */
     #[tokio::test]
     async fn test_symlink_no_file_override() -> Result<(), anyhow::Error> {
-        test_setup();
+        test_setup().await?;
 
         let workdir = clean_and_setup_test_dir("test_symlink_no_file_override")?;
 
@@ -193,7 +193,7 @@ mod tests {
      */
     #[tokio::test]
     async fn test_dry_run() -> Result<(), anyhow::Error> {
-        test_setup();
+        test_setup().await?;
         
         let result = load_env_dryrun_for("all-modules", "dev").await?;
 

@@ -13,7 +13,7 @@ mod tests {
     #[tokio::test]
     async fn test_assume_role() -> Result<(), anyhow::Error> {
 
-        setup_test_env().await?;
+        test_setup().await?;
         aws_ensure_role_exists("NovopsTestAwsAssumeRole").await?;        
 
         let outputs = load_env_for("aws_assumerole", "dev").await?;
@@ -30,7 +30,7 @@ mod tests {
     #[tokio::test]
     async fn test_ssm_param() -> Result<(), anyhow::Error> {
 
-        setup_test_env().await?;
+        test_setup().await?;
 
         // String
         let pstring_value = "novops-string-test";
@@ -56,7 +56,7 @@ mod tests {
     async fn test_secretsmanager() -> Result<(), anyhow::Error> {
 
         // Prepare env and dummy secret
-        setup_test_env().await?;
+        test_setup().await?;
 
         let expect_string = "Some-String-data?1548a~#{[[".to_string();
         let expect_binary = vec![240, 159, 146, 150]; // 💖
@@ -83,7 +83,7 @@ mod tests {
     async fn test_secretsmanager_non_utf8_variable() -> Result<(), anyhow::Error> {
 
         // Prepare env and dummy secret
-        setup_test_env().await?;
+        test_setup().await?;
 
         let non_utf8_binary = vec![0, 159, 146, 150];
         ensure_test_secret_exists("novops-test-secretsmanager-binary-non-utf8", None, Some(non_utf8_binary.clone())).await?;
@@ -134,19 +134,6 @@ mod tests {
             .send().await?;
 
         info!("Create AWS secret {} response: {:?}", sname, r);
-
-        Ok(())
-    }
-
-    async fn setup_test_env() -> Result<(), anyhow::Error> {
-        test_setup();
-        
-        // use known AWS config
-        let aws_config = std::env::current_dir()?.join("tests/aws/config");
-        let aws_creds = std::env::current_dir()?.join("tests/aws/credentials");
-
-        std::env::set_var("AWS_CONFIG_FILE", aws_config.to_str().unwrap());
-        std::env::set_var("AWS_SHARED_CREDENTIALS_FILE", &aws_creds.to_str().unwrap());
 
         Ok(())
     }
