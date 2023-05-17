@@ -10,7 +10,7 @@ mod tests {
     #[tokio::test]
     async fn test_azure_keyvault() -> Result<(), anyhow::Error> {
 
-        test_utils::test_setup();
+        test_utils::test_setup().await?;
 
         let outputs = test_utils::load_env_dryrun_for("azure_keyvault", "dev").await?;
 

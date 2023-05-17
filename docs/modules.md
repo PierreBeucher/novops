@@ -4,9 +4,10 @@
   - [Files and Variables](#files-and-variables)
   - [Hashicorp Vault](#hashicorp-vault)
     - [Authentication & Configuration](#authentication--configuration)
+    - [AWS](#aws)
     - [Key Value v2](#key-value-v2)
     - [Key Value v1](#key-value-v1)
-  - [AWS](#aws)
+  - [AWS](#aws-1)
     - [Authentication & Configuration](#authentication--configuration-1)
     - [STS Assume Role](#sts-assume-role)
     - [Systems Manager (SSM) Parameter Store](#systems-manager-ssm-parameter-store)
@@ -95,6 +96,22 @@ Or set [Vault built-in environment variables](https://developer.hashicorp.com/va
 ```sh
 export VAULT_TOKEN=xxx
 export VAULT_ADDR=https://vault.mycompany.org:8200
+```
+
+### AWS 
+
+[AWS Secret Engine](https://developer.hashicorp.com/vault/api-docs/secret/aws) to generate temporary credentials. Maps directly to [Generate Credentials API](https://developer.hashicorp.com/vault/api-docs/secret/aws#generate-credentials). Outputs environment variables `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` & `AWS_SESSION_TOKEN` used by most [AWS SDKs and tools](https://docs.aws.amazon.com/sdkref/latest/guide/environment-variables.html):
+
+```yaml
+environments:
+  test:
+    hashivault:
+      aws:
+        mount: aws
+        name: dev_role
+        role_arn: arn:aws:iam::111122223333:role/dev_role
+        role_session_name: dev-session
+        ttl: 2h
 ```
 
 ### Key Value v2

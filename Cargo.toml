@@ -30,11 +30,11 @@ reqwest = "0.11.13"
 tracing-subscriber = { version = "0.3.15", features = ["env-filter"] }
 tokio = { version = "1", features = ["full"] }
 convert_case = "0.5.0"
-async-trait = "0.1.56"
+async-trait = "0.1.68"
 anyhow = { version = "1.0", features = ["backtrace"] }
 rand = "0.5"
-# Use specific revision as kv1 has been merged recently but not yet released (https://github.com/jmgilman/vaultrs/pull/46)
-vaultrs = { git = "https://github.com/jmgilman/vaultrs", rev="823c44b898a2990f099cc8737a36a618ae209385" }
+# Use our own version as AWS client is not yet merged in mainstream. See https://github.com/jmgilman/vaultrs/pull/58
+vaultrs = { git = "https://github.com/PierreBeucher/vaultrs", rev="aws-se-2023-05-15" }
 url = "2.3.1"
 schemars = "0.8.10"
 http = "0.2"

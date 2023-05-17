@@ -10,7 +10,7 @@ mod tests {
     #[tokio::test]
     async fn test_gcloud_secretmanager() -> Result<(), anyhow::Error> {
 
-        test_utils::test_setup();
+        test_utils::test_setup().await?;
 
         let expect = "RESULT:projects/pierre-sandbox-372512/secrets/TestSecret/versions/latest";
         let outputs = test_utils::load_env_dryrun_for("gcloud_secretmanager", "dev").await?;

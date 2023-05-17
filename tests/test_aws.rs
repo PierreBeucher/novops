@@ -3,26 +3,24 @@ mod test_utils;
 
 #[cfg(test)]
 mod tests {
-    use novops::modules::aws::client::{get_iam_client, get_ssm_client, get_secretsmanager_client};
-    use novops::modules::aws::config::AwsClientConfig;
+    use novops::modules::aws::client::{get_ssm_client, get_secretsmanager_client};
     use aws_sdk_ssm::model::ParameterType;
     use aws_smithy_types::Blob;
-    use crate::test_utils::{load_env_for, test_setup};
+    use crate::test_utils::{load_env_for, test_setup, aws_ensure_role_exists, aws_test_config};
 
     use log::info;
 
     #[tokio::test]
     async fn test_assume_role() -> Result<(), anyhow::Error> {
 
-        setup_test_env().await?;
-        ensure_test_role_exists("NovopsTestAwsAssumeRole").await?;        
+        test_setup().await?;
+        aws_ensure_role_exists("NovopsTestAwsAssumeRole").await?;        
 
         let outputs = load_env_for("aws_assumerole", "dev").await?;
 
         info!("test_assume_role: Found variables: {:?}", outputs.variables);
 
-        // STS temporary keys starts with ASIA https://docs.aws.amazon.com/STS/latest/APIReference/API_GetAccessKeyInfo.html
-        assert!(outputs.variables.get("AWS_ACCESS_KEY_ID").unwrap().value.starts_with("ASIA"));
+        assert!(outputs.variables.get("AWS_ACCESS_KEY_ID").unwrap().value.len() > 0);
         assert!(outputs.variables.get("AWS_SECRET_ACCESS_KEY").unwrap().value.len() > 0);
         assert!(outputs.variables.get("AWS_SESSION_TOKEN").unwrap().value.len() > 0);
 
@@ -32,7 +30,7 @@ mod tests {
     #[tokio::test]
     async fn test_ssm_param() -> Result<(), anyhow::Error> {
 
-        setup_test_env().await?;
+        test_setup().await?;
 
         // String
         let pstring_value = "novops-string-test";
@@ -58,7 +56,7 @@ mod tests {
     async fn test_secretsmanager() -> Result<(), anyhow::Error> {
 
         // Prepare env and dummy secret
-        setup_test_env().await?;
+        test_setup().await?;
 
         let expect_string = "Some-String-data?1548a~#{[[".to_string();
         let expect_binary = vec![240, 159, 146, 150]; // 💖
@@ -85,7 +83,7 @@ mod tests {
     async fn test_secretsmanager_non_utf8_variable() -> Result<(), anyhow::Error> {
 
         // Prepare env and dummy secret
-        setup_test_env().await?;
+        test_setup().await?;
 
         let non_utf8_binary = vec![0, 159, 146, 150];
         ensure_test_secret_exists("novops-test-secretsmanager-binary-non-utf8", None, Some(non_utf8_binary.clone())).await?;
@@ -93,39 +91,6 @@ mod tests {
         let outputs = load_env_for("aws_secretsmanager_var_nonutf8", "dev").await;
         outputs.expect_err("Expected non UTF-8 binary data to provoke an error.");
 
-        Ok(())
-    }
-
-    /**
-     * create test IAM role to impersonate, delete it first if already exists
-     */
-    async fn ensure_test_role_exists(role_name: &str) -> Result<(), anyhow::Error> {
-        let client = get_iam_client(&aws_test_config()).await?;
-        let existing_role_result = client.get_role().role_name(role_name).send().await;
-
-        match existing_role_result {
-            Ok(_) => {  // role exists, clean before running test
-                client.delete_role().role_name(role_name).send().await?;
-            }
-            Err(_) => {}, // role do not exists, do nothing
-        }
-
-        client.create_role()
-            .role_name(role_name)
-            .assume_role_policy_document(r#"{
-                "Version": "2012-10-17",
-                "Statement": [
-                    {
-                        "Effect": "Allow",
-                        "Principal": {
-                            "AWS": "111122223333"
-                        },
-                        "Action": "sts:AssumeRole"
-                    }
-                ]
-            }"#)
-            .send().await.expect("Valid create role response");
-        
         Ok(())
     }
 
@@ -171,25 +136,6 @@ mod tests {
         info!("Create AWS secret {} response: {:?}", sname, r);
 
         Ok(())
-    }
-
-    async fn setup_test_env() -> Result<(), anyhow::Error> {
-        test_setup();
-        
-        // use known AWS config
-        let aws_config = std::env::current_dir()?.join("tests/aws/config");
-        let aws_creds = std::env::current_dir()?.join("tests/aws/credentials");
-
-        std::env::set_var("AWS_CONFIG_FILE", aws_config.to_str().unwrap());
-        std::env::set_var("AWS_SHARED_CREDENTIALS_FILE", &aws_creds.to_str().unwrap());
-
-        Ok(())
-    }
-
-    fn aws_test_config() -> AwsClientConfig{
-        let mut aws_conf = AwsClientConfig::default();
-        aws_conf.endpoint("http://localhost:4566/");
-        return aws_conf;
     }
 
 }

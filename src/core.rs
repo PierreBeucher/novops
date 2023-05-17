@@ -5,7 +5,12 @@ use anyhow;
 use std::path::PathBuf;
 use schemars::JsonSchema;
 
-use crate::modules::hashivault::{config::HashivaultConfig, kv2::HashiVaultKeyValueV2Input, kv1::HashiVaultKeyValueV1Input};
+use crate::modules::hashivault::{
+    self,
+    config::HashivaultConfig, 
+    kv2::HashiVaultKeyValueV2Input, 
+    kv1::HashiVaultKeyValueV1Input, 
+};
 use crate::modules::bitwarden;
 use crate::modules::aws;
 use crate::modules::gcloud;
@@ -64,7 +69,8 @@ impl Default for NovopsConfigDefault {
 pub struct NovopsEnvironmentInput {
     pub variables: Option<Vec<VariableInput>>,
     pub files: Option<Vec<FileInput>>,
-    pub aws: Option<aws::config::AwsInput>
+    pub aws: Option<aws::config::AwsInput>,
+    pub hashivault: Option<hashivault::config::HashiVaultInput>
 }
 
 /**

@@ -4,14 +4,22 @@ mod test_utils;
 mod tests {
     use anyhow::Context;
     use vaultrs::client::{VaultClient, VaultClientSettingsBuilder};
-    use vaultrs::{kv2, kv1};
+    use vaultrs::{
+        self, 
+        kv2, 
+        kv1, 
+        aws, 
+        api::aws::requests::{ 
+            SetConfigurationRequest, CreateUpdateRoleRequest 
+        }
+    };
     use log::info;
     use std::collections::HashMap;
-    use crate::test_utils::{load_env_for, test_setup};
+    use crate::test_utils::{load_env_for, test_setup, aws_ensure_role_exists};
 
     #[tokio::test]
     async fn test_hashivault_kv2() -> Result<(), anyhow::Error> {
-        test_setup();
+        test_setup().await?;
         let client = hashivault_test_client();
 
         // enable kv2 engine
@@ -34,7 +42,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_hashivault_kv1() -> Result<(), anyhow::Error> {
-        test_setup();
+        test_setup().await?;
         
         let client = hashivault_test_client();
         enable_engine(&client, "kv1", "generic", None).await?;
@@ -49,6 +57,38 @@ mod tests {
         let outputs = load_env_for("hvault_kv1", "dev").await?;
 
         assert_eq!(outputs.variables.get("HASHIVAULT_KV_V1_TEST").unwrap().value, "s3cret_kv1");
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_hashivault_aws() -> Result<(), anyhow::Error> {
+        test_setup().await?;
+        
+        // Setup Vault AWS SE for Localstack and create Hashivault role
+        let client = hashivault_test_client();
+        enable_engine(&client, "test_aws", "aws", None).await?;
+        
+        aws::config::set(&client, "test_aws", "test_key", "test_secret", Some(SetConfigurationRequest::builder()
+            .sts_endpoint("http://localstack:4566/") // Localstack URL reachable from Vault container in Docker Compose stack
+            .iam_endpoint("http://localstack:4566/")
+        )).await?;
+
+        aws::roles::create_update(&client, "test_aws", "test_role", "assumed_role", Some(CreateUpdateRoleRequest::builder()
+            .role_arns(vec!["arn:aws:iam::111122223333:role/test_role".to_string()])
+        )).await?;
+
+        // Make sure IAM Role exists on AWS side 
+        aws_ensure_role_exists("test_role").await?;
+
+        // Generate credentials
+        let outputs = load_env_for("hvault_aws", "dev").await?;
+
+        info!("Hashivault AWS credentials: {:?}", outputs);
+
+        assert!(outputs.variables.get("AWS_ACCESS_KEY_ID").unwrap().value.len() > 0);
+        assert!(outputs.variables.get("AWS_SECRET_ACCESS_KEY").unwrap().value.len() > 0);
+        assert!(outputs.variables.get("AWS_SESSION_TOKEN").unwrap().value.len() > 0);
 
         Ok(())
     }

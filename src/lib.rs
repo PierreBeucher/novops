@@ -185,6 +185,19 @@ pub async fn resolve_environment_inputs(ctx: &NovopsContext, inputs: NovopsEnvir
         None => (),
     }
 
+    match &inputs.hashivault {
+        Some(hashivault) => {
+            let r = hashivault.aws.resolve(&ctx).await
+                .with_context(|| format!("Could not resolve Hashivault input {:?}", hashivault))?;
+
+            for vo in r {
+                variable_outputs.insert(vo.name.clone(), vo);
+            }
+            
+        },
+        None => (),
+    }
+
     Ok((variable_outputs, file_outputs))
 
 }
