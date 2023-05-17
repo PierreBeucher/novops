@@ -1,3 +1,12 @@
+# [0.5.0](https://github.com/novadiscovery/novops/compare/v0.4.0...v0.5.0) (2023-05-17)
+
+
+### Features
+
+* Hashivault module with AWS Secret Engine ([141e282](https://github.com/novadiscovery/novops/commit/141e282394cad8d7c2cece9077113861c366e986))
+
+
+
 # [0.4.0](https://github.com/novadiscovery/novops/compare/v0.3.0...v0.4.0) (2023-03-11)
 
 
@@ -41,10 +50,6 @@
 ### Features
 
 * licensed under GNU LGPLv3 ([927f000](https://github.com/novadiscovery/novops/commit/927f000e5282cc5de70709879494526c90c1ded8))
-
-
-
-## [0.1.18](https://github.com/novadiscovery/novops/compare/v0.1.17...v0.1.18) (2022-11-22)
 
 
 
