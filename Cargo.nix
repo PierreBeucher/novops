@@ -24,7 +24,7 @@ args@{
   ignoreLockHash,
 }:
 let
-  nixifiedLockHash = "2b3cb521b6ca4c9675722dc0f784eb0b6324a01d5980cd33476edc8048c3f05e";
+  nixifiedLockHash = "f45fd2b18f2f07965ea6204383f556c0bcc8ebfd72216e11e536e585a717704f";
   workspaceSrc = if args.workspaceSrc == null then ./. else args.workspaceSrc;
   currentLockHash = builtins.hashFile "sha256" (workspaceSrc + /Cargo.lock);
   lockHashIgnored = if ignoreLockHash
@@ -4049,7 +4049,6 @@ in
       url = https://github.com/PierreBeucher/vaultrs;
       name = "vaultrs";
       version = "0.7.0";
-      ref = "refs/tags/aws-se-2023-05-15"; # specify tag as commit is not yet in main
       rev = "809de3eee0880e6dfb5e7c64784eeb6308a3a11a";};
     features = builtins.concatLists [
       [ "default" ]
