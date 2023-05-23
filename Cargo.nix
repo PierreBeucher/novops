@@ -4049,6 +4049,7 @@ in
       url = https://github.com/PierreBeucher/vaultrs;
       name = "vaultrs";
       version = "0.7.0";
+      ref = "refs/tags/aws-se-2023-05-15"; # specify tag as commit is not yet in main
       rev = "809de3eee0880e6dfb5e7c64784eeb6308a3a11a";};
     features = builtins.concatLists [
       [ "default" ]
