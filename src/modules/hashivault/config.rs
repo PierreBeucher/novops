@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use serde::Deserialize;
 use schemars::JsonSchema;
 
@@ -14,8 +16,11 @@ pub struct HashivaultConfig {
   /// Address in form http(s)://HOST:PORT
   pub address: Option<String>,
 
-  /// Token used to connect
+  /// Hashivault token (plain string, for testing purpose only)
   pub token: Option<String>,
+
+  /// Hashivault token path 
+  pub token_path: Option<PathBuf>,
 
   /// TLS verify
   pub verify: Option<bool>
@@ -26,6 +31,7 @@ impl Default for HashivaultConfig {
     HashivaultConfig{
       address: None,
       token: None,
+      token_path: None,
       verify: None
     }
   }
