@@ -9,3 +9,6 @@ tests/localconfig
 
 # vscode 
 .vscode/settings.json
+
+# Nix
+result
