@@ -2,6 +2,8 @@ use std::path::PathBuf;
 use std::fs;
 use std::env;
 use novops::{NovopsOutputs, NovopsArgs, load_context_and_resolve};
+use novops::core::{NovopsContext, NovopsConfig, NovopsConfigFile, NovopsConfigDefault};
+use std::collections::HashMap;
 use log::debug;
 use novops::modules::aws::{client::get_iam_client, config::AwsClientConfig};
 
@@ -117,4 +119,27 @@ pub async fn aws_ensure_role_exists(role_name: &str) -> Result<(), anyhow::Error
       .send().await.expect("Valid create role response");
   
   Ok(())
+}
+
+#[cfg(test)]
+#[allow(dead_code)]
+pub fn create_dummy_context() -> NovopsContext{
+  NovopsContext {
+    env_name: String::from("dev"),
+    app_name: String::from("test-empty"),
+    workdir: PathBuf::from("/tmp"),
+    config_file_data: NovopsConfigFile{
+        name: String::from("test-empty"),
+        environments: HashMap::new(),
+        config: Some(NovopsConfig { 
+            default: Some(NovopsConfigDefault {
+                 environment: Some(String::from("dev"))
+            }), 
+            hashivault: None,
+            aws: None
+        })
+    },
+    env_var_filepath: PathBuf::from("/tmp/vars"),
+    dry_run: false
+  }
 }

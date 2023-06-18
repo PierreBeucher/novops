@@ -3,6 +3,7 @@ mod test_utils;
 #[cfg(test)]
 mod tests {
     use anyhow::Context;
+    use std::{ fs, path::PathBuf };
     use vaultrs::client::{VaultClient, VaultClientSettingsBuilder};
     use vaultrs::{
         self, 
@@ -15,7 +16,13 @@ mod tests {
     };
     use log::info;
     use std::collections::HashMap;
-    use crate::test_utils::{load_env_for, test_setup, aws_ensure_role_exists};
+    use crate::test_utils::{load_env_for, test_setup, aws_ensure_role_exists, self};
+    use novops::modules::hashivault::{
+        client::{load_vault_token, load_vault_address},
+        config::HashivaultConfig
+    };
+    use novops::core::{NovopsConfig, NovopsContext};
+
 
     #[tokio::test]
     async fn test_hashivault_kv2() -> Result<(), anyhow::Error> {
@@ -94,6 +101,94 @@ mod tests {
     }
 
     /**
+     * Check vault token is loaded in various situations in the proper order
+     */
+    #[tokio::test]
+    async fn test_hashivault_client_token_load() -> Result<(), anyhow::Error> {
+        test_setup().await?;
+
+        // Empty config should yield empty token
+        let ctx_empty = create_dummy_context_with_hvault(None, None, None);
+        
+        let result_empty = load_vault_token(&ctx_empty, None, None)?;
+        assert!(result_empty.is_empty());
+
+        // Token in home should be used
+        // Create dummy token for testing
+        // use linefeed and empty space to also test trimming
+        let home_token = "hometoken\n   \n";
+        let expected_home_token = "hometoken";
+
+        let dummy_home_path = PathBuf::from("/tmp");
+        let home_token_path = dummy_home_path.join(".vault-token");
+        let home_var = Some(dummy_home_path);
+        fs::write(home_token_path, home_token).with_context(|| "Couldn't write test token in /tmp")?;
+        
+        let ctx_empty = create_dummy_context_with_hvault(None, None, None);
+        let result_home_token = load_vault_token(&ctx_empty, home_var.clone(), None)?;
+
+        assert_eq!(result_home_token, expected_home_token);
+
+        // Providing plain token should use it
+        let token_plain = "token_plain";
+        let ctx_token_path = create_dummy_context_with_hvault(
+            None, Some(String::from(token_plain)), None);
+        let result_token_plain = load_vault_token(&ctx_token_path, home_var.clone(), None)?;
+        assert_eq!(result_token_plain, token_plain);
+
+        // Providing token path should read token path before plain token
+        let tmp_token_path = "/tmp/token";
+        let token_file_content = "token_in_file";
+        fs::write(&tmp_token_path, token_file_content)
+            .with_context(|| format!("Couldn't write test token to {tmp_token_path}"))?;
+
+        let ctx_token_path = create_dummy_context_with_hvault(
+            None, Some(String::from(token_plain)), Some(PathBuf::from(tmp_token_path)));
+        let result_token_path = load_vault_token(&ctx_token_path, home_var.clone(), None)?;
+        assert_eq!(result_token_path, token_file_content);
+
+        // Providing token en var should use it before anything else
+        let env_var_token = String::from("envvartoken");
+        let ctx_token_path = create_dummy_context_with_hvault(
+            None, Some(String::from(token_plain)), Some(PathBuf::from(tmp_token_path)));
+        let result_token_env_var = load_vault_token(&ctx_token_path, home_var.clone(), Some(env_var_token.clone()))?;
+        assert_eq!(result_token_env_var, env_var_token);
+
+        Ok(())
+    }
+
+    /**
+     * Check vault address is loaded in various situations in the proper order
+     */
+    #[tokio::test]
+    async fn test_hashivault_client_address_load() -> Result<(), anyhow::Error> {
+        test_setup().await?;
+
+        // Empty config should yield empty address
+        let ctx_empty = create_dummy_context_with_hvault(None, None, None);
+        let result_empty = load_vault_address(&ctx_empty, None)?;
+        assert_eq!(result_empty, url::Url::parse("http://127.0.0.1:8200")?);
+
+        // Vault address config should yield configured address
+        let addr_config = "https://dummy-vault-config";
+        let ctx_addr = create_dummy_context_with_hvault(
+            Some(String::from(addr_config)), None, None);
+    
+        let result_config = load_vault_address(&ctx_addr, None)?;
+        assert_eq!(result_config, url::Url::parse(addr_config)?);
+
+        // Vault address env var should be used first
+        let addr_var = String::from("https://env-var-address");
+        let ctx_addr = create_dummy_context_with_hvault(
+            Some(String::from(addr_config)), None, None);
+    
+        let result_env_var = load_vault_address(&ctx_addr, Some(addr_var.clone()))?;
+        assert_eq!(result_env_var, url::Url::parse(&addr_var)?);
+        
+        Ok(())
+    }
+
+    /**
      * Test client used to prepare Hashivault with a few secrets
      * Voluntarily separated from implemented client to make tests independent
      */
@@ -124,6 +219,23 @@ mod tests {
         }
         
         Ok(())
+    }
+
+    fn create_dummy_context_with_hvault(addr: Option<String>, token: Option<String>, token_path: Option<PathBuf>) -> NovopsContext {
+        let mut ctx = test_utils::create_dummy_context();
+
+        let mut novops_config = NovopsConfig::default();
+
+        novops_config.hashivault = Some(HashivaultConfig {
+            address: addr,
+            token: token,
+            token_path: token_path,
+            verify: Some(false)
+        });
+
+        ctx.config_file_data.config = Some(novops_config);
+
+        return ctx
     }
 
 }

@@ -1,12 +1,13 @@
 use crate::core::NovopsContext;
 
 use anyhow::Context;
-use vaultrs::client::{VaultClient, VaultClientSettingsBuilder};
+use vaultrs::client::{VaultClient, VaultClientSettingsBuilder };
 use url::Url;
 use async_trait::async_trait;
-use std::collections::HashMap;
+use std::{ collections::HashMap, env, fs, path::{Path, PathBuf} };
 use vaultrs::{kv2, kv1, aws, api::aws::requests::GenerateCredentialsRequest};
-
+use log::debug;
+use home;
 
 #[async_trait]
 pub trait HashivaultClient {
@@ -164,23 +165,130 @@ pub fn get_client(ctx: &NovopsContext) -> Result<Box<dyn HashivaultClient + Send
 
 pub fn build_client(ctx: &NovopsContext) -> Result<VaultClient, anyhow::Error> {
 
+    let default_settings = VaultClientSettingsBuilder::default().build()?;
+
     let hv_config = ctx.config_file_data.config.clone()
         .unwrap_or_default()
         .hashivault.unwrap_or_default();
+    
+    let token_var = env::var("VAULT_TOKEN").ok();
+    let addr_var = env::var("VAULT_ADDR").ok();
+    let home_var = home::home_dir();
 
-    let default_settings = VaultClientSettingsBuilder::default().build()?;
-
-    let vault_url_string = hv_config.address.unwrap_or(default_settings.address.to_string());
-    let vault_url = Url::parse(&vault_url_string)
-        .with_context(|| format!("Couldn't parse Vault URL '{:?}'", &vault_url_string))?;
+    let vault_token = load_vault_token(ctx, home_var, token_var).with_context(|| "Couldn't load Vault token")?;
+    let vault_url = load_vault_address(ctx, addr_var).with_context(|| "Couldn't load Vault address")?;
 
     let settings = VaultClientSettingsBuilder::default()
         .address(vault_url)
-        .token(hv_config.token.unwrap_or(default_settings.token))
+        .token(vault_token)
         .verify(hv_config.verify.unwrap_or(default_settings.verify))
         .build()?;
     
     let client = VaultClient::new(settings)?;
     
     Ok(client)
+}
+
+/// Look for token address in this order:
+/// - VAULT_TOKEN env var
+/// - Novops config (file)
+/// - Novops config (plain)
+/// - $HOME/.vault-token
+/// - default settings
+pub fn load_vault_token(ctx: &NovopsContext, home_var: Option<PathBuf>, token_var: Option<String>) -> Result<String, anyhow::Error>  {
+
+    debug!("Looking for a vault token...");
+    
+    if token_var.is_some() {
+        debug!("Found VAULT_TOKEN variable, using it.");
+        return Ok(token_var.unwrap())
+    }
+
+    let hvault_config = &ctx.clone().config_file_data.config.unwrap_or_default()
+        .hashivault.unwrap_or_default();
+
+    let token_path = &hvault_config.token_path;
+    if token_path.is_some(){
+        debug!("Found token path config, reading file and using value as token...");
+
+        let token = read_vault_token_file(&token_path.clone().unwrap())?;
+        return Ok(token)
+    }
+
+    let token_plain = &hvault_config.token;
+
+    if token_plain.is_some(){
+        debug!("Found plain token in config, using its value as token...");
+
+        return Ok(token_plain.clone().unwrap())
+    }
+
+    if home_var.is_some() {
+        let home_token_path = Path::new(&home_var.unwrap()).join(".vault-token");
+
+        debug!("Checking vault token file exists at {:?}", home_token_path);
+
+        if home_token_path.exists() {
+            debug!("Using vault token file {:?}", home_token_path);
+
+            let token = read_vault_token_file(&home_token_path)
+                .with_context(|| format!("Found a token file '{:?}' in HOME but couldn't read", &home_token_path))?;
+
+            return Ok(token)
+        }
+    }
+
+    debug!("No vault token found, returning empty string...");
+
+    return Ok(VaultClientSettingsBuilder::default().build()?.token)
+
+}
+
+/// Look for vault address in this order:
+/// - VAULT_ADDR env var
+/// - Novops config
+/// - default settings
+pub fn load_vault_address(ctx: &NovopsContext, addr_var: Option<String>) -> Result<Url, anyhow::Error>  {
+
+    debug!("Looking for a vault address...");
+
+    if addr_var.is_some() {
+        debug!("Found VAULT_ADDR variable, using it.");
+
+        return Ok(parse_vault_addr_str(addr_var.unwrap())?);
+    }
+
+    let hvault_config = &ctx.clone().config_file_data.config.unwrap_or_default()
+        .hashivault.unwrap_or_default();
+
+    let addr_config = &hvault_config.address;
+    if addr_config.is_some(){
+        debug!("Found vault address config, using it.");
+
+        let addr = parse_vault_addr_str(addr_config.clone().unwrap())
+            .with_context(|| format!("Couldn't parse address as URl: '{:?}'", addr_config))?;
+
+        debug!("Returning vault address from config...");
+
+        return Ok(addr);
+    }
+
+    debug!("No vault address found, returning empty string...");
+
+    return Ok(VaultClientSettingsBuilder::default().build()?.address)
+
+}
+
+fn parse_vault_addr_str(vault_addr_str: String) -> Result<Url, anyhow::Error> {
+    let vault_addr = Url::parse(&vault_addr_str)
+        .with_context(|| format!("Couldn't parse Vault URL '{:?}'", &vault_addr_str))?;
+    return Ok(vault_addr);
+}
+
+fn read_vault_token_file(token_path: &PathBuf) -> Result<String, anyhow::Error>{
+    let token = fs::read_to_string(token_path)
+        .with_context(|| format!("Couldn't read token file at {:?}", token_path))?;
+
+    // trim result as empty spaces or linefeed causes vaultrs to panic
+    return Ok(String::from(token.trim()))
 }
