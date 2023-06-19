@@ -1,0 +1,21 @@
+# From https://github.com/google-github-actions/release-please-action
+on:
+  push:
+    branches:
+      - main
+      - releaseplease # temporary while testing release process
+
+permissions:
+  contents: write
+  pull-requests: write
+
+name: release-please
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: google-github-actions/release-please-action@v3
+        with:
+          command: manifest
+          default-branch: releaseplease # temporary to test release
