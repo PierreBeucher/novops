@@ -3,7 +3,6 @@ on:
   push:
     branches:
       - main
-      - releaseplease # temporary while testing release process
 
 permissions:
   contents: write
@@ -18,4 +17,3 @@ jobs:
       - uses: google-github-actions/release-please-action@v3
         with:
           command: manifest
-          default-branch: releaseplease # temporary to test release
