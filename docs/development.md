@@ -38,5 +38,9 @@ nix run github:cargo2nix/cargo2nix/unstable
 
 ## Releasing
 
-- Run Github Action workflow `Tag release` to push new tag with changelogs
-- Manually create a release from Git tag. Workflow `Publish release` will automatically add `novops` assets.
+- `release-please` should create/update Release PRs automatically on `main` changes
+- Merge PR and run locally
+  ```sh
+  # Need a token with Content and PullRequest read/write permission
+  npx release-please --token=$GITHUB_TOKEN --repo-url=novadiscovery/novops github-release
+  ```
