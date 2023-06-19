@@ -3,16 +3,24 @@ version: "3.8"
 services:
   vault:
     image: vault:1.12.2
+    container_name: vault
     cap_add:
     - IPC_LOCK
     ports:
     - 8200:8200
     environment:
       VAULT_DEV_ROOT_TOKEN_ID: novops
+    healthcheck:
+      test: ["CMD", "wget", "localhost:8200/v1/sys/health", "-S", "-O", "-"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 3s
+
 
   # Adapted from https://github.com/localstack/localstack/blob/master/docker-compose.yml
   localstack:
-    container_name: "${LOCALSTACK_DOCKER_NAME-localstack_main}"
+    container_name: localstack
     image: localstack/localstack:2.0.2
     ports:
       - "127.0.0.1:4566:4566"            # LocalStack Gateway

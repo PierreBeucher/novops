@@ -15,7 +15,7 @@ mod tests {
         }
     };
     use log::info;
-    use std::collections::HashMap;
+    use std::{ collections::HashMap, thread, time };
     use crate::test_utils::{load_env_for, test_setup, aws_ensure_role_exists, self};
     use novops::modules::hashivault::{
         client::{load_vault_token, load_vault_address},
@@ -32,6 +32,10 @@ mod tests {
         // enable kv2 engine
         let opts = HashMap::from([("version".to_string(), "2".to_string())]);
         enable_engine(&client, "kv2", "kv", Some(opts)).await?;
+
+        // sleep a few seconds as creating kv2 secret engine may take a few seconds
+        // vault may return a 400 in the meantime
+        thread::sleep(time::Duration::from_secs(3));
 
         kv2::set(
             &client,
