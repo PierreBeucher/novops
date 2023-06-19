@@ -1,4 +1,6 @@
-# [0.5.0](https://github.com/novadiscovery/novops/compare/v0.4.0...v0.5.0) (2023-05-17)
+# Changelog
+
+## [0.5.0](https://github.com/novadiscovery/novops/compare/v0.4.0...v0.5.0) (2023-05-17)
 
 
 ### Features
@@ -7,7 +9,7 @@
 
 
 
-# [0.4.0](https://github.com/novadiscovery/novops/compare/v0.3.0...v0.4.0) (2023-03-11)
+## [0.4.0](https://github.com/novadiscovery/novops/compare/v0.3.0...v0.4.0) (2023-03-11)
 
 
 ### Bug Fixes
@@ -22,7 +24,7 @@
 
 
 
-# [0.3.0](https://github.com/novadiscovery/novops/compare/v0.2.0...v0.3.0) (2023-01-21)
+## [0.3.0](https://github.com/novadiscovery/novops/compare/v0.2.0...v0.3.0) (2023-01-21)
 
 
 ### Features
@@ -33,7 +35,7 @@
 
 
 
-# [0.2.0](https://github.com/novadiscovery/novops/compare/v0.1.19...v0.2.0) (2023-01-06)
+## [0.2.0](https://github.com/novadiscovery/novops/compare/v0.1.19...v0.2.0) (2023-01-06)
 
 
 ### Features
@@ -43,13 +45,9 @@
 * AWS SSM Parameter Store module ([d866f04](https://github.com/novadiscovery/novops/commit/d866f04754503b44c353428d2e003e0cce1abe73))
 
 
-
 ## [0.1.19](https://github.com/novadiscovery/novops/compare/v0.1.18...v0.1.19) (2022-11-30)
 
 
 ### Features
 
 * licensed under GNU LGPLv3 ([927f000](https://github.com/novadiscovery/novops/commit/927f000e5282cc5de70709879494526c90c1ded8))
-
-
-
