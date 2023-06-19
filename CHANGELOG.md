@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.6.0](https://github.com/novadiscovery/novops/compare/v0.5.0...v0.6.0) (2023-06-19)
+
+
+### Features
+
+* load Hashivault token file from default location or provide path in config ([08f2e05](https://github.com/novadiscovery/novops/commit/08f2e058c6508954fe4f018e052bf69d90061f51))
+
+
+### Bug Fixes
+
+* Cargo.nix sync ([bf08ecd](https://github.com/novadiscovery/novops/commit/bf08ecd97e631bd6317359da563a30ce8b3d7e7e))
+* Nix ref for vaultrs ([d9d4f30](https://github.com/novadiscovery/novops/commit/d9d4f30540e65fd2380e45be8021f829296f8b87))
+* Nix ref for vaultrs ([fa41126](https://github.com/novadiscovery/novops/commit/fa411267e25dedef4ef3be0c0f29553a6759ea20))
+
 ## [0.5.0](https://github.com/novadiscovery/novops/compare/v0.4.0...v0.5.0) (2023-05-17)
 
 
