@@ -38,9 +38,4 @@ nix run github:cargo2nix/cargo2nix/unstable
 
 ## Releasing
 
-- `release-please` should create/update Release PRs automatically on `main` changes
-- Merge PR and run locally
-  ```sh
-  # Need a token with Content and PullRequest read/write permission
-  npx release-please --token=$GITHUB_TOKEN --repo-url=novadiscovery/novops github-release
-  ```
+`release-please` should create/update Release PRs automatically on `main` changes. Merging automatically creates release and related artifacts. 
