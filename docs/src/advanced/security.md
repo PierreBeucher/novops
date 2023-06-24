@@ -1,4 +1,4 @@
-# Security - how safe is Novops?
+# Security - how are secrets safely loaded?
 
 ## Data storage
 

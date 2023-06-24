@@ -12,3 +12,8 @@ tests/localconfig
 
 # Nix
 result
+
+# mkbook
+docs-old
+docs/book
+docs-new/book

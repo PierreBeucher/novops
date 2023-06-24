@@ -1,4 +1,4 @@
-# Novops internal code architecture and concepts
+# Internal architecture: Inputs, Outputs and resolving
 
 Novops relies around the following concepts:
 

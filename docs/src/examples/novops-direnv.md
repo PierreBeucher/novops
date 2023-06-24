@@ -1,0 +1,2 @@
+# Novops + direnv
+
