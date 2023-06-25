@@ -12,7 +12,7 @@ mod tests {
 
         test_utils::test_setup().await?;
 
-        let expect = "RESULT:projects/pierre-sandbox-372512/secrets/TestSecret/versions/latest";
+        let expect = "RESULT:projects/398497848942/secrets/test-novops/versions/latest";
         let outputs = test_utils::load_env_dryrun_for("gcloud_secretmanager", "dev").await?;
 
         info!("test_gcloud_secretmanager: Found variables: {:?}", outputs.variables);

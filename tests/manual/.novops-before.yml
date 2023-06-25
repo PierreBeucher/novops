@@ -1,0 +1,18 @@
+# Internal Novops config for Novops testing
+name: novops-manual-google-test
+
+environments:
+  dev:
+    
+    files:
+
+    # GCloud SA key for testing GCloud module
+    - variable: GOOGLE_APPLICATION_CREDENTIALS
+      content:
+        bitwarden:
+          entry: Novops testing GCloud SA key
+          field: notes
+
+config:
+  default:
+    environment: dev
