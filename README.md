@@ -26,6 +26,6 @@ We welcome contributions: bug reports/fixes, modules, proposals... :)
 
 See [contribution guide](./CONTRIBUTING.md) and [development guide](https://novadiscovery.github.io/novops/contributing/development.html)
 
-## Licence 
+## License 
 
 [GNU Lesser General Public License](LICENSE)
