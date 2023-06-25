@@ -3,7 +3,6 @@ use serde::Deserialize;
 use async_trait::async_trait;
 use schemars::JsonSchema;
 use std::default::Default;
-use base64;
 use crc32c;
 use log::debug;
 
@@ -66,23 +65,16 @@ async fn retrieve_secret_bytes_for(ctx: &NovopsContext, secret: &GCloudSecretMan
     
     let client = get_client(ctx).await;
 
-    // let client = DefaultGCloudClient{};
     let payload = client.get_secret_version(&secret.name).await?;
 
-    debug!("Decoding Base64 payload for {:}: '{:?}'", &secret.name, &payload.data);
-
-    // decode b64
     let payload_data = payload.data
         .ok_or(anyhow::anyhow!("No payload data obtained for {}", &secret.name))?;
-
-    let bytes_val = base64::decode(payload_data)
-        .with_context(|| format!("Couldn't decode Base64 payload for secret '{}'.", &secret.name))?;
 
     if secret.validate_crc32c.unwrap_or(true) {
         let expected_checksum = payload.data_crc32c
             .ok_or(anyhow::anyhow!("No CRC32C found for {:}. If the secret has no CRC32C, set 'validate_crc32c: false' on input", &secret.name))?;
 
-        let calculated_checksum = crc32c::crc32c(&bytes_val).to_string();
+        let calculated_checksum = i64::from(crc32c::crc32c(&payload_data));
 
         debug!("Secret {:} - expected checksum: {:} - calculated checksum: {:}", 
             &secret.name, &expected_checksum, &calculated_checksum);
@@ -92,5 +84,5 @@ async fn retrieve_secret_bytes_for(ctx: &NovopsContext, secret: &GCloudSecretMan
             &secret.name, expected_checksum, calculated_checksum));
     }
     
-    return Ok(bytes_val);
+    return Ok(payload_data);
 }

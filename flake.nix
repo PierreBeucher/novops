@@ -39,6 +39,8 @@
                 pkgs.openssl.dev
                 pkgs.pkg-config
                 pkgs.mdbook
+                pkgs.google-cloud-sdk
+                pkgs.bitwarden-cli
               ];
 
               # Skip tests as most are integration tests requiring setup
