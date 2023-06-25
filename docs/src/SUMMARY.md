@@ -23,7 +23,6 @@
   - [Ansible setup](examples/ansible.md)
   - [Terraform setup](examples/terraform.md)
   - [Pulumi setup](examples/pulumi.md)
-  - [Novops + direnv](examples/novops-direnv.md)
   - [Authenticate with Hashicorp Vault before loading Novops](examples/hvault-auth.md)
   - [Impersonate IAM Role before loading Novops](examples/aws-role.md)
 - [Advanced](advanced/README.md)
