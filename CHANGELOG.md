@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.1](https://github.com/novadiscovery/novops/compare/v0.6.0...v0.6.1) (2023-06-25)
+
+
+### Bug Fixes
+
+* Google client Application Default Credentials ([4c16437](https://github.com/novadiscovery/novops/commit/4c1643796e9db7488119ffc98e2fc7da654972d0))
+
 ## [0.6.0](https://github.com/novadiscovery/novops/compare/v0.5.0...v0.6.0) (2023-06-19)
 
 
