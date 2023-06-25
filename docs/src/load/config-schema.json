@@ -290,6 +290,52 @@
         }
       }
     },
+    "HashiVaultAWSInput": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "mount": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "role_arn": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "role_session_name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "ttl": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "HashiVaultInput": {
+      "type": "object",
+      "required": [
+        "aws"
+      ],
+      "properties": {
+        "aws": {
+          "$ref": "#/definitions/HashiVaultAWSInput"
+        }
+      }
+    },
     "HashiVaultKeyValueV1": {
       "type": "object",
       "required": [
@@ -371,7 +417,14 @@
           ]
         },
         "token": {
-          "description": "Token used to connect",
+          "description": "Hashivault token (plain string, for testing purpose only)",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "token_path": {
+          "description": "Hashivault token path",
           "type": [
             "string",
             "null"
@@ -454,6 +507,16 @@
           "items": {
             "$ref": "#/definitions/FileInput"
           }
+        },
+        "hashivault": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/HashiVaultInput"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "variables": {
           "type": [

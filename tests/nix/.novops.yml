@@ -1,0 +1,16 @@
+name: my-awesome-app
+
+environments:
+
+  dev:    
+    variables:
+      - name: HELLO_WORLD
+        value: "Hello World!"
+    files: 
+      - variable: HELLO_FILE
+        content: "Hello file!"
+  
+  prod:    
+    variables:
+      - name: HELLO_WORLD
+        value: "Hello World from Prod!"

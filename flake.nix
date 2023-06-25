@@ -38,6 +38,7 @@
               buildInputs = [
                 pkgs.openssl.dev
                 pkgs.pkg-config
+                pkgs.mdbook
               ];
 
               # Skip tests as most are integration tests requiring setup
