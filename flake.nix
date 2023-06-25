@@ -39,6 +39,7 @@
                 pkgs.openssl.dev
                 pkgs.pkg-config
                 pkgs.mdbook
+                pkgs.google-cloud-sdk
               ];
 
               # Skip tests as most are integration tests requiring setup
