@@ -10,6 +10,15 @@ unzip novops.zip
 sudo mv novops /usr/local/bin/novops
 ```
 
+Install a specific version:
+
+```sh
+export NOVOPS_VERSION=0.6.0
+curl -L "https://github.com/novadiscovery/novops/releases/download/v${NOVOPS_VERSION}/novops-X64-Linux.zip" -o novops.zip
+unzip novops.zip
+sudo mv novops /usr/local/bin/novops
+```
+
 Novops is currently only available for x86-64 systems. More will come soon!
 
 ## Nix

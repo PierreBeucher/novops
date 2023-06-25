@@ -30,13 +30,11 @@ You can download `novops` binary on the fly:
 job-with-novops:
   image: some-image
   stage: test
-  variables:
-    NOVOPS_VERSION: "0.6.0"
   script:
     # Download novops
-    - >-
-      curl -L "https://github.com/novadiscovery/novops/releases/download/v${NOVOPS_VERSION}/novops-X64-Linux.zip" -o novops.zip &&
-      unzip novops.zip &&
+    - |-
+      curl -L "https://github.com/novadiscovery/novops/releases/latest/download/novops-X64-Linux.zip" -o novops.zip
+      unzip novops.zip
       mv novops /usr/local/bin/novops
     
     # Load config
@@ -48,6 +46,22 @@ job-with-novops:
     - pulumi up -yrf
 ```
 
+Alternatively, set a specific version:
+
+```yaml
+job-with-novops:
+  # ...
+  variables:
+    NOVOPS_VERSION: "0.6.0"
+  script:
+    # Download novops
+    - |-
+      curl -L "https://github.com/novadiscovery/novops/releases/download/v${NOVOPS_VERSION}/novops-X64-Linux.zip" -o novops.zip
+      unzip novops.zip
+      mv novops /usr/local/bin/novops
+    
+    # ...
+```
 
 ## Authenticating to external provider on CI
 
