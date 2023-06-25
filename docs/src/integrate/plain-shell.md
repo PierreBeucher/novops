@@ -1,8 +1,24 @@
 # Plain shell (sh, bash, zsh...)
 
-For local usage with plain shell, [`direnv`](https://direnv.net/) usage is recommended for security reasons:
-- Novops provide a sourceable environment variable file, but does not provide facility to load/unload. You can use `source` but...
-- [`direnv`](https://direnv.net/) does provide a better way to load/unload variables in current shell as it will prevent unwanted variables or secrets to remain in active environment
+Ensure [Novops is installed](../install.md) and configure it:
+
+## With `direnv`
+
+[`direnv`](https://direnv.net/) usage is recommended for security and usability.
+
+[Setup `direnv` for your shell](https://direnv.net/docs/hook.html) and create a `.envrc` file at the root of your Git repository:
+
+```sh
+eval "novops load -s .env.tmp && source .env.tmp && rm .env.tmp"
+```
+
+`direnv` will take care of loading/unloading values as you `cd` in and out of your project's directory.
+
+### Why is `direnv` recommended?
+
+[`direnv`](https://direnv.net/) usage is recommended for security and usability:
+- Novops provide a sourceable environment variable file, but does not provide load/unload out of the box. `direnv` helps load Novops config seamlessly.
+- `direnv` will prevent unwanted variables or secrets to remain in active environment after loading Novops config. 
 
 If you use Novops without `direnv`, some variable may not be unloaded properly when switching context, for example:
 
@@ -18,10 +34,16 @@ novops load -e dev -s .env && source .env
 # Direnv would have automatically loaded/unloaded env for you
 ```
 
-Instead, with `direnv` installed, you'll just have to run:
+## Without `direnv`
+
+Run command to load Novops:
 
 ```sh
-# Generate env file at .envrc
-# direnv will automatically load it
-novops load -s .envrc
+novops load -e dev -s .env && source .env
+```
+
+You can also setup an alias such as:
+
+```sh
+alias nload="novops load -s .env && source .env"
 ```
