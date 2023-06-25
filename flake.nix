@@ -3,7 +3,7 @@
 
   inputs = {
     dream2nix.url = "github:nix-community/dream2nix";
-    nixpkgs.follows = "dream2nix/nixpkgs";
+    nixpkgs.url = "github:NixOS/nixpkgs/release-23.05";
   };
 
   outputs = { self, nixpkgs, dream2nix }:
@@ -19,6 +19,11 @@
         projects = ./projects.toml;
 
         packageOverrides = {
+          
+          # Use more recent rust toolchain
+          "^.*".set-toolchain.overrideRustToolchain = old: {
+            inherit (pkgs) cargo rustc;
+          };
 
           # Add build dependencies
           # dream2nix uses crane and generate 2 derivations novops and novops-deps

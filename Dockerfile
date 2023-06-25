@@ -1,7 +1,7 @@
 # Static build using musl
 # clux/muslrust provides static build of popular libraries
 # allowing a fully static binary as output
-FROM clux/muslrust:1.68.0-stable as builder
+FROM clux/muslrust:1.69.0-stable as builder
 
 WORKDIR /build
 

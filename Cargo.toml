@@ -10,7 +10,7 @@ serde_yaml = "0.8"
 enum_dispatch = "0.3.8"
 clap = { version = "4.0.18", features = ["derive", "cargo"] }
 clap_complete = "*"
-xdg = "^2.1"
+xdg = "2.1"
 log = "0.4"
 env_logger = "0.10.0"
 users = "0.11"
