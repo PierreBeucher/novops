@@ -16,7 +16,7 @@
 
 ## Install & Get Started
 
-See [Installation](installation.md) and [Go Get Started](getting-started.md) for next steps!
+See [Installation](install.md) and [Go Get Started](getting-started.md) for next steps!
 
 ## Why Novops?
 
