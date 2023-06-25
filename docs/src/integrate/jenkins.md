@@ -8,7 +8,7 @@ See [Docker integration](docker.md) to build a Docker image packaging Novops, th
 ```Jenkinsfile
     agent {
         docker {
-            image 'you'image-with-novops'
+            image 'your-image-with-novops'
         }
     }
 
