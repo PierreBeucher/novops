@@ -2,11 +2,13 @@
 
 `novops` is a platform agnostic secret and config manager for local development and CI.
 
+- [Introduction](#introduction)
   - [Features](#features)
   - [Install & Get Started](#install--get-started)
   - [Why Novops?](#why-novops)
     - [A story you've probably heard before...](#a-story-youve-probably-heard-before)
     - [Use Novops to reduce CI/CD drift and load secrets securely](#use-novops-to-reduce-cicd-drift-and-load-secrets-securely)
+  - [How is Novops different than Docker, Nix an alike?](#how-is-novops-different-than-docker-nix-an-alike)
 
 ## Features
 
