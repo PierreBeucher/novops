@@ -8,6 +8,8 @@
 
 ## Authentication & Configuration
 
+See [Hashicorp Vault examples](../examples/hvault-auth.md) for various ways of authenticating with Hashicorp Vault from CI and local development environments.
+
 Vault adress can be specified with (by order of precedence):
 
 - `VAULT_ADDR` environment variable
