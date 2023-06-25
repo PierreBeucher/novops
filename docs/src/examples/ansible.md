@@ -1,10 +1,14 @@
 # Ansible
 
-Ansible uses inventories to manage multi-environment setup and connect to target via SSH. 
+A typical Ansible workflow requires developers and CI to provide per environment:
 
-Leverage Novops and [Ansible built-in variables](https://docs.ansible.com/ansible/latest/reference_appendices/config.html#environment-variables) to define per-environment configuration.
+- Ansible inventory
+- Private SSH key to connect on target hosts
+- Ansible Vault password
 
-Your workflow will then look like
+Instead of duplicating configs and spreading secrets on CI and your local environment, you can use Novops and [Ansible built-in variables](https://docs.ansible.com/ansible/latest/reference_appendices/config.html#environment-variables).
+
+Your workflow will then look like:
 
 ```sh
 novops load -s .envrc && source .envrc
@@ -14,6 +18,8 @@ novops load -s .envrc && source .envrc
 # They've all been loaded as environment variables and files
 ansible-playbook my-playbook.yml
 ```
+
+Create a `.novops.yml` such as:
 
 ```yaml
 environments:
@@ -66,3 +72,5 @@ environments:
             path: myapp/prod
             key: inventory_password
 ```
+
+Your workflow will now be the same on CI or for local development, and you'll be able to switch environments seamlessly !

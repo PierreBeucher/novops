@@ -8,6 +8,8 @@
 
 ## Authentication & Configuration
 
+See [AWS Examples](../examples/aws-role.md) for authentication methods you can use CI or for local development environments.
+
 Specify your AWS credentials as usual (see [AWS Programmatic access](https://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-types.html#access-keys-and-secret-access-keys) or [Credentials quickstart](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html#cli-configure-quickstart-creds)):
 
 - Environment variables `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, etc.

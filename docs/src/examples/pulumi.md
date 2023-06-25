@@ -1,8 +1,28 @@
 # Pulumi
 
-Pulumi uses Stacks to manage multi-environment setup, often protected via password and with specific backend configurations.
+A typical Pulumi workflow requires developers and CI to provide per environment:
 
-Use [Pulumi built-in environment variables](https://www.pulumi.com/docs/reference/cli/environment-variables/) to simplify and secure multi-environment setup:
+- Pulumi stack name
+- Pulumi stack passphrase
+- Pulumi authentication token or backend config
+
+Instead of duplicating configs and spreading secrets on CI and your local environment, you can use Novops and [Pulumi built-in environment variables](https://www.pulumi.com/docs/reference/cli/environment-variables/).
+
+Your workflow will then look like:
+
+```sh
+novops load -s .envrc && source .envrc
+# Select environment: dev, prod (default: dev)
+
+# No need to specify stack name, passphrase or backend
+# They've all been loaded as environment variables and files
+pulumi up
+```
+
+- [Pulumi](#pulumi)
+    - [Stack passwords](#stack-passwords)
+    - [Pulumi Cloud Backend authentication](#pulumi-cloud-backend-authentication)
+    - [Custom Pulumi backend](#custom-pulumi-backend)
 
 ### Stack passwords
 
@@ -85,3 +105,7 @@ environments:
       assume_role:
         role_arn: arn:aws:iam::12345678910:role/app_prod_deployment
 ```
+
+---
+
+Your workflow will now be the same on CI or for local development, and you'll be able to switch environments seamlessly !

@@ -1,8 +1,9 @@
 # Terraform
 
-The usual way to manage Terraform multi-environment is to either:
-- Use dedicated workspaces per environment
-- Use dedicated configuration per environments
+A typical Terraform workflow requires developers and CI to provide per environment:
+
+- Terraform workspaces
+- Terraform variable files & configuration
 
 Leverage Novops and [Terraform built-in environment variables](https://developer.hashicorp.com/terraform/cli/config/environment-variables) to define per-environment configuration. 
 
