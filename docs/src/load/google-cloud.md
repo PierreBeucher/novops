@@ -10,7 +10,7 @@ Provide credentials using [Application Default Credentials](https://cloud.google
 
 - Set `GOOGLE_APPLICATION_CREDENTIALS` to a credential JSON file
 - Setup creds using `gcloud` CLI
-- Attached service account
+- Attached service account using VM metadata server to get credentials 
 
 ## Secret Manager
 
