@@ -27,6 +27,7 @@
   - [Impersonate IAM Role before loading Novops](examples/aws-role.md)
 - [Advanced](advanced/README.md)
   - [Security - how are secrets safely loaded?](advanced/security.md)
+  - [Debugging and log verbosity](advanced/debugging.md)
   - [`.novops.yml` configuration schema](advanced/schema.json)
   - [Internal architecture: Inputs, Outputs and resolving](advanced/architecture.md)
 [Contributing](contributing/README.md)
