@@ -1,7 +1,3 @@
-.PHONY: dockers
-docker:
-	docker buildx build . -t novops:local --load 
-
 .PHONY: build
 build:
 	docker buildx build . -o type=local,dest=build
