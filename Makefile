@@ -9,3 +9,6 @@ test-docker:
 .PHONY: test
 test: test-docker
 	cargo test
+
+doc-serve:
+	(cd docs/ && mdbook serve -o)
