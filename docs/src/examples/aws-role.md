@@ -35,4 +35,4 @@ On CI, you can configure AWS authentication before loading Novops config:
 - [GitLab CI: Configure OpenID Connect in AWS to retrieve temporary credentials](https://docs.gitlab.com/ee/ci/cloud_services/aws/)
 - [Jenkins: How To Authenticate to AWS with the Pipeline AWS Plugin](https://docs.cloudbees.com/docs/cloudbees-ci-kb/latest/client-and-managed-controllers/how-to-authenticate-to-aws-with-the-pipeline-aws-plugin)
 
-See [AWS Module documentation](../load/aws.md) for details. Alternatively you can use [Hashicorp Vault AWS Secret Engine](../load/hashicorp-vault.md)
+See [AWS Module documentation](../config/aws.md) for details. Alternatively you can use [Hashicorp Vault AWS Secret Engine](../config/hashicorp-vault.md)

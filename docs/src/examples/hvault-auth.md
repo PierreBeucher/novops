@@ -2,7 +2,7 @@
 
 [Hashicorp Vault](https://www.vaultproject.io/) is a popular secret manager. Typical workflow using Hashicorp Vault requires authentication and loading of multiple secrets into environment, often hard to reproduce between CI and local development environment.
 
-Leverage Novops and [Hashicorp Vault module](../load/hashicorp-vault.md) to load secrets seamlessly, whether on CI or locally:
+Leverage Novops and [Hashicorp Vault module](../config/hashicorp-vault.md) to load secrets seamlessly, whether on CI or locally:
 
 Create a `.novops.yml` file such as:
 
