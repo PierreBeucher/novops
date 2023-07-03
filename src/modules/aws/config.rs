@@ -48,21 +48,19 @@ impl AwsClientConfig {
     }
 }
 
-/**
- * Global AWS config
- */
+
+/// Global AWS config
 #[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
 pub struct AwsConfig {
     
-    /**
-     * Override endpoint for all AWS services
-     * Can be used with tools like LocalStack (http://localhost:4566/)
-     */
+    /// Override endpoint for all AWS services
+    /// Can be used with tools like LocalStack, for example http://localhost:4566/
     pub endpoint: Option<String>,
 
-    /**
-     * AWS Profile to use when resolving inputs
-     */
+    /// AWS Profile name. Must exist locally in AWS config. 
+    /// 
+    /// It's advised not to use this directly as profile name configuration is higly dependent
+    /// on local configuration. Prefer using AWS_PROFILE environment variable where needed. 
     pub profile: Option<String>
 }
 

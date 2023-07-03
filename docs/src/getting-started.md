@@ -81,7 +81,7 @@ alias nload='novops load -s .envrc && source .envrc'
 
 # A more complete example
 
-Plain string values aren't very useful, are they? The power of Novops lies behind its modules: you can get values from external secret or configuration providers like [Hashicorp Vault](load/hashicorp-vault.md) or [AWS Secret Manager](load/aws.md).
+Plain string values aren't very useful, are they? The power of Novops lies behind its modules: you can get values from external secret or configuration providers like [Hashicorp Vault](config/hashicorp-vault.md) or [AWS Secret Manager](config/aws.md).
 
 For example:
 
@@ -160,6 +160,6 @@ Note that files are loaded under `/run/user/1000`, the `XDG_RUNTIME_DIR` directo
 
 ## Getting further
 
-- See [Novops configuration details](load/config.md) to learn more about Modules, Inputs and Outputs
+- See [Novops configuration details](config/config.md) to learn more about Modules, Inputs and Outputs
 - [How Novops loads files securely](advanced/security.md)
 - Checkout examples and use cases

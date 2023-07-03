@@ -5,16 +5,17 @@ use async_trait::async_trait;
 use schemars::JsonSchema;
 use super::client::get_client;
 
-
+/// Reference a Key Value V1 secret
 #[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
 pub struct HashiVaultKeyValueV1Input {
   hvault_kv1: HashiVaultKeyValueV1
 }
 
-
+/// Reference a Key Value V1 secret
 #[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
 pub struct HashiVaultKeyValueV1 {
     /// KV v1 mount point
+    /// 
     /// default to "kv/"
     pub mount: Option<String>,
 

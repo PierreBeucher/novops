@@ -2,7 +2,7 @@
 
 `novops` will load configuration from current directory `.novops.yml` by default. 
 
-See modules documentation and [full configuration schema](config-schema.json) for detailed schema.
+See modules documentation and [full configuration schema](./schema.html) for detailed schema.
 
 ## Configuration: Environments, Modules, Inputs and Outputs
 

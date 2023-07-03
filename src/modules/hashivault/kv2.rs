@@ -5,14 +5,17 @@ use serde::Deserialize;
 use async_trait::async_trait;
 use schemars::JsonSchema;
 
+/// Reference a Key Value V2 secret
 #[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
 pub struct HashiVaultKeyValueV2Input {
   hvault_kv2: HashiVaultKeyValueV2
 }
 
+/// Reference a Key Value V2 secret
 #[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
 pub struct HashiVaultKeyValueV2 {
     /// KV v2 mount point
+    /// 
     /// default to "secret/"
     pub mount: Option<String>,
 

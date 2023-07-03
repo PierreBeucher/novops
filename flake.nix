@@ -46,6 +46,7 @@
                 pkgs.mdbook
                 pkgs.google-cloud-sdk
                 pkgs.bitwarden-cli
+                pkgs.json-schema-for-humans
               ];
 
               # Skip tests as most are integration tests requiring setup

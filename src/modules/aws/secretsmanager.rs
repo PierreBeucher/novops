@@ -8,42 +8,29 @@ use std::default::Default;
 use crate::core::{ResolveTo, NovopsContext};
 use crate::modules::aws::client::get_client;
 
+/// Reference an AWS Secret Manager secret
 #[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
 pub struct AwsSecretsManagerSecretInput {
     
     pub aws_secret: AwsSecretsManagerSecret
 }
 
-/**
- * Structure to request a Secrets Manager secret
- * 
- * Secret Manager content is either String or Binary so this Input implements 
- * ResolveTo<String> and ResolveTo<Vec<u8>> to represent both situations
- * 
- * Depending on usage, resolving behavior is:
- * - String for VariableInput: String is used for export
- * - Binary for VariableInput: **Vec<u8> is encoded in UTF-8 for export**
- * - String for FileInput: String's underlying Vec<u8> is written to file
- * - Binary for FileInput: Vec<u8> data is written to file as-is
- * 
- * See https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
- */
+
+/// Structure to request a Secrets Manager secret
+/// 
+/// Maps directly to GetSecretValue API. See https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
 #[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema, Default)]
 pub struct AwsSecretsManagerSecret {
     
-    /**
-     * Secret ID
-     */
+    /// Secret ID
     pub id: String,
 
-    /**
-     * The unique identifier of the version of the secret to retrieve. 
-     */
+    
+    /// The unique identifier of the version of the secret to retrieve. 
     pub version_id: Option<String>,
 
-    /**
-     * The staging label of the version of the secret to retrieve.
-     */
+    
+    /// The staging label of the version of the secret to retrieve.
     pub version_stage: Option<String>,
 }
 

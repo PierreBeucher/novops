@@ -1,6 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "NovopsConfigFile",
+  "description": "Main Novops config file",
   "type": "object",
   "required": [
     "environments",
@@ -8,6 +9,7 @@
   ],
   "properties": {
     "config": {
+      "description": "Global configurations for Novops and modules",
       "anyOf": [
         {
           "$ref": "#/definitions/NovopsConfig"
@@ -18,26 +20,31 @@
       ]
     },
     "environments": {
+      "description": "Source of truth defining files and variables loaded by Novops\n\nEnvironments are named uniquely (such as \"dev\", \"prod\"...) to allow for different configs to be loaded in various contexts",
       "type": "object",
       "additionalProperties": {
         "$ref": "#/definitions/NovopsEnvironmentInput"
       }
     },
     "name": {
+      "description": "Unique application name.\n\nLoading Novops from distinct files with the same name may have unexpected results",
       "type": "string"
     }
   },
   "definitions": {
     "AwsAssumeRoleInput": {
+      "description": "Assume an IAM Role",
       "type": "object",
       "required": [
         "role_arn"
       ],
       "properties": {
         "role_arn": {
+          "description": "Full IAM Role ARN",
           "type": "string"
         },
         "source_profile": {
+          "description": "Source profile. Must exist in config.",
           "type": [
             "string",
             "null"
@@ -50,14 +57,14 @@
       "type": "object",
       "properties": {
         "endpoint": {
-          "description": "Override endpoint for all AWS services Can be used with tools like LocalStack (http://localhost:4566/)",
+          "description": "Override endpoint for all AWS services Can be used with tools like LocalStack, for example http://localhost:4566/",
           "type": [
             "string",
             "null"
           ]
         },
         "profile": {
-          "description": "AWS Profile to use when resolving inputs",
+          "description": "AWS Profile name. Must exist locally in AWS config.\n\nIt's advised not to use this directly as profile name configuration is higly dependent on local configuration. Prefer using AWS_PROFILE environment variable where needed.",
           "type": [
             "string",
             "null"
@@ -77,6 +84,7 @@
       }
     },
     "AwsSSMParamStoreInput": {
+      "description": "Reference an SSM Parameter config or secret",
       "type": "object",
       "required": [
         "aws_ssm_parameter"
@@ -88,6 +96,7 @@
       }
     },
     "AwsSSMParameter": {
+      "description": "Reference an SSM Parameter config or secret\n\nMaps directly to GetParameter API. See https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_GetParameter.html",
       "type": "object",
       "required": [
         "name"
@@ -107,7 +116,7 @@
       }
     },
     "AwsSecretsManagerSecret": {
-      "description": "Structure to request a Secrets Manager secret\n\nSecret Manager content is either String or Binary so this Input implements ResolveTo<String> and ResolveTo<Vec<u8>> to represent both situations\n\nDepending on usage, resolving behavior is: - String for VariableInput: String is used for export - Binary for VariableInput: **Vec<u8> is encoded in UTF-8 for export** - String for FileInput: String's underlying Vec<u8> is written to file - Binary for FileInput: Vec<u8> data is written to file as-is\n\nSee https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html",
+      "description": "Structure to request a Secrets Manager secret\n\nMaps directly to GetSecretValue API. See https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html",
       "type": "object",
       "required": [
         "id"
@@ -134,6 +143,7 @@
       }
     },
     "AwsSecretsManagerSecretInput": {
+      "description": "Reference an AWS Secret Manager secret",
       "type": "object",
       "required": [
         "aws_secret"
@@ -145,6 +155,7 @@
       }
     },
     "AzureKeyvaultSecret": {
+      "description": "Maps directly to Keyvault Get Secret API\n\nSee https://learn.microsoft.com/en-us/rest/api/keyvault/secrets/get-secret/get-secret?tabs=HTTP",
       "type": "object",
       "required": [
         "name",
@@ -169,6 +180,7 @@
       }
     },
     "AzureKeyvaultSecretInput": {
+      "description": "Reference an Azure Keyvault secret",
       "type": "object",
       "required": [
         "azure_keyvault_secret"
@@ -180,6 +192,7 @@
       }
     },
     "BitwardenEntry": {
+      "description": "A BitWarden entry",
       "type": "object",
       "required": [
         "entry",
@@ -187,15 +200,17 @@
       ],
       "properties": {
         "entry": {
+          "description": "Entry name",
           "type": "string"
         },
         "field": {
+          "description": "Field in entry to use as value.",
           "type": "string"
         }
       }
     },
     "BitwardenItemInput": {
-      "description": "A BitWarden secret such as\n\nmyvar: bitwarden: entry: wordpress_prod field: login.password",
+      "description": "A BitWarden secret reference",
       "type": "object",
       "required": [
         "bitwarden"
@@ -207,7 +222,7 @@
       }
     },
     "BytesResolvableInput": {
-      "description": "Enum for all Inputs resolving to a Byte Vector (including [StringResolvableInput] as Rust internal structure represents String as Byte vector) This input is used by [FileInput] to resolve file content whic is not always a String but may also be binary or blob data.",
+      "description": "Any input to be used for file content.",
       "anyOf": [
         {
           "$ref": "#/definitions/AwsSecretsManagerSecretInput"
@@ -217,41 +232,39 @@
         },
         {
           "$ref": "#/definitions/StringResolvableInput"
-        },
-        {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "format": "uint8",
-            "minimum": 0.0
-          }
         }
       ]
     },
     "FileInput": {
-      "description": "Content is any input File can also define a destination (by default, will use XDG Runtime directory, or a secure /tmp subfolder in XDG is not available) Dest will override default destination to a custom path Variable is an environment variable output pointing to generated file\n\nExample:\n\ndog: content: \"wouf\"\n\nWould generate Outputs: - a file such as /run/user/1000/novops/animals/dev/dog - an environment variable such as NOVOPS_ANIMALS_DEV_FILE_DOG=\"/run/user/1000/novops/animals/dev/dog\"\n\ncat: dest: /tmp/thecat variable: CAT_LOCATION content: \"meow\"\n\nWould generate Outputs: - a file such as /tmp/thecat - an environment variable such as CAT_LOCATION=\"/tmp/thecat\"",
       "type": "object",
       "required": [
         "content"
       ],
       "properties": {
         "content": {
-          "$ref": "#/definitions/BytesResolvableInput"
+          "description": "File content",
+          "allOf": [
+            {
+              "$ref": "#/definitions/BytesResolvableInput"
+            }
+          ]
         },
         "dest": {
+          "description": "Destination where file will be generated. Default to secure Novops working directory.\n\nSetting this value may prevent file from being auto-deleted as it won't be managed in a safe location and may remain indefinitely.",
           "type": [
             "string",
             "null"
           ]
         },
         "name": {
-          "description": "name to use when auto-generating file and variable name if not specified, the YAML key for file will be used",
+          "description": "File name to use when auto-generating file and variable name. if not set, the YAML key for file will be used",
           "type": [
             "string",
             "null"
           ]
         },
         "variable": {
+          "description": "Environment variable name pointing to generated file.\n\nExample: setting `NPM_TOKEN` will output an environment variable pointing to file path such as\n\n`NPM_TOKEN: /run/user/1000/novops/dev/file_xxx`",
           "type": [
             "string",
             "null"
@@ -260,7 +273,7 @@
       }
     },
     "GCloudSecretManagerSecret": {
-      "description": "Structure to request a GCloud Secret Manager secret\n\nSee https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html",
+      "description": "Structure to request a GCloud Secret Manager secret\n\nSee https://cloud.google.com/secret-manager/docs/reference/rest/v1/projects.secrets/get",
       "type": "object",
       "required": [
         "name"
@@ -280,6 +293,7 @@
       }
     },
     "GCloudSecretManagerSecretInput": {
+      "description": "Reference Secret Manager secret",
       "type": "object",
       "required": [
         "gcloud_secret"
@@ -291,33 +305,39 @@
       }
     },
     "HashiVaultAWSInput": {
+      "description": "Reference AWS Secret Engine role to generate AWS credentials as environment variables.\n\nMaps directly to Generate Credentials API. See https://developer.hashicorp.com/vault/api-docs/secret/aws#generate-credentials",
       "type": "object",
       "required": [
         "name"
       ],
       "properties": {
         "mount": {
+          "description": "Secret Engine mount point. Default to 'aws'.",
           "type": [
             "string",
             "null"
           ]
         },
         "name": {
+          "description": "Vault role name",
           "type": "string"
         },
         "role_arn": {
+          "description": "AWS IAM Role ARN",
           "type": [
             "string",
             "null"
           ]
         },
         "role_session_name": {
+          "description": "Session name",
           "type": [
             "string",
             "null"
           ]
         },
         "ttl": {
+          "description": "Generated token time to live. Example: \"3600s\"",
           "type": [
             "string",
             "null"
@@ -332,11 +352,17 @@
       ],
       "properties": {
         "aws": {
-          "$ref": "#/definitions/HashiVaultAWSInput"
+          "description": "Use Vault AWS Secret Engine to generate temporary AWS credentials.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/HashiVaultAWSInput"
+            }
+          ]
         }
       }
     },
     "HashiVaultKeyValueV1": {
+      "description": "Reference a Key Value V1 secret",
       "type": "object",
       "required": [
         "key",
@@ -348,7 +374,7 @@
           "type": "string"
         },
         "mount": {
-          "description": "KV v1 mount point default to \"kv/\"",
+          "description": "KV v1 mount point\n\ndefault to \"kv/\"",
           "type": [
             "string",
             "null"
@@ -361,6 +387,7 @@
       }
     },
     "HashiVaultKeyValueV1Input": {
+      "description": "Reference a Key Value V1 secret",
       "type": "object",
       "required": [
         "hvault_kv1"
@@ -372,6 +399,7 @@
       }
     },
     "HashiVaultKeyValueV2": {
+      "description": "Reference a Key Value V2 secret",
       "type": "object",
       "required": [
         "key",
@@ -383,7 +411,7 @@
           "type": "string"
         },
         "mount": {
-          "description": "KV v2 mount point default to \"secret/\"",
+          "description": "KV v2 mount point\n\ndefault to \"secret/\"",
           "type": [
             "string",
             "null"
@@ -396,6 +424,7 @@
       }
     },
     "HashiVaultKeyValueV2Input": {
+      "description": "Reference a Key Value V2 secret",
       "type": "object",
       "required": [
         "hvault_kv2"
@@ -410,28 +439,28 @@
       "type": "object",
       "properties": {
         "address": {
-          "description": "Address in form http(s)://HOST:PORT",
+          "description": "Address in form http(s)://HOST:PORT\n\nExample: https://vault.mycompany.org:8200",
           "type": [
             "string",
             "null"
           ]
         },
         "token": {
-          "description": "Hashivault token (plain string, for testing purpose only)",
+          "description": "Vault token as plain string\n\nUse for testing only. DO NOT COMMIT NOVOPS CONFIG WITH THIS SET.",
           "type": [
             "string",
             "null"
           ]
         },
         "token_path": {
-          "description": "Hashivault token path",
+          "description": "Vault token path.\n\nExample: /var/secrets/vault-token",
           "type": [
             "string",
             "null"
           ]
         },
         "verify": {
-          "description": "TLS verify",
+          "description": "Whether to enable TLS verify (true by default)",
           "type": [
             "boolean",
             "null"
@@ -440,9 +469,11 @@
       }
     },
     "NovopsConfig": {
+      "description": "Global Novops configuration defining behavior for modules",
       "type": "object",
       "properties": {
         "aws": {
+          "description": "AWS module configs",
           "anyOf": [
             {
               "$ref": "#/definitions/AwsConfig"
@@ -453,6 +484,7 @@
           ]
         },
         "default": {
+          "description": "Novops default configurations",
           "anyOf": [
             {
               "$ref": "#/definitions/NovopsConfigDefault"
@@ -463,6 +495,7 @@
           ]
         },
         "hashivault": {
+          "description": "Hashicorp Vault module configs",
           "anyOf": [
             {
               "$ref": "#/definitions/HashivaultConfig"
@@ -478,6 +511,7 @@
       "type": "object",
       "properties": {
         "environment": {
+          "description": "Default environment name, selected by default if no user input is provided",
           "type": [
             "string",
             "null"
@@ -486,10 +520,11 @@
       }
     },
     "NovopsEnvironmentInput": {
-      "description": "A Novops environment defining Input and Output Environment name is the corresponding YAML key\n\nAvailable modules: - Variable are simpple Key/Valye using any String input - File are defined using a specific Input struct - AWS allow to assume IAM Role (Output: env vars)",
+      "description": "Modules to be loaded for an environment. Each module defines one or more Input which will be resolved into Outputs (files & variables)",
       "type": "object",
       "properties": {
         "aws": {
+          "description": "Assume an AWS Role from local config.\n\nOutputs environment variables `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_SESSION_TOKEN` with temporary credentials for IAM Role.",
           "anyOf": [
             {
               "$ref": "#/definitions/AwsInput"
@@ -500,6 +535,7 @@
           ]
         },
         "files": {
+          "description": "Files resolving to concrete files on local filesystem and environment variables pointing to file",
           "type": [
             "array",
             "null"
@@ -509,6 +545,7 @@
           }
         },
         "hashivault": {
+          "description": "Reference one or more Hashicorp Vault Secret Engines to generate either files or variables.",
           "anyOf": [
             {
               "$ref": "#/definitions/HashiVaultInput"
@@ -519,6 +556,7 @@
           ]
         },
         "variables": {
+          "description": "Variables resolving to environment variables from provided source",
           "type": [
             "array",
             "null"
@@ -530,7 +568,7 @@
       }
     },
     "StringResolvableInput": {
-      "description": "Enum with Input that will always resolve to String Centralize ResolveTo<String> to reduce boiler-plate code on other inputs like FileInput and VariableInput\n\nMost modules Inputs will resolve to a String which can be used either as Variable or File. See [BytesResolvableInput] if you need to handle binary data.",
+      "description": "All possible inputs resolving to a string value",
       "anyOf": [
         {
           "type": "string"
@@ -559,7 +597,6 @@
       ]
     },
     "VariableInput": {
-      "description": "An environment variable (key / value)",
       "type": "object",
       "required": [
         "name",
@@ -567,10 +604,16 @@
       ],
       "properties": {
         "name": {
+          "description": "Environment variable name, such as `NPM_TOKEN`",
           "type": "string"
         },
         "value": {
-          "$ref": "#/definitions/StringResolvableInput"
+          "description": "Source of truth for variable",
+          "allOf": [
+            {
+              "$ref": "#/definitions/StringResolvableInput"
+            }
+          ]
         }
       }
     }

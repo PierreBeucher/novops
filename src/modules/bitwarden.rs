@@ -1,7 +1,6 @@
-/**
- * Simple wrapper around BitWarden CLI
- * Keep it simple as we intend to remove/deprecated Bitwarden usage in the future
-*/
+
+/// Simple wrapper around BitWarden CLI
+/// Keep it simple as we intend to remove/deprecated Bitwarden usage in the future
 
 use std::process::{Command, Output};
 use std;
@@ -14,15 +13,8 @@ use schemars::JsonSchema;
 
 use crate::core;
 
-/**
- * A BitWarden secret such as
- * 
- * myvar:
- *   bitwarden:
- *     entry: wordpress_prod
- *     field: login.password
- */
 
+/// A BitWarden secret reference 
 #[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
 pub struct BitwardenItemInput {
     bitwarden: BitwardenEntry,
@@ -54,24 +46,26 @@ impl core::ResolveTo<String> for BitwardenItemInput {
     }
 }
 
+/// A BitWarden entry
 #[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
 pub struct BitwardenEntry {
+    /// Entry name
     entry: String,
+
+    /// Field in entry to use as value.
     field: String
 }
 
-/**
- * Wraps Bitwarden command context
- */
+
+/// Wraps Bitwarden command context
 #[derive(Debug)]
 pub struct BitwardenCommandContext {
   pub output: Option<Output>,
   pub command: String
 }
 
-/**
- * Retrieve a Bitwarden item as a JSON value
- */
+
+/// Retrieve a Bitwarden item as a JSON value
 pub fn get_item(item: &String) -> Result<serde_json::Value, anyhow::Error> {
   let command_str = format!("bw get item '{}'", item);
 
@@ -101,13 +95,12 @@ pub fn get_item(item: &String) -> Result<serde_json::Value, anyhow::Error> {
 
 }
 
-/**
- * Get a string from a JSON Value
- * 
- * Example: considering JSON { "login": { "password": "secret", "username": "foo" }} 
- * get_string_in_value(myJson, ["item", "foo"]) ==> "bar"
- * This is a wrapper for Novops config where client provide a string like "login.password" for the desired Bitwarden entry
- */
+
+/// Get a string from a JSON Value
+/// 
+/// Example: considering JSON { "login": { "password": "secret", "username": "foo" }} 
+/// get_string_in_value(myJson, ["item", "foo"]) ==> "bar"
+/// This is a wrapper for Novops config where client provide a string like "login.password" for the desired Bitwarden entry
 pub fn get_string_in_value(value: &serde_json::Value, mut fields: Vec<String>) -> Result<String, anyhow::Error>{
   let field = fields.remove(0);
 

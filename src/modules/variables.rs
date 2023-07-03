@@ -4,12 +4,12 @@ use crate::core::{ResolveTo, StringResolvableInput, NovopsContext};
 use anyhow;
 use schemars::JsonSchema;
 
-/**
- * An environment variable (key / value)
- */
 #[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
 pub struct VariableInput {
+    /// Environment variable name, such as `NPM_TOKEN`
     pub name: String,
+
+    /// Source of truth for variable 
     pub value: StringResolvableInput
 }
     

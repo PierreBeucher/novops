@@ -5,3 +5,4 @@ tests/
 .novops.yml
 README.md
 Makefile
+docs/

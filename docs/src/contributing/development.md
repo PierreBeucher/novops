@@ -1,5 +1,11 @@
 # Development guide
 
+Every command below must be run under [Nix Flake development shell](https://nixos.wiki/wiki/Flakes):
+
+```
+nix develop
+```
+
 ## Build
 
 Novops is built with Docker BuildKit. Built binary is fully static. See [Dockerfile](../Dockerfile).
@@ -26,14 +32,22 @@ make test-docker
 RUST_LOG=novops=debug cargo test --test test_aws -- --nocapture
 ```
 
-Tests are run on CI for any non-`master` branch using the same procedure. 
+Tests are run on CI for any non-`master` branch using the same procedure.
 
-## Updating dependencies
+## Update JSON Schema
 
-This command regenerates the Cargo.nix and as such should be run everytime Cargo.lock is changed. It will fail on CI if not done. 
+JSON Schema is generated from [schemars](https://docs.rs/schemars/latest/schemars/)
 
-```sh
-nix run github:cargo2nix/cargo2nix/unstable
+```
+make doc
+```
+
+## Serve documentation locally
+
+Doc is built with [`mdBook`](https://github.com/rust-lang/mdBook)
+
+```
+make doc-serve
 ```
 
 ## Releasing

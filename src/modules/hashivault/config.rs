@@ -7,6 +7,8 @@ use super::aws::HashiVaultAWSInput;
 
 #[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
 pub struct HashiVaultInput {
+
+    /// Use Vault AWS Secret Engine to generate temporary AWS credentials.
     pub aws: HashiVaultAWSInput
 }
 
@@ -14,15 +16,22 @@ pub struct HashiVaultInput {
 #[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]  
 pub struct HashivaultConfig {
   /// Address in form http(s)://HOST:PORT
+  /// 
+  /// Example: https://vault.mycompany.org:8200
   pub address: Option<String>,
 
-  /// Hashivault token (plain string, for testing purpose only)
+  /// Vault token as plain string
+  /// 
+  /// Use for testing only. DO NOT COMMIT NOVOPS CONFIG WITH THIS SET.
+  /// 
   pub token: Option<String>,
 
-  /// Hashivault token path 
+  /// Vault token path.
+  /// 
+  /// Example: /var/secrets/vault-token
   pub token_path: Option<PathBuf>,
 
-  /// TLS verify
+  /// Whether to enable TLS verify (true by default)
   pub verify: Option<bool>
 }
 
