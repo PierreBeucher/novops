@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://novadiscovery.github.io/novops/config/config.schema.json",
   "title": "NovopsConfigFile",
+  "description": "Main Novops config file",
   "type": "object",
   "required": [
     "environments",
@@ -9,6 +9,7 @@
   ],
   "properties": {
     "config": {
+      "description": "Global configurations for Novops and modules",
       "anyOf": [
         {
           "$ref": "#/definitions/NovopsConfig"
@@ -19,12 +20,14 @@
       ]
     },
     "environments": {
+      "description": "Available environments. Keys are environment names.",
       "type": "object",
       "additionalProperties": {
         "$ref": "#/definitions/NovopsEnvironmentInput"
       }
     },
     "name": {
+      "description": "Unique application name.\n\nLoading Novops from distinct files with the same name may have unexpected results",
       "type": "string"
     }
   },
@@ -441,6 +444,7 @@
       }
     },
     "NovopsConfig": {
+      "description": "Global Novops configuration defining behavior for modules",
       "type": "object",
       "properties": {
         "aws": {

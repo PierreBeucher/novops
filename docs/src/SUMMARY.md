@@ -5,7 +5,8 @@
 - [Getting started](getting-started.md)
 
 - [Configuration and Modules](config/README.md)
-  - [`.novops.yml` configuration schema](config/config.md)
+  - [Configuration](config/config.md)
+    - [Configuration schema](config/schema.md)
   - [Files and Variables](config/files-variables.md)
   - [Hashicorp Vault](config/hashicorp-vault.md)
   - [AWS](config/aws.md)

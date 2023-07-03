@@ -15,6 +15,7 @@ use std::os::unix;
 use std::path::PathBuf;
 use std::env;
 use std::collections::HashMap;
+use schemars::schema_for;
 
 #[derive(Debug)]
 pub struct NovopsArgs {
@@ -483,3 +484,9 @@ fn create_symlink(lnk: &PathBuf, target: &PathBuf) -> Result<(), anyhow::Error> 
         .with_context(|| format!("Couldn't create symlink {:?} -> {:?}", &lnk, &target))
 }
     
+pub fn get_config_schema() -> Result<String, anyhow::Error>{
+    let schema = schema_for!(NovopsConfigFile);
+    let output = serde_json::to_string_pretty(&schema)
+        .with_context(|| "Couldn't convert JSON schema to pretty string.")?;
+    return Ok(output)
+}

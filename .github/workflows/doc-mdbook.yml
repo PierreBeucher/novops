@@ -1,11 +1,15 @@
-# From https://github.com/actions/starter-workflows/blob/main/pages/mdbook.yml
+# Build doc with mdBook and json-schema-for-humans
+# See:
+# - https://github.com/actions/starter-workflows/blob/main/pages/mdbook.yml
+# - https://coveooss.github.io/json-schema-for-humans/#/
 name: GitHub Pages with mdBook
 
 on:
   push:
     branches:
       - main
-      - mdbook # for testing
+  pull_request:
+  workflow_dispatch: 
 
 permissions:
   contents: read
@@ -36,6 +40,10 @@ jobs:
 
       - name: build mdBook site
         run: mdbook build ./docs/
+      
+      # A bit hacky as it modified directly mdbook folder
+      - name: copy json schema doc into book
+        run: cp docs/schema/index.html docs/book/config/schema.html
 
       - name: Upload mdBook artifact
         uses: actions/upload-pages-artifact@v1
@@ -43,6 +51,7 @@ jobs:
           path: ./docs/book
   
   deploy:
+    if: github.ref == 'refs/heads/main'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

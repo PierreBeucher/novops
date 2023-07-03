@@ -18,14 +18,29 @@ use crate::modules::azure;
 use crate::modules::files::{FileInput};
 use crate::modules::variables::{VariableInput};
 
+/// Available environments. Keys are environment names. 
+type NovopsEnvironments = HashMap<String, NovopsEnvironmentInput>;
 
+///
+/// Main Novops config file
+/// 
 #[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
 pub struct NovopsConfigFile {
+    /// Unique application name.
+    /// 
+    /// Loading Novops from distinct files with the same name may have unexpected results
     pub name: String,
-    pub environments: HashMap<String, NovopsEnvironmentInput>,
+
+    /// Available environments. Keys are environment names. 
+    pub environments: NovopsEnvironments,
+
+    /// Global configurations for Novops and modules 
     pub config: Option<NovopsConfig>
 }
 
+///
+/// Global Novops configuration defining behavior for modules
+/// 
 #[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
 pub struct NovopsConfig {
     pub default: Option<NovopsConfigDefault>,

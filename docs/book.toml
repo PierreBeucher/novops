@@ -5,6 +5,9 @@ multilingual = false
 src = "src"
 title = "novops documentation"
 
+[build]
+create-missing = false
+
 [output.html]
 git-repository-url = "https://github.com/novadiscovery/novops"
 edit-url-template = "https://github.com/novadiscovery/novops/edit/main/docs/{path}"

@@ -34,6 +34,14 @@ RUST_LOG=novops=debug cargo test --test test_aws -- --nocapture
 
 Tests are run on CI for any non-`master` branch using the same procedure.
 
+## Update JSON Schema
+
+JSON Schema is generated from [schemars](https://docs.rs/schemars/latest/schemars/)
+
+```
+make doc
+```
+
 ## Serve documentation locally
 
 Doc is built with [`mdBook`](https://github.com/rust-lang/mdBook)

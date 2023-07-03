@@ -3,8 +3,7 @@ use std::{process::exit, io};
 use anyhow::Context;
 use tokio;
 use clap::{Arg, Command, value_parser, ArgAction, crate_version};
-use novops::{self, core::NovopsConfigFile, init_logger};
-use schemars::schema_for;
+use novops::{self, init_logger, get_config_schema};
 use clap_complete::{generate, Shell};
 use log::error;
 
@@ -116,10 +115,8 @@ async fn main() -> Result<(), anyhow::Error> {
     };
 
     if let Some(_cmd) = m.subcommand_matches("schema") {
-        let schema = schema_for!(NovopsConfigFile);
-        let output = serde_json::to_string_pretty(&schema)
-            .with_context(|| "Couldn't convert JSON schema to pretty string.")?;
-        println!("{}", output);
+        let schema = get_config_schema()?;
+        println!("{}", schema);
         exit(0)
     }
     
