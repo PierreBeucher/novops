@@ -31,7 +31,10 @@ pub struct NovopsConfigFile {
     /// Loading Novops from distinct files with the same name may have unexpected results
     pub name: String,
 
-    /// Available environments. Keys are environment names. 
+    /// Source of truth defining files and variables loaded by Novops
+    /// 
+    /// Environments are named uniquely (such as "dev", "prod"...) 
+    /// to allow for different configs to be loaded in various contexts
     pub environments: NovopsEnvironments,
 
     /// Global configurations for Novops and modules 
@@ -43,8 +46,13 @@ pub struct NovopsConfigFile {
 /// 
 #[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
 pub struct NovopsConfig {
+    /// Novops default configurations
     pub default: Option<NovopsConfigDefault>,
+
+    /// Hashicorp Vault module configs
     pub hashivault: Option<HashivaultConfig>,
+
+    /// AWS module configs
     pub aws: Option<aws::config::AwsConfig>
 }
 
@@ -60,6 +68,7 @@ impl Default for NovopsConfig {
 
 #[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]    
 pub struct NovopsConfigDefault {
+    /// Default environment name, selected by default if no user input is provided
     pub environment: Option<String>,
 }
 
@@ -71,26 +80,30 @@ impl Default for NovopsConfigDefault {
     }
 }
 
-/**
- * A Novops environment defining Input and Output
- * Environment name is the corresponding YAML key
- * 
- * Available modules:
- * - Variable are simpple Key/Valye using any String input
- * - File are defined using a specific Input struct
- * - AWS allow to assume IAM Role (Output: env vars)
- */
+
+/// Modules to be loaded for an environment. Each module defines one or more Input
+/// which will be resolved into Outputs (files & variables)
 #[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
 pub struct NovopsEnvironmentInput {
+    
+    /// Variables resolving to environment variables from provided source
     pub variables: Option<Vec<VariableInput>>,
+
+    /// Files resolving to concrete files on local filesystem and environment variables pointing to file
     pub files: Option<Vec<FileInput>>,
+
+    /// Assume an AWS Role from local config. 
+    /// 
+    /// Outputs environment variables `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_SESSION_TOKEN` 
+    /// with temporary credentials for IAM Role.
     pub aws: Option<aws::config::AwsInput>,
+
+    /// Reference one or more Hashicorp Vault Secret Engines to generate either files or variables.
     pub hashivault: Option<hashivault::config::HashiVaultInput>
 }
 
-/**
- * Context in which an environment is loaded. Passed to Inputs with ResolveTo() to generate related Output 
- */
+
+/// Context in which an environment is loaded. Passed to Inputs with ResolveTo() to generate related Output 
 #[derive(Debug, Deserialize, Clone, PartialEq)]
 pub struct NovopsContext {
 
@@ -113,22 +126,15 @@ pub struct NovopsContext {
     pub dry_run: bool
 }
 
-/**
- * Trait all Input are implement to generate their final Output value
- */
+
+/// Trait all Input are implement to generate their final Output value
 #[async_trait]
 pub trait ResolveTo<T> {
     async fn resolve(&self, ctx: &NovopsContext) -> Result<T, anyhow::Error>;
 }
 
-/**
- * Enum with Input that will always resolve to String
- * Centralize ResolveTo<String> to reduce boiler-plate code on other inputs
- * like FileInput and VariableInput
- * 
- * Most modules Inputs will resolve to a String which can be used either
- * as Variable or File. See [BytesResolvableInput] if you need to handle binary data.
- */
+
+/// All possible inputs resolving to a string value
 #[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
 #[serde(untagged)]
 pub enum StringResolvableInput {
@@ -142,9 +148,8 @@ pub enum StringResolvableInput {
     AzureKeyvaultSecretInput(azure::vault::AzureKeyvaultSecretInput)
 }
 
-/**
- * String is the most simple Input to resolve: it resolve to itself
- */
+
+/// String is the most simple Input to resolve: it resolve to itself
 #[async_trait]
 impl ResolveTo<String> for String {
     async fn resolve(&self, _: &NovopsContext) -> Result<String, anyhow::Error> {
@@ -169,18 +174,18 @@ impl ResolveTo<String> for StringResolvableInput {
 }
 
 
-/**
- * Enum for all Inputs resolving to a Byte Vector (including [StringResolvableInput]
- * as Rust internal structure represents String as Byte vector)
- * This input is used by [FileInput] to resolve file content whic is not always a String but may also 
- * be binary or blob data. 
- */
+
+/// Any input to be used for file content. 
 #[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
 #[serde(untagged)]
 pub enum BytesResolvableInput {
     AwsSecretsManagerSecretInput(aws::secretsmanager::AwsSecretsManagerSecretInput),
     GCloudSecretManagerSecretInput(gcloud::secretmanager::GCloudSecretManagerSecretInput),
     StringResolvableInput(StringResolvableInput),
+
+    // skip for schema doc generation as it's useless for human user
+    // only useful for internal transformation of blobs into strings
+    #[schemars(skip)] 
     ByteVec(Vec<u8>)
 }
 

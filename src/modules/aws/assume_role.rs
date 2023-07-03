@@ -11,9 +11,14 @@ use crate::modules::aws::client::get_client_with_profile;
 
 const STS_ROLE_SESSION_NAME_MAX_LENGTH: usize = 64;
 
+/// Assume an IAM Role 
 #[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
 pub struct AwsAssumeRoleInput {
+
+    /// Full IAM Role ARN
     pub role_arn: String,
+
+    /// Source profile. Must exist in config. 
     pub source_profile: Option<String>
 }
 

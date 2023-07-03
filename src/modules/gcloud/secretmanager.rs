@@ -10,30 +10,26 @@ use log::debug;
 use crate::core::{ResolveTo, NovopsContext};
 use super::client::get_client;
 
+/// Reference Secret Manager secret
 #[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
 pub struct GCloudSecretManagerSecretInput {
     
     pub gcloud_secret: GCloudSecretManagerSecret
 }
 
-/**
- * Structure to request a GCloud Secret Manager secret
- * 
- * See https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
- */
+
+/// Structure to request a GCloud Secret Manager secret
+/// 
+/// See https://cloud.google.com/secret-manager/docs/reference/rest/v1/projects.secrets/get
 #[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema, Default)]
 pub struct GCloudSecretManagerSecret {
     
-    /**
-     * Name of the secret in the format projects/\*\/secrets/\*\/versions/\*
-     * Such as `projects/my-org-project/secrets/my-secret/latest`
-     * Or `projects/my-org-project/secrets/my-secret/42` for a specific version
-     */
+    /// Name of the secret in the format projects/\*\/secrets/\*\/versions/\*
+    /// Such as `projects/my-org-project/secrets/my-secret/latest`
+    /// Or `projects/my-org-project/secrets/my-secret/42` for a specific version
     pub name: String,
 
-    /**
-     * Whether to validate crc32c checksum provided with secret (default: true)
-     */
+    /// Whether to validate crc32c checksum provided with secret (default: true)
     pub validate_crc32c: Option<bool>
 }
 
@@ -58,9 +54,8 @@ impl ResolveTo<Vec<u8>> for GCloudSecretManagerSecretInput {
     }
 }
 
-/**
- * Return bytes value or a secret after validating CRC32
- */
+
+/// Return bytes value or a secret after validating CRC32
 async fn retrieve_secret_bytes_for(ctx: &NovopsContext, secret: &GCloudSecretManagerSecret) -> Result<Vec<u8>, anyhow::Error> {
     
     let client = get_client(ctx).await;

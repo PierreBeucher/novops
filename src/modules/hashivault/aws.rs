@@ -7,12 +7,25 @@ use serde::Deserialize;
 use async_trait::async_trait;
 use schemars::JsonSchema;
 
+/// Reference AWS Secret Engine role to generate AWS credentials as environment variables.
+/// 
+/// Maps directly to Generate Credentials API. See https://developer.hashicorp.com/vault/api-docs/secret/aws#generate-credentials
 #[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
 pub struct HashiVaultAWSInput {
+
+    /// Secret Engine mount point. Default to 'aws'.
     pub mount: Option<String>,
+
+    /// Vault role name 
     pub name: String,
+
+    /// AWS IAM Role ARN
     pub role_arn: Option<String>,
+
+    /// Session name 
     pub role_session_name: Option<String>,
+    
+    /// Generated token time to live. Example: "3600s"
     pub ttl: Option<String>
 }
 

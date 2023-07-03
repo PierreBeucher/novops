@@ -7,6 +7,7 @@ use crate::core::{ResolveTo, NovopsContext};
 
 use super::client::get_client;
 
+/// Reference an Azure Keyvault secret
 #[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
 pub struct AzureKeyvaultSecretInput {
     
@@ -14,22 +15,19 @@ pub struct AzureKeyvaultSecretInput {
 }
 
 
+/// Maps directly to Keyvault Get Secret API
+/// 
+/// See https://learn.microsoft.com/en-us/rest/api/keyvault/secrets/get-secret/get-secret?tabs=HTTP
 #[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema, Default)]
 pub struct AzureKeyvaultSecret {
     
-    /**
-     * Secret's vault name
-     */
+    /// Secret's vault name
     pub vault: String,
-
-    /**
-     * Secret name
-     */
+    
+    /// Secret name
     pub name: String,
 
-    /**
-     * Secret's version (default: latest)
-     */
+    /// Secret's version (default: latest)
     pub version: Option<String>,
 }
 

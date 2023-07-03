@@ -6,23 +6,23 @@ use std::default::Default;
 use crate::core::{ResolveTo, NovopsContext};
 use crate::modules::aws::client::get_client;
 
+/// Reference an SSM Parameter config or secret
 #[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
 pub struct AwsSSMParamStoreInput {
     
     pub aws_ssm_parameter: AwsSSMParameter
 }
 
+/// Reference an SSM Parameter config or secret
+/// 
+/// Maps directly to GetParameter API. See https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_GetParameter.html
 #[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema, Default)]
 pub struct AwsSSMParameter {
     
-    /**
-     * Parameter name
-     */
+    /// Parameter name
     pub name: String,
 
-    /**
-     * Return decrypted values for secure string parameters. This flag is ignored for String and StringList parameter types.
-     */
+    /// Return decrypted values for secure string parameters. This flag is ignored for String and StringList parameter types.
     pub with_decryption: Option<bool>
 }
 

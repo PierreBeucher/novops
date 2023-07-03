@@ -9,47 +9,32 @@ use schemars::JsonSchema;
 use crate::core::{ResolveTo, NovopsContext, BytesResolvableInput};
 use crate::modules::variables::{VariableOutput};
 
-/**
- * Content is any input
- * File can also define a destination (by default, will use XDG Runtime directory, or a secure /tmp subfolder in XDG is not available)
- * Dest will override default destination to a custom path
- * Variable is an environment variable output pointing to generated file
- * 
- * Example:
- * 
- * dog:
- *   content: "wouf"
- * 
- * Would generate Outputs:
- * - a file such as /run/user/1000/novops/animals/dev/dog
- * - an environment variable such as NOVOPS_ANIMALS_DEV_FILE_DOG="/run/user/1000/novops/animals/dev/dog"
- * 
- * cat:
- *   dest: /tmp/thecat
- *   variable: CAT_LOCATION
- *   content: "meow"
- * 
- * Would generate Outputs:
- * - a file such as /tmp/thecat
- * - an environment variable such as CAT_LOCATION="/tmp/thecat"
- * 
- */
+
+/// 
 #[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
 pub struct FileInput {
-    /// name to use when auto-generating file and variable name
-    /// if not specified, the YAML key for file will be used
+    /// File name to use when auto-generating file and variable name.
+    /// if not set, the YAML key for file will be used
     pub name: Option<String>,
 
+    /// Destination where file will be generated. Default to secure Novops working directory.
+    /// 
+    /// Setting this value may prevent file from being auto-deleted as it won't be managed in a safe location and may remain indefinitely.
     pub dest: Option<String>,
     
+    /// Environment variable name pointing to generated file. 
+    /// 
+    /// Example: setting `NPM_TOKEN` will output an environment variable pointing to file path such as 
+    /// 
+    /// `NPM_TOKEN: /run/user/1000/novops/dev/file_xxx`
     pub variable: Option<String>,
     
+    /// File content 
     pub content: BytesResolvableInput
 }
 
-/**
- * Output for FileInput, with final dest, variable and content
- */
+
+/// Output for FileInput, with final dest, variable and content
 #[derive(Debug, Clone, PartialEq, JsonSchema)]
 pub struct FileOutput {
     pub dest: PathBuf,
@@ -57,9 +42,8 @@ pub struct FileOutput {
     pub content: Vec<u8> // TODO buffer? content may be long
 }
 
-/**
- * Resolve a FileInput to its FileOutput for given context
- */
+
+/// Resolve a FileInput to its FileOutput for given context
 #[async_trait]
 impl ResolveTo<FileOutput> for FileInput {
     async fn resolve(&self, ctx: &NovopsContext) -> Result<FileOutput, anyhow::Error> {
