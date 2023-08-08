@@ -29,3 +29,7 @@ See [contribution guide](./CONTRIBUTING.md) and [development guide](https://nova
 ## License 
 
 [GNU Lesser General Public License](LICENSE)
+
+## Acknowledgment
+
+Novops was initially developed and used at [Novadiscovery](https://www.novadiscovery.com/) who graciously transferred code ownership. Thanks Nova's team for your help in designing and developing Novops. 
