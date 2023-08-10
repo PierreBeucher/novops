@@ -5,7 +5,7 @@
 Novops is distributed as a standalone static binary. To install, run:
 
 ```sh
-curl -L "https://github.com/novadiscovery/novops/releases/latest/download/novops-X64-Linux.zip" -o novops.zip
+curl -L "https://github.com/PierreBeucher/novops/releases/latest/download/novops-X64-Linux.zip" -o novops.zip
 unzip novops.zip
 sudo mv novops /usr/local/bin/novops
 ```
@@ -14,7 +14,7 @@ Install a specific version:
 
 ```sh
 export NOVOPS_VERSION=0.6.0
-curl -L "https://github.com/novadiscovery/novops/releases/download/v${NOVOPS_VERSION}/novops-X64-Linux.zip" -o novops.zip
+curl -L "https://github.com/PierreBeucher/novops/releases/download/v${NOVOPS_VERSION}/novops-X64-Linux.zip" -o novops.zip
 unzip novops.zip
 sudo mv novops /usr/local/bin/novops
 ```
@@ -61,7 +61,7 @@ Requirements:
 - Make
 - Docker 
 
-Clone [Novops repository](https://github.com/novadiscovery/novops) and run:
+Clone [Novops repository](https://github.com/PierreBeucher/novops) and run:
 
 ```
 make build

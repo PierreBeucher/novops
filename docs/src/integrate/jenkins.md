@@ -28,7 +28,7 @@ Setup a step such as:
 ```Jenkinsfile
     stage('Novops') {
         sh '''
-            curl -L "https://github.com/novadiscovery/novops/releases/latest/download/novops-X64-Linux.zip" -o novops.zip
+            curl -L "https://github.com/PierreBeucher/novops/releases/latest/download/novops-X64-Linux.zip" -o novops.zip
             unzip novops.zip
             sudo mv novops /usr/local/bin/novops
 
@@ -46,7 +46,7 @@ Alternatively, setup a specific version:
 
     stage('Novops') {
         sh '''
-            curl -L "https://github.com/novadiscovery/novops/releases/download/v${NOVOPS_VERSION}/novops-X64-Linux.zip" -o novops.zip
+            curl -L "https://github.com/PierreBeucher/novops/releases/download/v${NOVOPS_VERSION}/novops-X64-Linux.zip" -o novops.zip
             unzip novops.zip
             mv novops /usr/local/bin/novops
 

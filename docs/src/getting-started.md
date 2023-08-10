@@ -5,7 +5,7 @@
 First install Novops:
 
 ```sh
-curl -L "https://github.com/novadiscovery/novops/releases/latest/download/novops-X64-Linux.zip" -o novops.zip
+curl -L "https://github.com/PierreBeucher/novops/releases/latest/download/novops-X64-Linux.zip" -o novops.zip
 unzip novops.zip
 sudo mv novops /usr/local/bin/novops
 ```

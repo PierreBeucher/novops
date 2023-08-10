@@ -33,7 +33,7 @@ job-with-novops:
   script:
     # Download novops
     - |-
-      curl -L "https://github.com/novadiscovery/novops/releases/latest/download/novops-X64-Linux.zip" -o novops.zip
+      curl -L "https://github.com/PierreBeucher/novops/releases/latest/download/novops-X64-Linux.zip" -o novops.zip
       unzip novops.zip
       mv novops /usr/local/bin/novops
     
@@ -56,7 +56,7 @@ job-with-novops:
   script:
     # Download novops
     - |-
-      curl -L "https://github.com/novadiscovery/novops/releases/download/v${NOVOPS_VERSION}/novops-X64-Linux.zip" -o novops.zip
+      curl -L "https://github.com/PierreBeucher/novops/releases/download/v${NOVOPS_VERSION}/novops-X64-Linux.zip" -o novops.zip
       unzip novops.zip
       mv novops /usr/local/bin/novops
     
