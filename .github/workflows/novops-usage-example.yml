@@ -13,7 +13,7 @@ jobs:
 
       - name: setup Novops
         run: |
-          curl -L "https://github.com/novadiscovery/novops/releases/latest/download/novops-X64-Linux.zip" -o novops.zip
+          curl -L "https://github.com/PierreBeucher/novops/releases/latest/download/novops-X64-Linux.zip" -o novops.zip
           unzip novops.zip
           mv novops /usr/local/bin/novops
       

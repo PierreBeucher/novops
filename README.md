@@ -16,15 +16,15 @@ Platform agnostic secret and config manager for local development and CI.
 
 ## Documentation
 
-See [Installation](https://novadiscovery.github.io/novops/install.html) and [Get Started](https://novadiscovery.github.io/novops/getting-started.html) for next steps!
+See [Installation](https://pierrebeucher.github.io/novops/install.html) and [Get Started](https://pierrebeucher.github.io/novops/getting-started.html) for next steps!
 
-[Checkout full documentation](https://novadiscovery.github.io/novops/intro.html)
+[Checkout full documentation](https://pierrebeucher.github.io/novops/intro.html)
 
 ## Contributing
 
 We welcome contributions: bug reports/fixes, modules, proposals... :)
 
-See [contribution guide](./CONTRIBUTING.md) and [development guide](https://novadiscovery.github.io/novops/contributing/development.html)
+See [contribution guide](./CONTRIBUTING.md) and [development guide](https://pierrebeucher.github.io/novops/contributing/development.html)
 
 ## License 
 

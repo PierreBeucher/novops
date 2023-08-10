@@ -12,7 +12,7 @@ jobs:
 
       - name: setup Novops
         run: |
-          curl -L "https://github.com/novadiscovery/novops/releases/latest/download/novops-X64-Linux.zip" -o novops.zip
+          curl -L "https://github.com/PierreBeucher/novops/releases/latest/download/novops-X64-Linux.zip" -o novops.zip
           unzip novops.zip
           mv novops /usr/local/bin/novops
       
@@ -34,7 +34,7 @@ Alternatively, set a specific version:
   env:
     NOVOPS_VERSION: 0.6.0
   run: |
-    curl -L "https://github.com/novadiscovery/novops/releases/download/v${NOVOPS_VERSION}/novops-X64-Linux.zip" -o novops.zip
+    curl -L "https://github.com/PierreBeucher/novops/releases/download/v${NOVOPS_VERSION}/novops-X64-Linux.zip" -o novops.zip
     unzip novops.zip
     sudo mv novops /usr/local/bin/novops
 ```
