@@ -294,7 +294,7 @@ fn prepare_working_directory_tmp(app_name: &String, env_name: &String) -> Result
     fs::create_dir_all(&user_workdir)
         .with_context(|| format!("Couldn't create user working directory {:?}", &user_workdir))?;
     
-    fs::set_permissions(&user_workdir, fs::Permissions::from_mode(0o0600))
+    fs::set_permissions(&user_workdir, fs::Permissions::from_mode(0o0700))
         .with_context(|| format!("Couldn't set permission on user working directory {:?}", &user_workdir))?;
     
     // create current app/env workdir under user workdir
