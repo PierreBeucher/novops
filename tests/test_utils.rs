@@ -45,6 +45,7 @@ async fn _load_env_for(conf_name: &str, env: &str, dry_run: bool) -> Result<Novo
   let args = NovopsArgs { 
     config: format!("tests/.novops.{}.yml", conf_name), 
     env: Some(env.to_string()), 
+    format: String::from("dotenv-export"),
     working_directory: None,
     symlink: None,
     dry_run: Some(dry_run)

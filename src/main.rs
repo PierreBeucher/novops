@@ -9,12 +9,12 @@ use log::error;
 
 fn build_cli() -> Command {
     let app = Command::new("novops")
-        .about("Platform agnostic secret manager")
+        .about("Cross-plaform secret loader")
         .version(crate_version!())
-        .author("Novadiscovery")
+        .author("Pierre Beucher")
         .subcommand(
             Command::new("load")
-            .about("Load a Novops environment")
+            .about("Load a Novops environment. Output resulting environment variables to stdout or to a file using -s/--symlink. ")
             .arg(Arg::new("config")
                 .short('c')
                 .long("config")
@@ -31,6 +31,13 @@ fn build_cli() -> Command {
                 .value_name("ENVNAME")
                 .required(false)
             )
+            .arg(Arg::new("format")
+                .help("Format for environment variables: dotenv-export|dotenv")
+                .short('f')
+                .long("format")
+                .value_name("FORMAT")
+                .default_value("dotenv-export")
+            )
             .arg(Arg::new("working_dir")
                 .help("Working directory under which files and secrets will be saved. \
                     Default to XDG_RUNTIME_DIR if available, or a secured temporary files otherwise. \
@@ -41,14 +48,14 @@ fn build_cli() -> Command {
                 .required(false)
             )
             .arg(Arg::new("symlink")
-                .help("Create a symlink pointing to working directory.")
+                .help("Create a symlink pointing to generated environment variable file. Implies -o 'workdir'")
                 .long("symlink")
                 .short('s')
-                .value_name("SYMLINK_PATH")
+                .value_name("SYMLINK")
                 .required(false)
             )
             .arg(Arg::new("dry_run")
-                .help("Perform a dry-run: not external service is be called and dummy outputs is written to disk. Used for testing purposes.")
+                .help("Perform a dry-run: not external service will be called and dummy outputs is written to disk. Used for testing purposes.")
                 .long("dry-run")
                 .value_name("DRY_RUN")
                 .action(ArgAction::SetTrue)
@@ -92,8 +99,10 @@ async fn main() -> Result<(), anyhow::Error> {
 
         let args = novops::NovopsArgs{ 
             config: load_subc.get_one::<String>("config")
-                .ok_or(anyhow::anyhow!("Config is None. This is probably a bug."))?.clone(),
+                .ok_or(anyhow::anyhow!("Config is None. This is probably a bug as CLI defines default value."))?.clone(),
             env: load_subc.get_one::<String>("environment").map(String::from),
+            format: load_subc.get_one::<String>("format")
+                .ok_or(anyhow::anyhow!("Format is None. This is probably a bug as CLI defines default value."))?.clone(),
             working_directory: load_subc.get_one::<String>("working_dir").map(String::from),
             symlink: load_subc.get_one::<String>("symlink").map(String::from),
             dry_run: load_subc.get_one::<bool>("dry_run").map(|e| *e)
