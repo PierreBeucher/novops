@@ -16,6 +16,8 @@ use std::path::PathBuf;
 use std::env;
 use std::collections::HashMap;
 use schemars::schema_for;
+use std::process::Command;
+use std::os::unix::process::CommandExt;
 
 #[derive(Debug)]
 pub struct NovopsLoadArgs {
@@ -71,6 +73,18 @@ pub async fn load_environment_no_write_vars(args: &NovopsLoadArgs) -> Result<Nov
 
 }
 
+pub async fn load_environment_and_exec(args: &NovopsLoadArgs, command_args: Vec<&String>) -> Result<(), anyhow::Error> {
+
+    let outputs = load_environment_no_write_vars(&args).await?;
+    let vars : Vec<VariableOutput> = outputs.variables.into_values().collect();
+
+    let mut cmd = prepare_exec_command(command_args, &vars);
+    exec_replace(&mut cmd)
+        .with_context(|| format!("Error running process {:?} {:?}", &cmd.get_program(), &cmd.get_args()))?;
+
+    Ok(())
+}
+
 pub async fn load_context_and_resolve(args: &NovopsLoadArgs) -> Result<NovopsOutputs, anyhow::Error> {
 
     debug!("Loading context for {:?}", &args);
@@ -87,6 +101,35 @@ pub async fn load_context_and_resolve(args: &NovopsLoadArgs) -> Result<NovopsOut
         variables: var_out, 
         files: file_out 
     })
+}
+
+pub fn prepare_exec_command(mut command_args: Vec<&String>, variables: &Vec<VariableOutput>) -> Command{
+    // first element of command argument is passed as child program
+    // everything else is passed as arguments
+    let child_program = command_args.remove(0);
+    let child_args = command_args;
+
+    let mut command = Command::new(&child_program);
+    command.args(&child_args);
+    
+
+    for var in variables {
+        command.env(&var.name, &var.value);
+    }
+
+    command
+}
+
+/**
+ * Run child process replacing current process
+ * Never returns () as child process should have replaced current process
+ */
+fn exec_replace(cmd: &mut Command) -> Result<(), anyhow::Error>{
+
+    info!("Running child command: {:?} {:?}", &cmd.get_program(), &cmd.get_args());
+    let error = cmd.exec();
+    
+    Err(anyhow::Error::new(error))
 }
 
 /**

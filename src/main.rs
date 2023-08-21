@@ -1,13 +1,11 @@
-use std::{process::exit, io, os::unix::process::CommandExt};
+use std::{process::exit, io};
 
 use anyhow::Context;
 use tokio;
 use clap::{Arg, Command, value_parser, ArgAction, crate_version};
 use novops::{self, init_logger, get_config_schema};
 use clap_complete::{generate, Shell};
-use log::{error, info};
-use std::process;
-            
+use log::error;
 
 fn build_cli() -> Command {
     
@@ -154,32 +152,13 @@ async fn main() -> Result<(), anyhow::Error> {
             dry_run: load_subc.get_one::<bool>("dry_run").map(|e| *e)
         };
 
-        let mut command_arg: Vec<&String> = load_subc.get_many::<String>("command")
+        let command_args: Vec<&String> = load_subc.get_many::<String>("command")
             .ok_or(anyhow::anyhow!("Command is required. This is probably a bug as CLi requires it."))?
             .collect();
 
-        let outputs = novops::load_environment_no_write_vars(&args).await
-            .with_context(|| "Failed to load environment. Set environment variable RUST_LOG=[trace|debug|info|warn] or RUST_BACKTRACE=1 for more verbosity.")?;
+        novops::load_environment_and_exec(&args, command_args).await
+            .with_context(|| "Failed to load environment and exec command. Set environment variable RUST_LOG=[trace|debug|info|warn] or RUST_BACKTRACE=1 for more verbosity.")?;
 
-        // first element of command argument is passed as child program
-        // everything else is passed as arguments
-        let child_program = command_arg.remove(0);
-        let child_args = command_arg;
-
-        let mut child = process::Command::new(&child_program);
-        child.args(&child_args);
-
-        info!("Running child command: {:?}", child);
-
-        for(_ , val) in outputs.variables {
-            child.env(&val.name, &val.value);
-        }
-
-        let error = child.exec();
-
-        // exec should have replaced current process
-        // if not, an error occured
-        error!("Error running child command: {:}", error);
         exit(2)
     };
 

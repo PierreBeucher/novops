@@ -4,9 +4,11 @@ mod test_utils;
 
 #[cfg(test)]
 mod tests {
-    use novops::{make_context, NovopsLoadArgs, load_environment_write_vars};
+    use novops::modules::variables::VariableOutput;
+    use novops::{make_context, NovopsLoadArgs, load_environment_write_vars, prepare_exec_command};
     use novops::core::{NovopsContext, NovopsConfig, NovopsConfigFile, NovopsConfigDefault, NovopsEnvironmentInput};
     use std::collections::HashMap;
+    use std::ffi::OsStr;
     use std::path::PathBuf;
     use std::fs;
     use std::os::unix::fs::PermissionsExt;
@@ -221,6 +223,42 @@ mod tests {
         assert!(result.variables.get("AWS_SESSION_TOKEN").unwrap().value.len() > 0);
         assert!(result.variables.get("AWS_SECRET_ACCESS_KEY").unwrap().value.len() > 0);
 
+        Ok(())
+    }
+
+    /**
+     * Check all modules with dry run
+     * Having non-empty values and no errors is enough
+     */
+    #[tokio::test]
+    async fn test_run_prepare_process() -> Result<(), anyhow::Error> {
+        test_setup().await?;
+
+
+        let cmd =String::from("sh");
+        let arg1 =String::from("-c");
+        let arg2 =String::from("echo foo");
+        let args = vec![&cmd, &arg1, &arg2];
+
+        let var1 = "FOO";
+        let val1 = "barzzz";
+        let vars : Vec<VariableOutput> = vec![VariableOutput{ 
+            name: String::from(var1), 
+            value: String::from(val1)
+        }];
+
+        let result = prepare_exec_command(args, &vars);
+        
+        assert_eq!(result.get_envs().len(), 1);
+
+        let os_vars : Vec<(&OsStr, Option<&OsStr>)> = result.get_envs().collect();
+        assert_eq!(os_vars[0], (OsStr::new(var1), Some(OsStr::new(val1))));
+
+        assert_eq!(result.get_program(), OsStr::new("sh"));
+
+        let result_args : Vec<&OsStr> = result.get_args().map(|arg| arg).collect();
+        assert_eq!(result_args, vec![OsStr::new(&arg1), OsStr::new(&arg2)]);
+        
         Ok(())
     }
 
