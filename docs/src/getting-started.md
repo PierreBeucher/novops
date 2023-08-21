@@ -53,6 +53,12 @@ source <(novops load)
 # source <(novops load -e dev) to avoid prompting for environment
 ```
 
+Or run sub-process:
+
+```sh
+novops run sh
+```
+
 You can now access variables:
 
 ```sh
@@ -117,7 +123,8 @@ environments:
 Load config:
 
 ```sh
-source <(novops load -e dev)
+source <(novops load -e dev) 
+# or novops run -e dev sh
 
 env | grep AWS
 # AWS_ACCESS_KEY_ID=AKIA...
@@ -138,10 +145,11 @@ cat $TOKEN_FILE
 
 Novops tries to be secure:
 
-- Secrets are kept in-memory: directly sourced in shell via standard output
+- Secrets are kept in-memory: directly sourced in shell via standard output or by running a sub-process with environment variables
 - Secrets won't be written to disk unless specifically asked by user
 - If secrets are to be written to disk, Novops try to use a secure directory ([`XDG_RUNTIME_DIR`, see Security](advanced/security.md)) so they are protected and not persisted. 
-- Secrets are loaded temporarily: being in memory, they'll disappear as soon as process finished using them. No secret is persisted. When possible, Novops generates temporary secrets (e.g. credentials)
+- Secrets are loaded temporarily: being in memory, they'll disappear as soon as process finished using them. No secret is persisted
+- Novops generates temporary secrets (e.g. credentials) when possible
 
 ## Next steps
 

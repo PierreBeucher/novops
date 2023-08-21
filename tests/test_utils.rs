@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 use std::fs;
 use std::env;
-use novops::{NovopsOutputs, NovopsArgs, load_context_and_resolve};
+use novops::{NovopsOutputs, NovopsLoadArgs, load_context_and_resolve};
 use novops::core::{NovopsContext, NovopsConfig, NovopsConfigFile, NovopsConfigDefault};
 use std::collections::HashMap;
 use log::debug;
@@ -42,12 +42,10 @@ pub async fn load_env_dryrun_for(conf_name: &str, env: &str) -> Result<NovopsOut
 }
 
 async fn _load_env_for(conf_name: &str, env: &str, dry_run: bool) -> Result<NovopsOutputs, anyhow::Error> {
-  let args = NovopsArgs { 
+  let args = NovopsLoadArgs { 
     config: format!("tests/.novops.{}.yml", conf_name), 
     env: Some(env.to_string()), 
-    format: String::from("dotenv-export"),
     working_directory: None,
-    symlink: None,
     dry_run: Some(dry_run)
   };
 

@@ -8,6 +8,40 @@ use clap_complete::{generate, Shell};
 use log::error;
 
 fn build_cli() -> Command {
+    
+    // Args used by both load and run commands
+    let arg_config = Arg::new("config")
+        .short('c')
+        .long("config")
+        .value_name("FILE")
+        .help("Configuration to use.")
+        .required(false)
+        .num_args(1)
+        .default_value(".novops.yml");
+        
+    let arg_environment = Arg::new("environment")
+        .help("Environment to load. Prompt is not specified.")
+        .long("env")
+        .short('e')
+        .value_name("ENVNAME")
+        .required(false);
+        
+    let arg_workdir = Arg::new("working_dir")
+        .help("Working directory under which files and secrets will be saved. \
+            Default to XDG_RUNTIME_DIR if available, or a secured temporary files otherwise. \
+            Warning: make sure to use a secured file when using this option. (i.e. directory with 0600 mod)")
+        .long("working-dir")
+        .short('w')
+        .value_name("DIR")
+        .required(false);
+
+    let arg_dryrun = Arg::new("dry_run")
+        .help("Perform a dry-run: not external service will be called and dummy outputs is written to disk. Used for testing purposes.")
+        .long("dry-run")
+        .value_name("DRY_RUN")
+        .action(ArgAction::SetTrue)
+        .required(false);
+
     let app = Command::new("novops")
         .about("Cross-plaform secret loader")
         .version(crate_version!())
@@ -15,20 +49,15 @@ fn build_cli() -> Command {
         .subcommand(
             Command::new("load")
             .about("Load a Novops environment. Output resulting environment variables to stdout or to a file using -s/--symlink. ")
-            .arg(Arg::new("config")
-                .short('c')
-                .long("config")
-                .value_name("FILE")
-                .help("Configuration to use.")
-                .required(false)
-                .num_args(1)
-                .default_value(".novops.yml")
-            )
-            .arg(Arg::new("environment")
-                .help("Environment to load. Prompt is not specified.")
-                .long("env")
-                .short('e')
-                .value_name("ENVNAME")
+            .arg(&arg_config)
+            .arg(&arg_environment)
+            .arg(&arg_workdir)
+            .arg(&arg_dryrun)
+            .arg(Arg::new("symlink")
+                .help("Create a symlink pointing to generated environment variable file. Implies -o 'workdir'")
+                .long("symlink")
+                .short('s')
+                .value_name("SYMLINK")
                 .required(false)
             )
             .arg(Arg::new("format")
@@ -38,28 +67,25 @@ fn build_cli() -> Command {
                 .value_name("FORMAT")
                 .default_value("dotenv-export")
             )
-            .arg(Arg::new("working_dir")
-                .help("Working directory under which files and secrets will be saved. \
-                    Default to XDG_RUNTIME_DIR if available, or a secured temporary files otherwise. \
-                    Warning: make sure to use a secured file when using this option. (i.e. directory with 0600 mod)")
-                .long("working-dir")
-                .short('w')
-                .value_name("DIR")
-                .required(false)
+        )
+        .subcommand(
+            Command::new("run")
+            .about("Run a command with loaded environment variables and files.")
+            .long_about("Run a command with loaded environment variables and files. \n\
+                Example: \n\
+                novops run sh\n\
+                novops run -- terraform apply\n\
+                "
             )
-            .arg(Arg::new("symlink")
-                .help("Create a symlink pointing to generated environment variable file. Implies -o 'workdir'")
-                .long("symlink")
-                .short('s')
-                .value_name("SYMLINK")
-                .required(false)
-            )
-            .arg(Arg::new("dry_run")
-                .help("Perform a dry-run: not external service will be called and dummy outputs is written to disk. Used for testing purposes.")
-                .long("dry-run")
-                .value_name("DRY_RUN")
-                .action(ArgAction::SetTrue)
-                .required(false)
+            .arg(&arg_config)
+            .arg(&arg_environment)
+            .arg(&arg_workdir)
+            .arg(&arg_dryrun)
+            .arg(Arg::new("command")
+                .value_name("COMMAND")
+                .action(ArgAction::Append)
+                .help("Command to run.")
+                .required(true)
             )
         )
         .subcommand(
@@ -97,21 +123,43 @@ async fn main() -> Result<(), anyhow::Error> {
 
     if let Some(load_subc) = m.subcommand_matches("load") {
 
-        let args = novops::NovopsArgs{ 
+        let symlink = load_subc.get_one::<String>("symlink").map(String::from);
+        
+        let env_format = load_subc.get_one::<String>("format")
+            .ok_or(anyhow::anyhow!("Format is None. This is probably a bug as CLI defines default value."))?.clone();
+
+        let args = novops::NovopsLoadArgs{ 
             config: load_subc.get_one::<String>("config")
                 .ok_or(anyhow::anyhow!("Config is None. This is probably a bug as CLI defines default value."))?.clone(),
             env: load_subc.get_one::<String>("environment").map(String::from),
-            format: load_subc.get_one::<String>("format")
-                .ok_or(anyhow::anyhow!("Format is None. This is probably a bug as CLI defines default value."))?.clone(),
             working_directory: load_subc.get_one::<String>("working_dir").map(String::from),
-            symlink: load_subc.get_one::<String>("symlink").map(String::from),
             dry_run: load_subc.get_one::<bool>("dry_run").map(|e| *e)
         };
 
-        novops::load_environment(args).await
+        novops::load_environment_write_vars(&args, &symlink, &env_format).await
             .with_context(|| "Failed to load environment. Set environment variable RUST_LOG=[trace|debug|info|warn] or RUST_BACKTRACE=1 for more verbosity.")?;
 
         exit(0)
+    };
+
+    if let Some(load_subc) = m.subcommand_matches("run") {
+        
+        let args = novops::NovopsLoadArgs{ 
+            config: load_subc.get_one::<String>("config")
+                .ok_or(anyhow::anyhow!("Config is None. This is probably a bug as CLI defines default value."))?.clone(),
+            env: load_subc.get_one::<String>("environment").map(String::from),
+            working_directory: load_subc.get_one::<String>("working_dir").map(String::from),
+            dry_run: load_subc.get_one::<bool>("dry_run").map(|e| *e)
+        };
+
+        let command_args: Vec<&String> = load_subc.get_many::<String>("command")
+            .ok_or(anyhow::anyhow!("Command is required. This is probably a bug as CLi requires it."))?
+            .collect();
+
+        novops::load_environment_and_exec(&args, command_args).await
+            .with_context(|| "Failed to load environment and exec command. Set environment variable RUST_LOG=[trace|debug|info|warn] or RUST_BACKTRACE=1 for more verbosity.")?;
+
+        exit(2)
     };
 
     if let Some(cmd) = m.subcommand_matches("completion") {

@@ -2,6 +2,7 @@
 
 - [Advanced CLI usage](#advanced-cli-usage)
   - [Override default config path](#override-default-config-path)
+  - [Run a sub-process](#run-a-sub-process)
   - [Specify environment without prompt](#specify-environment-without-prompt)
   - [Writing .env to secure directory](#writing-env-to-secure-directory)
   - [Change working directory](#change-working-directory)
@@ -13,6 +14,20 @@ By default Novops uses `.novops.yml` to load secrets. Use `novops load -c PATH` 
 
 ```sh
 novops load -c /path/to/novops/config.yml
+```
+
+## Run a sub-process
+
+Use `novops run`
+
+```sh
+novops run sh
+```
+
+Use `FLAG -- COMMAND...` to provide flags:
+
+```sh
+novops run -e dev -c /tmp/novops.yml -- run terraform apply
 ```
 
 ## Specify environment without prompt

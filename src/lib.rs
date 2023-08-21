@@ -16,18 +16,16 @@ use std::path::PathBuf;
 use std::env;
 use std::collections::HashMap;
 use schemars::schema_for;
+use std::process::Command;
+use std::os::unix::process::CommandExt;
 
 #[derive(Debug)]
-pub struct NovopsArgs {
+pub struct NovopsLoadArgs {
     pub config: String,
 
     pub env: Option<String>,
 
-    pub format: String,
-
     pub working_directory: Option<String>,
-
-    pub symlink: Option<String>,
 
     pub dry_run: Option<bool>
 
@@ -47,27 +45,47 @@ pub struct NovopsOutputs {
     pub files: HashMap<String, FileOutput>
 }
 
-// pub async fn parse_arg_and_run() -> Result<(), anyhow::Error> {
-//     let args = NovopsArgs::parse();
-//     run(args).await
-// }
+pub async fn load_environment_write_vars(args: &NovopsLoadArgs, symlink: &Option<String>, format: &str) -> Result<(), anyhow::Error> {
 
-pub async fn load_environment(args: NovopsArgs) -> Result<(), anyhow::Error> {
-    init_logger();
+    let outputs = load_environment_no_write_vars(&args).await?;
 
-    // Read config from args and resolve all inputs to their concrete outputs
-    let outputs = load_context_and_resolve(&args).await?;
+    let voutputs: Vec<VariableOutput> = outputs.variables.clone().into_iter().map(|(_, v)| v).collect();
+    export_variable_outputs(format, symlink, &voutputs, &outputs.context.workdir)?;
 
-    // Export output to user as per input (stdout or file)
-    export_outputs(&args, &outputs).await?;
-    
     info!("Novops environment loaded ! Export variables with:");
     info!("  source {:?}", &outputs.context.env_var_filepath);
 
     Ok(())
 }
 
-pub async fn load_context_and_resolve(args: &NovopsArgs) -> Result<NovopsOutputs, anyhow::Error> {
+pub async fn load_environment_no_write_vars(args: &NovopsLoadArgs) -> Result<NovopsOutputs, anyhow::Error> {
+
+    init_logger();
+
+    // Read config from args and resolve all inputs to their concrete outputs
+    let outputs = load_context_and_resolve(&args).await?;
+
+    // Export output to user as per input (stdout or file)
+    let foutputs: Vec<FileOutput> = outputs.files.clone().into_iter().map(|(_, f)| f).collect();
+    export_file_outputs(&foutputs)?;
+
+    Ok(outputs)
+
+}
+
+pub async fn load_environment_and_exec(args: &NovopsLoadArgs, command_args: Vec<&String>) -> Result<(), anyhow::Error> {
+
+    let outputs = load_environment_no_write_vars(&args).await?;
+    let vars : Vec<VariableOutput> = outputs.variables.into_values().collect();
+
+    let mut cmd = prepare_exec_command(command_args, &vars);
+    exec_replace(&mut cmd)
+        .with_context(|| format!("Error running process {:?} {:?}", &cmd.get_program(), &cmd.get_args()))?;
+
+    Ok(())
+}
+
+pub async fn load_context_and_resolve(args: &NovopsLoadArgs) -> Result<NovopsOutputs, anyhow::Error> {
 
     debug!("Loading context for {:?}", &args);
 
@@ -83,6 +101,35 @@ pub async fn load_context_and_resolve(args: &NovopsArgs) -> Result<NovopsOutputs
         variables: var_out, 
         files: file_out 
     })
+}
+
+pub fn prepare_exec_command(mut command_args: Vec<&String>, variables: &Vec<VariableOutput>) -> Command{
+    // first element of command argument is passed as child program
+    // everything else is passed as arguments
+    let child_program = command_args.remove(0);
+    let child_args = command_args;
+
+    let mut command = Command::new(&child_program);
+    command.args(&child_args);
+    
+
+    for var in variables {
+        command.env(&var.name, &var.value);
+    }
+
+    command
+}
+
+/**
+ * Run child process replacing current process
+ * Never returns () as child process should have replaced current process
+ */
+fn exec_replace(cmd: &mut Command) -> Result<(), anyhow::Error>{
+
+    info!("Running child command: {:?} {:?}", &cmd.get_program(), &cmd.get_args());
+    let error = cmd.exec();
+    
+    Err(anyhow::Error::new(error))
 }
 
 /**
@@ -105,7 +152,7 @@ pub fn init_logger() {
 /**
  * Generate Novops context from arguments, env vars and Novops config
  */
-pub async fn make_context(args: &NovopsArgs) -> Result<NovopsContext, anyhow::Error> {
+pub async fn make_context(args: &NovopsLoadArgs) -> Result<NovopsContext, anyhow::Error> {
     // Read CLI args and load config
     let config = read_config_file(&args.config)
         .with_context(|| format!("Error reading config file '{:}'", &args.config))?;
@@ -207,22 +254,6 @@ pub async fn resolve_environment_inputs(ctx: &NovopsContext, inputs: NovopsEnvir
 
 }
 
-/**
- * Export output variables and files
- * Variables are either shown as stdout or written to disk
- * Files are always written to disk
- */
-pub async fn export_outputs(args: &NovopsArgs, outputs: &NovopsOutputs) -> Result<(), anyhow::Error> {
-
-    let foutputs: Vec<FileOutput> = outputs.files.clone().into_iter().map(|(_, f)| f).collect();
-    export_file_outputs(&foutputs)?;
-
-    let voutputs: Vec<VariableOutput> = outputs.variables.clone().into_iter().map(|(_, v)| v).collect();
-    export_variable_outputs(&args.format, &args.symlink, &voutputs, &outputs.context.workdir)?;
-
-    Ok(())
-}
-
 fn read_config_file(config_path: &str) -> Result<NovopsConfigFile, anyhow::Error> {
     let f = std::fs::File::open(config_path)?;
     let config: NovopsConfigFile = serde_yaml::from_reader(f)
@@ -253,7 +284,7 @@ fn read_environment_name(config: &NovopsConfigFile, flag: &Option<String>) -> Re
  * 
  * Returns the absolute path to working directory
  */
-fn prepare_working_directory(args: &NovopsArgs, app_name: &String, env_name: &String) -> Result<PathBuf, anyhow::Error> {
+fn prepare_working_directory(args: &NovopsLoadArgs, app_name: &String, env_name: &String) -> Result<PathBuf, anyhow::Error> {
     
     let workdir = match &args.working_directory {
         Some(wd) => PathBuf::from(wd),
