@@ -23,12 +23,19 @@ pub struct NovopsArgs {
 
     pub env: Option<String>,
 
+    pub format: String,
+
     pub working_directory: Option<String>,
 
     pub symlink: Option<String>,
 
     pub dry_run: Option<bool>
+
 }
+
+const FORMAT_DOTENV_EXPORT: &str = "dotenv-export";
+const FORMAT_DOTENV_PLAIN: &str = "dotenv";
+const FORMAT_ALL: [&str; 2] = [ FORMAT_DOTENV_EXPORT, FORMAT_DOTENV_PLAIN ];
 
 /**
  * Structure containing all Outputs after resolving
@@ -51,18 +58,9 @@ pub async fn load_environment(args: NovopsArgs) -> Result<(), anyhow::Error> {
     // Read config from args and resolve all inputs to their concrete outputs
     let outputs = load_context_and_resolve(&args).await?;
 
-    // Write outputs to disk
-    export_outputs(&outputs).await?;
-
-    // If symlink option provided, create symlink
-    match args.symlink {
-        Some(lnk_str) => {
-            let lnk = PathBuf::from(&lnk_str);
-            create_symlink(&lnk, &outputs.context.env_var_filepath)?
-        },
-        None => (),
-    }
-
+    // Export output to user as per input (stdout or file)
+    export_outputs(&args, &outputs).await?;
+    
     info!("Novops environment loaded ! Export variables with:");
     info!("  source {:?}", &outputs.context.env_var_filepath);
 
@@ -89,12 +87,18 @@ pub async fn load_context_and_resolve(args: &NovopsArgs) -> Result<NovopsOutputs
 
 /**
  * Initialize logger. Ca be called more than once. 
+ * Novops always logs to stderr as stdout is reserved from output environment variables.
  */
 pub fn init_logger() {
+    let log_init_result = env_logger::Builder::new()
+        .parse_default_env()
+        .target(env_logger::Target::Stderr)
+        .try_init();
+
     // Allow multiple invocation of logger
-    match env_logger::try_init() {
+    match log_init_result {
         Ok(_) => {},
-        Err(e) => {debug!("env_logger::try_init() error: {:?}", e)},
+        Err(e) => {debug!("env_logger::try_init() error: {:?} - logger was probably already initialized, no worries.", e)},
     }
 }
 
@@ -203,13 +207,18 @@ pub async fn resolve_environment_inputs(ctx: &NovopsContext, inputs: NovopsEnvir
 
 }
 
-pub async fn export_outputs(outputs: &NovopsOutputs) -> Result<(), anyhow::Error> {
-    
+/**
+ * Export output variables and files
+ * Variables are either shown as stdout or written to disk
+ * Files are always written to disk
+ */
+pub async fn export_outputs(args: &NovopsArgs, outputs: &NovopsOutputs) -> Result<(), anyhow::Error> {
+
     let foutputs: Vec<FileOutput> = outputs.files.clone().into_iter().map(|(_, f)| f).collect();
     export_file_outputs(&foutputs)?;
 
     let voutputs: Vec<VariableOutput> = outputs.variables.clone().into_iter().map(|(_, v)| v).collect();
-    export_variable_outputs(&voutputs, &outputs.context.workdir)?;
+    export_variable_outputs(&args.format, &args.symlink, &voutputs, &outputs.context.workdir)?;
 
     Ok(())
 }
@@ -326,7 +335,7 @@ fn prompt_for_environment(config_file_data: &NovopsConfigFile) -> Result<String,
     };
     
     // use println, we want to prompt user not log something
-    println!("{prompt_msg}");
+    eprintln!("{prompt_msg}");
     
     let mut read_env = String::new();
     std::io::stdin().read_line(&mut read_env)
@@ -437,35 +446,85 @@ fn export_file_outputs(files: &Vec<FileOutput>) -> Result<(), anyhow::Error>{
  *  export VAR=value
  *  export FOO=bar
  * '  
+ * 
  */
-fn export_variable_outputs(vars: &Vec<VariableOutput>, working_dir: &PathBuf) -> Result<PathBuf, anyhow::Error>{
+fn export_variable_outputs(format: &str, symlink: &Option<String>, vars: &Vec<VariableOutput>, working_dir: &PathBuf) -> Result<(), anyhow::Error>{
 
-    // build a string such as
-    //  '
-    //   export VAR=value
-    //   export FOO=bar
-    //  '
-    // which can be exported into a shell using source
-    let mut exportable_vars = String::new();
-    for v in vars{
-        // use single quotes to avoid interpolation
-        // if single quote "'" are in password, replace them by ` '"'"' ` 
-        // which will cause bash to interpret them properly
-        // first ' ends initial quoation, then wrap our quote with "'" and start a new quotation with '
-        // for example password ` abc'def ` will become ` export pass='abc'"'"'def' `
-        let safe_val = &v.value.replace("'", "'\"'\"'");
-        let s = format!("export {:}='{:}'\n", &v.name, safe_val);
-        exportable_vars.push_str(&s);
+    let safe_vars = prepare_variable_outputs(vars);
+    let vars_string = format_variable_outputs(format, &safe_vars)?;
+    
+    // If symlink option provided, create symlink
+    // otherwise show variables in stdout
+    match symlink {
+        Some(lnk_str) => {
+            let workdir_var_file = working_dir.join("vars");
+            info!("Writing variable file in working directory at {:?}", &workdir_var_file);
+
+            fs::write(&workdir_var_file, vars_string)
+                .with_context(|| format!("Error writing file output at {:?}", &workdir_var_file))?;
+                    
+            let lnk = PathBuf::from(&lnk_str);
+            create_symlink(&lnk, &workdir_var_file)
+                .with_context(|| format!("Couldn't create symlink {:}", lnk_str))?
+        },
+        None => {
+            println!("{:}", vars_string)
+        }
     }
 
-    let var_file = working_dir.join("vars");
-    
-    info!("Writing var at {:?}", &var_file);
+    return Ok(())    
+}
 
-    fs::write(&var_file, exportable_vars)
-        .with_context(|| format!("Error writing file output at {:?}", &var_file))?;
+/**
+ * make sure our variables can be exported and return safe VariableOutput values 
+ * use single quotes to avoid interpolation
+ * if single quote "'" are in password, replace them by ` '"'"' ` 
+ * which will cause bash to interpret them properly
+ * first ' ends initial quoation, then wrap our quote with "'" and start a new quotation with '
+ * for example password ` abc'def ` will become ` export pass='abc'"'"'def' `
+ */
+pub fn prepare_variable_outputs(vars: &Vec<VariableOutput>) ->  Vec<VariableOutput> {
+    let mut safe_vars : Vec<VariableOutput> = Vec::new();
+    for v in vars{
+        let safe_val = v.value.replace("'", "'\"'\"'");
+        safe_vars.push(VariableOutput { name: v.name.clone(), value: safe_val })
+    }
 
-    return Ok(var_file);
+    return safe_vars;
+}
+
+/**
+ * Transform VariableOutputs to string according to given format 
+ */
+pub fn format_variable_outputs(format: &str, safe_vars: &Vec<VariableOutput>) -> Result<String, anyhow::Error> {
+    let mut vars_string = String::new();
+
+    if format == FORMAT_DOTENV_EXPORT {
+        // build a string such as
+        //  '
+        //   export VAR="value"
+        //   export FOO="bar"
+        //  '
+        for v in safe_vars{
+            let s = format!("export {:}='{:}'\n", &v.name, &v.value);
+            vars_string.push_str(&s);
+        }
+    } else if format == FORMAT_DOTENV_PLAIN {
+        // build a string such as
+        //  '
+        //   VAR="value"
+        //   FOO="bar"
+        //  '
+        for v in safe_vars{
+            let s = format!("{:}='{:}'\n", &v.name, &v.value);
+            vars_string.push_str(&s);
+        }
+    } else {
+        return Err(anyhow::format_err!("Unknown format {:}. Available formats: {:?}", format, FORMAT_ALL))
+    }
+
+    return Ok(vars_string);
+
 }
 
 fn create_symlink(lnk: &PathBuf, target: &PathBuf) -> Result<(), anyhow::Error> {

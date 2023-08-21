@@ -28,6 +28,7 @@ mod tests {
         let args = NovopsArgs {
             config: String::from(CONFIG_EMPTY),
             env: Some(String::from("dev")),
+            format: String::from("dotenv-export"),
             working_directory: Some(workdir.clone().into_os_string().into_string().unwrap()),
             symlink: None,
             dry_run: None
@@ -82,8 +83,9 @@ mod tests {
         load_environment(NovopsArgs { 
             config: String::from(CONFIG_STANDALONE),
             env: Some(String::from("dev")), 
+            format: String::from("dotenv-export"),
             working_directory: Some(workdir.clone().into_os_string().into_string().unwrap()), 
-            symlink: None,
+            symlink: Some(String::from(".envrc")),
             dry_run: None
         }).await?;   
 
@@ -131,6 +133,7 @@ mod tests {
         load_environment(NovopsArgs { 
             config: String::from(CONFIG_STANDALONE),
             env: Some(String::from("dev")), 
+            format: String::from("dotenv-export"),
             working_directory: Some(workdir.clone().into_os_string().into_string().unwrap()), 
             symlink: Some(expect_symlink_at.clone().into_os_string().into_string().unwrap()),
             dry_run: None
@@ -148,7 +151,8 @@ mod tests {
         let workdir_override = clean_and_setup_test_dir("test_symlink_flag_override")?;
         load_environment(NovopsArgs { 
             config: String::from(CONFIG_STANDALONE),
-            env: Some(String::from("staging")), 
+            env: Some(String::from("staging")),
+            format: String::from("dotenv-export"), 
             working_directory: Some(workdir_override.clone().into_os_string().into_string().unwrap()), 
             symlink: Some(expect_symlink_at.clone().into_os_string().into_string().unwrap()),
             dry_run: None
@@ -177,6 +181,7 @@ mod tests {
         let result = load_environment(NovopsArgs { 
             config: String::from(CONFIG_STANDALONE),
             env: Some(String::from("dev")), 
+            format: String::from("dotenv-export"),
             working_directory: Some(workdir.clone().into_os_string().into_string().unwrap()), 
             symlink: Some(symlink_path.clone().into_os_string().into_string().unwrap()),
             dry_run: None
