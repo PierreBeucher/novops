@@ -59,7 +59,7 @@ jobs:
             novops-build/novops
 
   load_novops:
-    name: run Novops load on Github action
+    name: run Novops commands
     runs-on: ubuntu-latest
     needs: docker_build
     steps:
@@ -70,7 +70,7 @@ jobs:
         with:
           name: novops-binary
 
-      - name: load novops
+      - name: novops load
         run: |
           chmod +x ./novops
           ./novops load -c tests/.novops.plain-strings.yml -s .envrc -e dev 
@@ -78,3 +78,7 @@ jobs:
       
       - name: check novops loaded values
         run: env | grep MY_APP_HOST
+
+      - name: novops run and check var
+        run: |
+          ./novops run -c tests/.novops.plain-strings.yml -e dev -- sh -c "env | grep DOG_PATH"
