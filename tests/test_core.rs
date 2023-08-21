@@ -4,7 +4,7 @@ mod test_utils;
 
 #[cfg(test)]
 mod tests {
-    use novops::{make_context, NovopsArgs, load_environment_write_vars};
+    use novops::{make_context, NovopsLoadArgs, load_environment_write_vars};
     use novops::core::{NovopsContext, NovopsConfig, NovopsConfigFile, NovopsConfigDefault, NovopsEnvironmentInput};
     use std::collections::HashMap;
     use std::path::PathBuf;
@@ -25,12 +25,10 @@ mod tests {
 
         let workdir = clean_and_setup_test_dir("test_load_simple_config")?;
 
-        let args = NovopsArgs {
+        let args = NovopsLoadArgs {
             config: String::from(CONFIG_EMPTY),
             env: Some(String::from("dev")),
-            format: String::from("dotenv-export"),
             working_directory: Some(workdir.clone().into_os_string().into_string().unwrap()),
-            symlink: None,
             dry_run: None
         };
         let result = make_context(&args).await?;
@@ -80,14 +78,15 @@ mod tests {
 
         let workdir = clean_and_setup_test_dir("test_simple_run")?;
 
-        load_environment_write_vars(&NovopsArgs { 
-            config: String::from(CONFIG_STANDALONE),
-            env: Some(String::from("dev")), 
-            format: String::from("dotenv-export"),
-            working_directory: Some(workdir.clone().into_os_string().into_string().unwrap()), 
-            symlink: Some(String::from(".envrc")),
-            dry_run: None
-        }).await?;   
+        load_environment_write_vars(&NovopsLoadArgs { 
+                config: String::from(CONFIG_STANDALONE),
+                env: Some(String::from("dev")), 
+                working_directory: Some(workdir.clone().into_os_string().into_string().unwrap()),
+                dry_run: None
+            },
+            &Some(String::from(".envrc")),
+            &String::from("dotenv-export")
+        ).await?;   
 
         let expected_var_file = PathBuf::from(&workdir).join("vars");
         let expected_var_content = fs::read_to_string(expected_var_file)?;
@@ -130,14 +129,15 @@ mod tests {
         let workdir = clean_and_setup_test_dir("test_symlink_flag")?;
 
         let expect_symlink_at = PathBuf::from(TEST_DIR).join("test-symlink");
-        load_environment_write_vars(&NovopsArgs { 
-            config: String::from(CONFIG_STANDALONE),
-            env: Some(String::from("dev")), 
-            format: String::from("dotenv-export"),
-            working_directory: Some(workdir.clone().into_os_string().into_string().unwrap()), 
-            symlink: Some(expect_symlink_at.clone().into_os_string().into_string().unwrap()),
-            dry_run: None
-        }).await?;
+        load_environment_write_vars(&NovopsLoadArgs { 
+                config: String::from(CONFIG_STANDALONE),
+                env: Some(String::from("dev")),
+                working_directory: Some(workdir.clone().into_os_string().into_string().unwrap()),
+                dry_run: None
+            },
+            &Some(expect_symlink_at.clone().into_os_string().into_string().unwrap()),
+            &String::from("dotenv-export")
+        ).await?;
 
         let symlink_metadata = fs::symlink_metadata(&expect_symlink_at)?;
         assert!(symlink_metadata.is_symlink(), "{:?} does not seem to be a symlink: {:?}", &expect_symlink_at, symlink_metadata);
@@ -149,14 +149,15 @@ mod tests {
         // run again with different symlink dest
         // expect existing symlink to be overriden
         let workdir_override = clean_and_setup_test_dir("test_symlink_flag_override")?;
-        load_environment_write_vars(&NovopsArgs { 
-            config: String::from(CONFIG_STANDALONE),
-            env: Some(String::from("staging")),
-            format: String::from("dotenv-export"), 
-            working_directory: Some(workdir_override.clone().into_os_string().into_string().unwrap()), 
-            symlink: Some(expect_symlink_at.clone().into_os_string().into_string().unwrap()),
-            dry_run: None
-        }).await?;
+        load_environment_write_vars(&NovopsLoadArgs { 
+                config: String::from(CONFIG_STANDALONE),
+                env: Some(String::from("staging")),
+                working_directory: Some(workdir_override.clone().into_os_string().into_string().unwrap()), 
+                dry_run: None
+            },
+            &Some(expect_symlink_at.clone().into_os_string().into_string().unwrap()),
+            &String::from("dotenv-export"),
+        ).await?;
 
         let overriden_symlink_dest = fs::read_link(&expect_symlink_at).unwrap();
         assert_eq!(overriden_symlink_dest, PathBuf::from(&workdir_override).join("vars"), "Symlink destination is not as expected");
@@ -178,14 +179,15 @@ mod tests {
         fs::File::create(&symlink_path)?;
         
         // expect error as we cannot erase existing file
-        let result = load_environment_write_vars(&NovopsArgs { 
-            config: String::from(CONFIG_STANDALONE),
-            env: Some(String::from("dev")), 
-            format: String::from("dotenv-export"),
-            working_directory: Some(workdir.clone().into_os_string().into_string().unwrap()), 
-            symlink: Some(symlink_path.clone().into_os_string().into_string().unwrap()),
-            dry_run: None
-        }).await;
+        let result = load_environment_write_vars(&NovopsLoadArgs { 
+                config: String::from(CONFIG_STANDALONE),
+                env: Some(String::from("dev")), 
+                working_directory: Some(workdir.clone().into_os_string().into_string().unwrap()), 
+                dry_run: None
+            }, 
+            &Some(symlink_path.clone().into_os_string().into_string().unwrap()),
+            &String::from("dotenv-export"),
+        ).await;
 
         result.expect_err("Expected an error when loading with symlink trying to override existing file, got OK.");
 

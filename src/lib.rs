@@ -18,16 +18,12 @@ use std::collections::HashMap;
 use schemars::schema_for;
 
 #[derive(Debug)]
-pub struct NovopsArgs {
+pub struct NovopsLoadArgs {
     pub config: String,
 
     pub env: Option<String>,
 
-    pub format: String,
-
     pub working_directory: Option<String>,
-
-    pub symlink: Option<String>,
 
     pub dry_run: Option<bool>
 
@@ -47,12 +43,12 @@ pub struct NovopsOutputs {
     pub files: HashMap<String, FileOutput>
 }
 
-pub async fn load_environment_write_vars(args: &NovopsArgs) -> Result<(), anyhow::Error> {
+pub async fn load_environment_write_vars(args: &NovopsLoadArgs, symlink: &Option<String>, format: &str) -> Result<(), anyhow::Error> {
 
     let outputs = load_environment_no_write_vars(&args).await?;
 
     let voutputs: Vec<VariableOutput> = outputs.variables.clone().into_iter().map(|(_, v)| v).collect();
-    export_variable_outputs(&args.format, &args.symlink, &voutputs, &outputs.context.workdir)?;
+    export_variable_outputs(format, symlink, &voutputs, &outputs.context.workdir)?;
 
     info!("Novops environment loaded ! Export variables with:");
     info!("  source {:?}", &outputs.context.env_var_filepath);
@@ -60,7 +56,7 @@ pub async fn load_environment_write_vars(args: &NovopsArgs) -> Result<(), anyhow
     Ok(())
 }
 
-pub async fn load_environment_no_write_vars(args: &NovopsArgs) -> Result<NovopsOutputs, anyhow::Error> {
+pub async fn load_environment_no_write_vars(args: &NovopsLoadArgs) -> Result<NovopsOutputs, anyhow::Error> {
 
     init_logger();
 
@@ -75,7 +71,7 @@ pub async fn load_environment_no_write_vars(args: &NovopsArgs) -> Result<NovopsO
 
 }
 
-pub async fn load_context_and_resolve(args: &NovopsArgs) -> Result<NovopsOutputs, anyhow::Error> {
+pub async fn load_context_and_resolve(args: &NovopsLoadArgs) -> Result<NovopsOutputs, anyhow::Error> {
 
     debug!("Loading context for {:?}", &args);
 
@@ -113,7 +109,7 @@ pub fn init_logger() {
 /**
  * Generate Novops context from arguments, env vars and Novops config
  */
-pub async fn make_context(args: &NovopsArgs) -> Result<NovopsContext, anyhow::Error> {
+pub async fn make_context(args: &NovopsLoadArgs) -> Result<NovopsContext, anyhow::Error> {
     // Read CLI args and load config
     let config = read_config_file(&args.config)
         .with_context(|| format!("Error reading config file '{:}'", &args.config))?;
@@ -245,7 +241,7 @@ fn read_environment_name(config: &NovopsConfigFile, flag: &Option<String>) -> Re
  * 
  * Returns the absolute path to working directory
  */
-fn prepare_working_directory(args: &NovopsArgs, app_name: &String, env_name: &String) -> Result<PathBuf, anyhow::Error> {
+fn prepare_working_directory(args: &NovopsLoadArgs, app_name: &String, env_name: &String) -> Result<PathBuf, anyhow::Error> {
     
     let workdir = match &args.working_directory {
         Some(wd) => PathBuf::from(wd),

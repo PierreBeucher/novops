@@ -125,18 +125,20 @@ async fn main() -> Result<(), anyhow::Error> {
 
     if let Some(load_subc) = m.subcommand_matches("load") {
 
-        let args = novops::NovopsArgs{ 
+        let symlink = load_subc.get_one::<String>("symlink").map(String::from);
+        
+        let env_format = load_subc.get_one::<String>("format")
+            .ok_or(anyhow::anyhow!("Format is None. This is probably a bug as CLI defines default value."))?.clone();
+
+        let args = novops::NovopsLoadArgs{ 
             config: load_subc.get_one::<String>("config")
                 .ok_or(anyhow::anyhow!("Config is None. This is probably a bug as CLI defines default value."))?.clone(),
             env: load_subc.get_one::<String>("environment").map(String::from),
-            format: load_subc.get_one::<String>("format")
-                .ok_or(anyhow::anyhow!("Format is None. This is probably a bug as CLI defines default value."))?.clone(),
             working_directory: load_subc.get_one::<String>("working_dir").map(String::from),
-            symlink: load_subc.get_one::<String>("symlink").map(String::from),
             dry_run: load_subc.get_one::<bool>("dry_run").map(|e| *e)
         };
 
-        novops::load_environment_write_vars(&args).await
+        novops::load_environment_write_vars(&args, &symlink, &env_format).await
             .with_context(|| "Failed to load environment. Set environment variable RUST_LOG=[trace|debug|info|warn] or RUST_BACKTRACE=1 for more verbosity.")?;
 
         exit(0)
@@ -144,13 +146,11 @@ async fn main() -> Result<(), anyhow::Error> {
 
     if let Some(load_subc) = m.subcommand_matches("run") {
         
-        let args = novops::NovopsArgs{ 
+        let args = novops::NovopsLoadArgs{ 
             config: load_subc.get_one::<String>("config")
                 .ok_or(anyhow::anyhow!("Config is None. This is probably a bug as CLI defines default value."))?.clone(),
             env: load_subc.get_one::<String>("environment").map(String::from),
-            format: String::from("TODOREMOVE"),
             working_directory: load_subc.get_one::<String>("working_dir").map(String::from),
-            symlink: Some(String::from("TODOREMOVE")),
             dry_run: load_subc.get_one::<bool>("dry_run").map(|e| *e)
         };
 
