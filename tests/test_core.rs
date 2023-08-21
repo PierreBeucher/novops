@@ -4,7 +4,7 @@ mod test_utils;
 
 #[cfg(test)]
 mod tests {
-    use novops::{make_context, NovopsArgs, load_environment};
+    use novops::{make_context, NovopsArgs, load_environment_write_vars};
     use novops::core::{NovopsContext, NovopsConfig, NovopsConfigFile, NovopsConfigDefault, NovopsEnvironmentInput};
     use std::collections::HashMap;
     use std::path::PathBuf;
@@ -80,7 +80,7 @@ mod tests {
 
         let workdir = clean_and_setup_test_dir("test_simple_run")?;
 
-        load_environment(NovopsArgs { 
+        load_environment_write_vars(&NovopsArgs { 
             config: String::from(CONFIG_STANDALONE),
             env: Some(String::from("dev")), 
             format: String::from("dotenv-export"),
@@ -130,7 +130,7 @@ mod tests {
         let workdir = clean_and_setup_test_dir("test_symlink_flag")?;
 
         let expect_symlink_at = PathBuf::from(TEST_DIR).join("test-symlink");
-        load_environment(NovopsArgs { 
+        load_environment_write_vars(&NovopsArgs { 
             config: String::from(CONFIG_STANDALONE),
             env: Some(String::from("dev")), 
             format: String::from("dotenv-export"),
@@ -149,7 +149,7 @@ mod tests {
         // run again with different symlink dest
         // expect existing symlink to be overriden
         let workdir_override = clean_and_setup_test_dir("test_symlink_flag_override")?;
-        load_environment(NovopsArgs { 
+        load_environment_write_vars(&NovopsArgs { 
             config: String::from(CONFIG_STANDALONE),
             env: Some(String::from("staging")),
             format: String::from("dotenv-export"), 
@@ -178,7 +178,7 @@ mod tests {
         fs::File::create(&symlink_path)?;
         
         // expect error as we cannot erase existing file
-        let result = load_environment(NovopsArgs { 
+        let result = load_environment_write_vars(&NovopsArgs { 
             config: String::from(CONFIG_STANDALONE),
             env: Some(String::from("dev")), 
             format: String::from("dotenv-export"),

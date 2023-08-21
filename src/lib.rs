@@ -47,24 +47,32 @@ pub struct NovopsOutputs {
     pub files: HashMap<String, FileOutput>
 }
 
-// pub async fn parse_arg_and_run() -> Result<(), anyhow::Error> {
-//     let args = NovopsArgs::parse();
-//     run(args).await
-// }
+pub async fn load_environment_write_vars(args: &NovopsArgs) -> Result<(), anyhow::Error> {
 
-pub async fn load_environment(args: NovopsArgs) -> Result<(), anyhow::Error> {
+    let outputs = load_environment_no_write_vars(&args).await?;
+
+    let voutputs: Vec<VariableOutput> = outputs.variables.clone().into_iter().map(|(_, v)| v).collect();
+    export_variable_outputs(&args.format, &args.symlink, &voutputs, &outputs.context.workdir)?;
+
+    info!("Novops environment loaded ! Export variables with:");
+    info!("  source {:?}", &outputs.context.env_var_filepath);
+
+    Ok(())
+}
+
+pub async fn load_environment_no_write_vars(args: &NovopsArgs) -> Result<NovopsOutputs, anyhow::Error> {
+
     init_logger();
 
     // Read config from args and resolve all inputs to their concrete outputs
     let outputs = load_context_and_resolve(&args).await?;
 
     // Export output to user as per input (stdout or file)
-    export_outputs(&args, &outputs).await?;
-    
-    info!("Novops environment loaded ! Export variables with:");
-    info!("  source {:?}", &outputs.context.env_var_filepath);
+    let foutputs: Vec<FileOutput> = outputs.files.clone().into_iter().map(|(_, f)| f).collect();
+    export_file_outputs(&foutputs)?;
 
-    Ok(())
+    Ok(outputs)
+
 }
 
 pub async fn load_context_and_resolve(args: &NovopsArgs) -> Result<NovopsOutputs, anyhow::Error> {
@@ -205,22 +213,6 @@ pub async fn resolve_environment_inputs(ctx: &NovopsContext, inputs: NovopsEnvir
 
     Ok((variable_outputs, file_outputs))
 
-}
-
-/**
- * Export output variables and files
- * Variables are either shown as stdout or written to disk
- * Files are always written to disk
- */
-pub async fn export_outputs(args: &NovopsArgs, outputs: &NovopsOutputs) -> Result<(), anyhow::Error> {
-
-    let foutputs: Vec<FileOutput> = outputs.files.clone().into_iter().map(|(_, f)| f).collect();
-    export_file_outputs(&foutputs)?;
-
-    let voutputs: Vec<VariableOutput> = outputs.variables.clone().into_iter().map(|(_, v)| v).collect();
-    export_variable_outputs(&args.format, &args.symlink, &voutputs, &outputs.context.workdir)?;
-
-    Ok(())
 }
 
 fn read_config_file(config_path: &str) -> Result<NovopsConfigFile, anyhow::Error> {
