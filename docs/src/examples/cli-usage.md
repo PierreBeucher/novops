@@ -1,12 +1,11 @@
 # Advanced CLI usage
 
-- [Advanced CLI usage](#advanced-cli-usage)
-  - [Override default config path](#override-default-config-path)
-  - [Run a sub-process](#run-a-sub-process)
-  - [Specify environment without prompt](#specify-environment-without-prompt)
-  - [Writing .env to secure directory](#writing-env-to-secure-directory)
-  - [Change working directory](#change-working-directory)
-  - [Dry-run](#dry-run)
+- [Override default config path](#override-default-config-path)
+- [Run a sub-process](#run-a-sub-process)
+- [Specify environment without prompt](#specify-environment-without-prompt)
+- [Writing .env to secure directory](#writing-env-to-secure-directory)
+- [Change working directory](#change-working-directory)
+- [Dry-run](#dry-run)
 
 ## Override default config path
 

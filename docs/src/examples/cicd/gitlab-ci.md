@@ -4,7 +4,7 @@ GitLab uses YAMl to define jobs. You can either:
 
 ## Use a Docker image packaging Novops
 
-See [Docker integration](docker.md) to build a Docker image packaging Novops, then use it in on CI such as:
+See [Docker examples](../docker.md) to build a container image packaging Novops, then use it in on CI such as:
 
 ```yaml
 job-with-novops:
@@ -13,11 +13,11 @@ job-with-novops:
   script:
     # Load config
     # Specify environment to avoid input prompt
-    - novops load -s .envrc -e $CI_ENVIRONMENT_NAME && source .envrc
+    - source <(novops load -e dev)
     
     # Environment is now loaded!
     # Run others commands...
-    - pulumi up -yrf
+    - terraform ... 
 ```
 
 ## Install novops on-the-fly
@@ -28,7 +28,7 @@ You can download `novops` binary on the fly:
 
 ```yaml
 job-with-novops:
-  image: some-image
+  image: hashicorp/terraform:light
   stage: test
   script:
     # Download novops
@@ -39,11 +39,11 @@ job-with-novops:
     
     # Load config
     # Specify environment to avoid input prompt
-    - novops load -s .envrc -e $CI_ENVIRONMENT_NAME && source .envrc
+    - source <(novops load -e dev)
     
     # Environment is now loaded!
     # Run others commands...
-    - pulumi up -yrf
+    - terraform ... 
 ```
 
 Alternatively, set a specific version:
@@ -59,8 +59,6 @@ job-with-novops:
       curl -L "https://github.com/PierreBeucher/novops/releases/download/v${NOVOPS_VERSION}/novops-X64-Linux.zip" -o novops.zip
       unzip novops.zip
       mv novops /usr/local/bin/novops
-    
-    # ...
 ```
 
 ## Authenticating to external provider on CI

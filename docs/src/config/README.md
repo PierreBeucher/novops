@@ -1,9 +1,18 @@
-# Load secrets and configs
+# Configuration and modules
+
+Everything you can use within `.novops.yml`
 
 - [`.novops.yml` configuration schema](config.md)
 - [Files and Variables](files-variables.md)
 - [Hashicorp Vault](hashicorp-vault.md)
+  - Key Value v1/v2
+  - AWS temporary credentials
 - [AWS](aws.md)
+  - Secrets Manager
+  - STS Assume Role for temporary IAM credentials
+  - SSM Parameter Store
 - [Google Cloud](google-cloud.md)
-- [Microsoft Azure](microsoft-azure.md)
+ - Secret Manager
+- [Azure](microsoft-azure.md)
+  - Key Vault
 - [BitWarden](bitwarden.md)

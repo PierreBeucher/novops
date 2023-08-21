@@ -3,7 +3,7 @@
 
 ## Use a Docker image packaging Novops
 
-See [Docker integration](docker.md) to build a Docker image packaging Novops, then use it in Jenkinsfile such as:
+See [Docker integration](../docker.md) to build a Docker image packaging Novops, then use it in Jenkinsfile such as:
 
 ```Jenkinsfile
     agent {
@@ -14,7 +14,7 @@ See [Docker integration](docker.md) to build a Docker image packaging Novops, th
 
     stage('Novops') {
         sh '''
-            novops load -s .envrc && source .envrc
+            source <(novops load -e dev)
         '''
     }
 ```
@@ -32,7 +32,7 @@ Setup a step such as:
             unzip novops.zip
             sudo mv novops /usr/local/bin/novops
 
-            novops load -s .envrc && source .envrc
+            source <(novops load -e dev)
         '''
     }
 ```
@@ -50,7 +50,7 @@ Alternatively, setup a specific version:
             unzip novops.zip
             mv novops /usr/local/bin/novops
 
-            novops load -s .envrc && source .envrc
+            source <(novops load -e dev)
         '''
     }
 ```

@@ -11,3 +11,5 @@ create-missing = false
 [output.html]
 git-repository-url = "https://github.com/PierreBeucher/novops"
 edit-url-template = "https://github.com/PierreBeucher/novops/edit/main/docs/{path}"
+
+# [output.linkcheck]

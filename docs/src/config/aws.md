@@ -1,36 +1,33 @@
 # AWS
 
-- [AWS](#aws)
-  - [Authentication & Configuration](#authentication--configuration)
-  - [STS Assume Role](#sts-assume-role)
-  - [Systems Manager (SSM) Parameter Store](#systems-manager-ssm-parameter-store)
-  - [Secrets Manager](#secrets-manager)
+- [Authentication & Configuration](#authentication--configuration)
+- [STS Assume Role](#sts-assume-role)
+- [Systems Manager (SSM) Parameter Store](#systems-manager-ssm-parameter-store)
+- [Secrets Manager](#secrets-manager)
 
 ## Authentication & Configuration
 
-See [AWS Examples](../examples/aws-role.md) for authentication methods you can use CI or for local development environments.
+Authenticating with `aws` CLI is enough, Novops will use locally available credentials. Specify your AWS credentials as usual (see [AWS Programmatic access](https://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-types.html#access-keys-and-secret-access-keys) or [Credentials quickstart](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html#cli-configure-quickstart-creds)):
 
-Specify your AWS credentials as usual (see [AWS Programmatic access](https://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-types.html#access-keys-and-secret-access-keys) or [Credentials quickstart](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html#cli-configure-quickstart-creds)):
+Credentials are loaded in order of priority:
 
 - Environment variables `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, etc.
 - Config file `.aws/config` and `.aws/credentials`
 - Use IAM Role attached from ECS or EC2 instance
 
-You can also set global AWS configuration to override certains configs (such as AWS endpoint), for example:
+You can also use `config` root element override certains configs (such as AWS endpoint), for example:
 
 ```yaml
-environments:
-  # ...
-
-aws:
-  endpoint: "http://localhost:4566/" # Use LocalStack endpoint
+config:
+  aws:
+    endpoint: "http://localhost:4566/" # Use LocalStack endpoint
 ```
 
 ## STS Assume Role
 
-Generate temporary [IAM Role credentials with AssumeRole](https://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRole.html):
+Generate temporary [IAM Role credentials with STS AssumeRole](https://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRole.html):
 
-Note that `aws` is an `environment` key rather than a `files` or `variables`. That's because it will output multiple variables.
+Note that `aws` is an `environment` sub-key, not a `files` or `variables` sub-key as it will output multiple variables `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_SESSION_TOKEN`
 
 ```yaml
 environments:

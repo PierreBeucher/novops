@@ -20,7 +20,7 @@ fn build_cli() -> Command {
         .default_value(".novops.yml");
         
     let arg_environment = Arg::new("environment")
-        .help("Environment to load. Prompt is not specified.")
+        .help("Environment to load. Prompt if not specified.")
         .long("env")
         .short('e')
         .value_name("ENVNAME")

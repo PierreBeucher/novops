@@ -1,5 +1,10 @@
 # Installation
 
+- [Linux](#linux)
+  - [Updating](#updating)
+- [Nix](#nix)
+- [From source](#from-source)
+
 ## Linux
 
 Novops is distributed as a standalone static binary. To install, run:
@@ -21,14 +26,20 @@ sudo mv novops /usr/local/bin/novops
 
 Novops is currently only available for x86-64 systems. More will come soon!
 
+### Updating
+
+To update Novops, simply replace binary with a new one.
+
 ## Nix
+
+Use a `flake.nix` such as:
 
 ```
 {
   description = "Example Flake using Novops";
 
   inputs = {
-    novops.url = "github:novadiscovery/novops"; # Add novops input
+    novops.url = "github:PierreBeucher/novops"; # Add novops input
     flake-utils.url = "github:numtide/flake-utils";
   };
 
