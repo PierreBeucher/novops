@@ -1,5 +1,6 @@
 # Examples and Use Cases
 
+- [CLI advanced usage](cli-usage.md)
 - [Ansible setup](ansible.md)
 - [Terraform setup](terraform.md)
 - [Pulumi setup](pulumi.md)
