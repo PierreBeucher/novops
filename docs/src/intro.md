@@ -1,30 +1,34 @@
 # Introduction
 
-`novops` is a platform agnostic secret and config manager for local development and CI.
+Novops is a platform-agnostic secret manager for local development and CI.
 
-- [Introduction](#introduction)
-  - [Features](#features)
-  - [Install & Get Started](#install--get-started)
-  - [Why Novops?](#why-novops)
-    - [A story you've probably heard before...](#a-story-youve-probably-heard-before)
-    - [Use Novops to reduce CI/CD drift and load secrets securely](#use-novops-to-reduce-cicd-drift-and-load-secrets-securely)
-  - [How is Novops different than Docker, Nix an alike?](#how-is-novops-different-than-docker-nix-an-alike)
+- [Features](#features)
+- [Getting Started](#getting-started)
+- [🔐 Security](#-security)
+- [Why Novops?](#why-novops)
+  - [A story you've probably heard before...](#a-story-youve-probably-heard-before)
+  - [Use Novops to reduce CI/CD drift and load secrets securely](#use-novops-to-reduce-cicd-drift-and-load-secrets-securely)
+- [How is Novops different than Docker, Nix an alike?](#how-is-novops-different-than-docker-nix-an-alike)
+
 
 ## Features
 
 ![novops-features](assets/novops-features.jpg)
 
-- Provide a single source of truth for secrets and configurations, usable by developers or CI/CD
-- Securely load secrets and configs as files or environment variables
-- Integrate with various secret and config providers: Hashicorp Vault, AWS, Google Cloud, Azure...
-- Easily integrated within most shells and CI systems: Gitlab, GitHub, Jenkins...
-- Implement development and CI workflow for DevOps tooling: Terraform, Pulumi, Ansible...
-- Manage multi-environment (dev, preprod, prod...)
-- Quick and easy installation with fully static binary
+- Securely load secrets and generate temporary credentials directly in memory as environment variables or temporary files
+- Fetch secrets at their source. No more syncing secrets between local tool, CI/CD, and Cloud secret service
+- Fetch secrets from anywhere: Hashicorp Vault, AWS, Google Cloud, Azure...
+- Reproduce the same workflow locally and on CI using shell, Docker, Gitlab, GitHub and more
+- Manage multi-environments setup
+- Easy installation with fully static binary or Nix 
 
-## Install & Get Started
+## Getting Started
 
-See [Installation](install.md) and [Go Get Started](getting-started.md) for next steps!
+[Go Get Started !](getting-started.md)
+
+## 🔐 Security
+
+Novops loads secrets in memory and does not write anything to disk. Secrets are loaded temporarily and kept only for as long as they are needed. See [Novops Security Model](./security.md) for details.
 
 ## Why Novops?
 
@@ -38,7 +42,7 @@ Consider a typical Infra as Code project:
 Secrets are managed by either:
 - A secret / config manager like Hashicorp Vault or AWS Secret Manager
 - Vendor-specific CI/CD secret storage provided as environment variables or files
-- Secrets stored locally on developer machines, often retrieved from one of the above
+- Secrets stored locally on developer machines, often synced manually from one of the above
 
 ![novops-before](assets/novops-before.jpg)
 

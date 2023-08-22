@@ -6,9 +6,15 @@ Every command below must be run under [Nix Flake development shell](https://nixo
 nix develop
 ```
 
+- [Build](#build)
+- [Run test](#run-test)
+- [Update JSON Schema](#update-json-schema)
+- [Serve documentation locally](#serve-documentation-locally)
+- [Releasing](#releasing)
+
 ## Build
 
-Novops is built with Docker BuildKit. Built binary is fully static. See [Dockerfile](../Dockerfile).
+Novops is built with Docker BuildKit. Built binary is fully static. See [Dockerfile](https://github.com/PierreBeucher/novops/blob/main/Dockerfile).
 
 ```sh
 # Result in ./build/novops

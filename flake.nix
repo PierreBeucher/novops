@@ -44,6 +44,7 @@
                 pkgs.openssl.dev
                 pkgs.pkg-config
                 pkgs.mdbook
+                pkgs.mdbook-linkcheck
                 pkgs.google-cloud-sdk
                 pkgs.bitwarden-cli
                 pkgs.json-schema-for-humans

@@ -2,7 +2,7 @@
 
 `files` and `variables` are primay way to configure Novops
 - Each element in `variables` will generate a single environment variable loaded from `value`
-- Each element in `files` will generate a [secured temporary file](../advanced/security.md) loaded from `content`
+- Each element in `files` will generate a [secured temporary file](../security.md) loaded from `content`
 
 ```yaml
 environments:

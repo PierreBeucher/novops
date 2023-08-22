@@ -1,5 +1,8 @@
 # Internal architecture: Inputs, Outputs and resolving
 
+- [Modules, Inputs, resolving & Outputs](#modules-inputs-resolving--outputs)
+- [Novops config schema and internal structure](#novops-config-schema-and-internal-structure)
+
 Novops relies around the following concepts:
 
 ## Modules, Inputs, resolving & Outputs 
@@ -82,7 +85,7 @@ impl ResolveTo<String> for HashiVaultKeyValueV2 {
 }
 ```
 
-See [`src/core.rs`](src/core.rs) for details.
+See [`src/core.rs`](https://github.com/PierreBeucher/novops/blob/main/src/core.rs) for details.
 
 ## Novops config schema and internal structure
 

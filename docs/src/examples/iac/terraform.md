@@ -1,23 +1,23 @@
 # Terraform
 
-A typical Terraform workflow requires developers and CI to provide per environment:
+Leverage [Terraform built-in environment variables](https://developer.hashicorp.com/terraform/cli/config/environment-variables) to setup your environments, e.g:
 
-- Terraform workspaces
-- Terraform variable files & configuration
+- `TF_WORKSPACE` - Set workspace per environment
+- `TF_VAR_name` - Set Terraform variable `name` via environment variables
+- `TF_CLI_ARGS` and `TF_CLI_ARGS_name` - Specify additional CLI arguments
 
-Leverage Novops and [Terraform built-in environment variables](https://developer.hashicorp.com/terraform/cli/config/environment-variables) to define per-environment configuration. 
-
-Your workflow will then look like
+Your workflow will then look like:
 
 ```sh
-novops load -s .envrc && source .envrc
-# Select environment: dev, prod (default: dev)
+source <(novops load)
 
 # No need to set workspace or custom variables 
 # They've all been loaded as environment variables and files
 terraform plan
 terraform apply
 ```
+
+Use a `.novops.yml` such as:
 
 ```yaml
 environments:

@@ -18,7 +18,7 @@ jobs:
       
       - name: run Novops
         run: |
-          novops load -s .envrc -e dev 
+          novops load -s .envrc -e dev
           cat .envrc >> "$GITHUB_ENV"
       
       - name: a step with loaded novops environment
@@ -39,11 +39,4 @@ Alternatively, set a specific version:
     sudo mv novops /usr/local/bin/novops
 ```
 
-_Note: we plan to provide GitHub Action so that you can use Novops with something like:_
-
-```yaml
-- name: Novops load
-  uses: novadiscovery/actions-novops@v1
-  with:
-    novops-version: '0.6.0'
-```
+_Note: roadmap includes a GitHub action to ease setup_

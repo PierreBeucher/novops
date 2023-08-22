@@ -1,8 +1,15 @@
 # Examples and Use Cases
 
-- [CLI advanced usage](cli-usage.md)
-- [Ansible setup](ansible.md)
-- [Terraform setup](terraform.md)
-- [Pulumi setup](pulumi.md)
-- [Authenticate with Hashicorp Vault before loading Novops](hvault-auth.md)
-- [Impersonate IAM Role before loading Novops](aws-role.md)
+- [shell (sh, bash, zsh...)](shell.md)
+- [Docker & Podman](docker.md)
+- [Nix](nix.md)
+
+CI/CD:
+- [GitLab CI](cicd/gitlab-ci.md) 
+- [GitHub Action](cicd/github-action.md)
+- [Jenkins](cicd/jenkins.md)
+
+Infrastructure as Code:
+- [Ansible](iac/ansible.md)
+- [Terraform](iac/terraform.md)
+- [Pulumi](iac/pulumi.md)

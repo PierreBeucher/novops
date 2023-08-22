@@ -6,22 +6,18 @@ Add Novops as input:
 
 ```nix
   inputs = {
-    # ...
-    novops.url = "github:novadiscovery/novops";
-    # ...
+    novops.url = "github:PierreBeucher/novops";
   };
 ```
 
 And then include Novops package wherever needed.
 
-Example minimal Flake:
+Example `flake.nix`:
 
 ```nix
 {
-    description = "Minimal example Flake using Novops";
-
     inputs = {
-        novops.url = "github:novadiscovery/novops"; 
+        novops.url = "github:PierreBeucher/novops"; 
     };
 
     outputs = { self, nixpkgs, novops }: {
@@ -31,7 +27,7 @@ Example minimal Flake:
             ];
             shellHook = ''
                 # Run novops on shell startup
-                novops load -s .envrc && source .envrc
+                source <(novops load)
             '';
         };
     };
@@ -45,7 +41,7 @@ A more complete Flake using [`flake-utils`](https://github.com/numtide/flake-uti
   description = "Example Flake using Novops";
 
   inputs = {
-    novops.url = "github:novadiscovery/novops"; # Add novops input
+    novops.url = "github:PierreBeucher/novops"; # Add novops input
     flake-utils.url = "github:numtide/flake-utils";
   };
 
@@ -62,7 +58,7 @@ A more complete Flake using [`flake-utils`](https://github.com/numtide/flake-uti
             ];
             shellHook = ''
               # Run novops on shell startup
-              novops load -s .envrc && source .envrc
+              source <(novops load)
             '';
           };
         };

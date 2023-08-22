@@ -1,21 +1,24 @@
 # BitWarden
 
-Using BitWarden requires BitWarden CLI `bw` to be installed locally and `BW_SESSION_TOKEN` variable set. 
+## Authentication & Configuration
+
+To use BitWarden module:
+
+- Ensure BitWarden CLI `bw` is available in the same context `novops` runs in
+- Set environment variable `BW_SESSION_TOKEN`
 
 ```yaml
 environments:
   dev:
     files: 
-    - name: ssh-key
-      content:
-        bitwarden:
-          # Name of the entry to load
-          entry: Some SSH Key entry
-          # Field to read from BitWarden objects. Maps directly to JSON field from 'bw get item' command
-          # See below for details
-          field: notes
-
-
+      - name: ssh-key
+        content:
+          bitwarden:
+            # Name of the entry to load
+            entry: Some SSH Key entry
+            # Field to read from BitWarden objects. Maps directly to JSON field from 'bw get item' command
+            # See below for details
+            field: notes
 ```
 
 Novops will load items using `bw get item` as JSON. `field` must be set to expected field. Separate sub-field with `.`. Examples:

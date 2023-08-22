@@ -2,7 +2,7 @@
     description = "Minimal example Flake using Novops";
 
     inputs = {
-        novops.url = "github:novadiscovery/novops"; 
+        novops.url = "github:PierreBeucher/novops"; 
     };
 
     outputs = { self, nixpkgs, novops }: {
@@ -12,7 +12,7 @@
             ];
             shellHook = ''
                 # Run novops on shell startup
-                novops load -s .envrc && source .envrc
+                source <(novops load)
             '';
         };
     };
