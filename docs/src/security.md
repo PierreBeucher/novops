@@ -1,15 +1,18 @@
 # Novops Security Model
 
-Novops load secrets safely. In short:
-- Secrets are loaded directly in-memory so they are kept only for as long as they are needed
-- Novops does not persist any secret. `.novops.yml` config file does not contain any secret and can be safely versionned with Git or version control tool.
-- Libraries used are carefully chosen and regularly updated.
-
+- [Overview](#overview)
 - [In-memory temporary secrets](#in-memory-temporary-secrets)
   - [Wait... Novops may create files but does not write to disk? 🤔](#wait-novops-may-create-files-but-does-not-write-to-disk-)
   - [With XDG_RUNTIME_DIR](#with-xdg_runtime_dir)
   - [Without XDG_RUNTIME_DIR](#without-xdg_runtime_dir)
 - [External libraries and CVEs](#external-libraries-and-cves)
+
+## Overview
+
+Novops load secrets safely. In short:
+- Secrets are loaded directly in-memory so they are kept only for as long as they are needed
+- Novops does not persist any secret. `.novops.yml` config file does not contain any secret and can be safely versionned with Git or version control tool.
+- Libraries used are carefully chosen and regularly updated.
 
 ## In-memory temporary secrets
 

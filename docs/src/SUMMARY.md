@@ -7,7 +7,7 @@
 
 - [Configuration and Modules](config/README.md)
   - [Configuration](config/config.md)
-    - [Configuration schema](config/schema.md)
+    - [`.novops.yml` schema](config/schema.md)
   - [Variables & Files](config/files-variables.md)
   - [Hashicorp Vault](config/hashicorp-vault.md)
   - [AWS](config/aws.md)

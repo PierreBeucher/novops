@@ -2,6 +2,15 @@
 
 Thanks for your interest in contributing ! Before implementing a module you may want to understand [Novops architecture](../advanced/architecture.md). 
 
+- [Overview](#overview)
+- [1. Input and Output](#1-input-and-output)
+- [2. Implement loading logic with `core::ResolveTo<E>`](#2-implement-loading-logic-with-coreresolvetoe)
+- [3. Integrate module to `core`](#3-integrate-module-to-core)
+- [4. (Optional) Global configuration](#4-optional-global-configuration)
+- [Testing](#testing)
+
+## Overview
+
 A few [modules](https://github.com/PierreBeucher/novops/tree/main/src/modules) already exists from which you can take inspiration. This guide uses Hashicorp Vault Key Value v2 `hvault_kv2` as example. 
 
 You can follow this checklist (I follow and update this checklist myself when adding new modules):
@@ -10,12 +19,6 @@ You can follow this checklist (I follow and update this checklist myself when ad
 2. [ ] Implement loading logic with `core::ResolveTo<E>`
 3. [ ] Integrate module to `core`
 4. [ ] Optionally, define global config for module
-
-- [1. Input and Output](#1-input-and-output)
-- [2. Implement loading logic with `core::ResolveTo<E>`](#2-implement-loading-logic-with-coreresolvetoe)
-- [3. Integrate module to `core`](#3-integrate-module-to-core)
-- [4. (Optional) Global configuration](#4-optional-global-configuration)
-- [Testing](#testing)
 
 ## 1. Input and Output
 

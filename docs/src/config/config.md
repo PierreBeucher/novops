@@ -2,6 +2,8 @@
 
 `novops` uses `.novops.yml` to load secrets. This doc details how this file can be used for various use cases. You can use another config with `novops [load|run] -c PATH`, though this doc will refer to `.novops.yml` for config file.
 
+See [full `.novops.yml` schema](https://pierrebeucher.github.io/novops/config/schema.html) for all available configurations.
+
 ## Configuration: Environments, Modules, Inputs and Outputs
 
 `.novops.yml` defines:
