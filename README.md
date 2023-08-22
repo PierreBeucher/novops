@@ -345,9 +345,10 @@ Feel free to create an issue and [contribute a PR](https://pierrebeucher.github.
 
 ## Contributing
 
-We welcome contributions: bug reports/fixes, modules, proposals... :)
+We welcome contributions: bug reports/fixes, modules, proposals... :) To get started you can check [Novops internal architecture](https://pierrebeucher.github.io/novops/advanced/architecture.html) and:
 
-See [contribution guide](./CONTRIBUTING.md) and [development guide](https://pierrebeucher.github.io/novops/contributing/development.html)
+- [New module implementation guide](https://pierrebeucher.github.io/novops/contributing/add-module.html)
+- [Development guide](https://pierrebeucher.github.io/novops/contributing/development.html)
 
 ## Inspiration and similar tools
 
@@ -355,7 +356,7 @@ See [contribution guide](./CONTRIBUTING.md) and [development guide](https://pier
 - https://github.com/dotenv-org/dotenv-vault
 - https://github.com/tellerops/teller
 - https://github.com/sorah/envchain
-- https://github.com/Infisical/infisical export
+- https://github.com/Infisical/infisical
 - https://github.com/99designs/aws-vault
 - https://github.com/channable/vaultenv
 
