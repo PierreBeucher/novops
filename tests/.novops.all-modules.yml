@@ -1,6 +1,4 @@
 # Show simple example for all modules
-name: test-all
-
 environments:
   dev:
     variables:

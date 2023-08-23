@@ -1,6 +1,4 @@
 # The unique application name
-name: test-app
-
 environments:
   dev:
     variables:

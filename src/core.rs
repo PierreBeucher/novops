@@ -26,10 +26,10 @@ type NovopsEnvironments = HashMap<String, NovopsEnvironmentInput>;
 /// 
 #[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
 pub struct NovopsConfigFile {
-    /// Unique application name.
+    /// Application name. Informational only. 
     /// 
-    /// Loading Novops from distinct files with the same name may have unexpected results
-    pub name: String,
+    /// If not specified, use current directory name
+    pub name: Option<String>,
 
     /// Source of truth defining files and variables loaded by Novops
     /// 

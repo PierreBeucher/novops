@@ -1,6 +1,4 @@
 # Hashicorp Vault Key Value v1
-name: hashivault-kv1
-
 environments:
   dev:
     variables:

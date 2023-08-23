@@ -1,6 +1,4 @@
 # Azure Key Vault
-name: test-azure-keyvault
-
 environments:
   dev:
     variables:

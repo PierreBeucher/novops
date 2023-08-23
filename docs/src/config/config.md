@@ -16,8 +16,6 @@ See [full `.novops.yml` schema](https://pierrebeucher.github.io/novops/config/sc
 Example: environments `dev` and `prod` with inputs `files`, `variables` and `hvault_kv2`. 
 
 ```yaml
-name: some-app
-
 environments:
 
   # Environment name

@@ -43,7 +43,7 @@ mod tests {
                 app_name: String::from("test-empty"),
                 workdir: workdir.clone(),
                 config_file_data: NovopsConfigFile{
-                    name: String::from("test-empty"),
+                    name: Some(String::from("test-empty")),
                     environments: HashMap::from([
                         (String::from("dev"), NovopsEnvironmentInput {
                             variables: None,

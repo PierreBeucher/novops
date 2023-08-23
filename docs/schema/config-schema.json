@@ -4,8 +4,7 @@
   "description": "Main Novops config file",
   "type": "object",
   "required": [
-    "environments",
-    "name"
+    "environments"
   ],
   "properties": {
     "config": {
@@ -27,8 +26,11 @@
       }
     },
     "name": {
-      "description": "Unique application name.\n\nLoading Novops from distinct files with the same name may have unexpected results",
-      "type": "string"
+      "description": "Application name. Informational only.\n\nIf not specified, use current directory name",
+      "type": [
+        "string",
+        "null"
+      ]
     }
   },
   "definitions": {

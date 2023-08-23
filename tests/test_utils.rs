@@ -128,7 +128,7 @@ pub fn create_dummy_context() -> NovopsContext{
     app_name: String::from("test-empty"),
     workdir: PathBuf::from("/tmp"),
     config_file_data: NovopsConfigFile{
-        name: String::from("test-empty"),
+        name: Some(String::from("test-empty")),
         environments: HashMap::new(),
         config: Some(NovopsConfig { 
             default: Some(NovopsConfigDefault {

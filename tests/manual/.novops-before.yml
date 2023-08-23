@@ -1,6 +1,4 @@
 # Internal Novops config for Novops testing
-name: novops-manual-google-test
-
 environments:
   dev:
     
