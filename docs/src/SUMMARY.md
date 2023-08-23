@@ -4,7 +4,7 @@
 - [Installation](install.md)
 - [Getting started](getting-started.md)
 - [Security Model](security.md)
-
+- [CLI reference](cli-reference.md)
 - [Configuration and Modules](config/README.md)
   - [Configuration](config/config.md)
     - [`.novops.yml` schema](config/schema.md)
