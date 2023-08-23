@@ -157,12 +157,28 @@ pub async fn make_context(args: &NovopsLoadArgs) -> Result<NovopsContext, anyhow
     let config = read_config_file(&args.config)
         .with_context(|| format!("Error reading config file '{:}'", &args.config))?;
 
-    let app_name = &config.name.clone();
+    // app name may be specififed by user
+    // if not, use current directory name
+    let app_name = match &config.name {
+        Some(n) => n.clone(),
+        None => {
+            let curdir = env::current_dir()
+                .with_context(|| "Couldn't read current directory.")?;
+            
+                let default_app_name = curdir.file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or("root");
+            
+            String::from(default_app_name)
+            // may not yield exact folder name as some non-UTF8 char may be replaced
+            // but it's acceptable for our purpose        
+        }
+    };
 
     // Env name is either specified as arg, as default or prompt user
     let env_name = read_environment_name(&config, &args.env)?;
 
-    // working directory under which to save files
+    // working directory under which to save files (if any)
     let workdir = prepare_working_directory(&args, &app_name, &env_name)?;
     info!("Using workdir: {:?}", &workdir);
 
@@ -289,11 +305,11 @@ fn prepare_working_directory(args: &NovopsLoadArgs, app_name: &String, env_name:
     let workdir = match &args.working_directory {
         Some(wd) => PathBuf::from(wd),
         None => match prepare_working_directory_xdg(app_name, env_name) {
-            Ok(s) => s,
-            Err(e) => {
-                info!("Using /tmp as XDG did not seem available: {:?}", e);
-                prepare_working_directory_tmp(app_name, env_name)?
-            },
+                Ok(s) => s,
+                Err(e) => {
+                    info!("Using /tmp as XDG did not seem available: {:?}", e);
+                    prepare_working_directory_tmp(app_name, env_name)?
+                },
         }
     };
 

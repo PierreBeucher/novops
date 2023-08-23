@@ -1,8 +1,6 @@
 # Simple standalone config without requiring external access
 # i.e. only plain variable and file content
 # Useful to test basic loading and flags such as 
-name: test-plain-strings
-
 environments:
   dev:
     # Variable can use plain string and any modules

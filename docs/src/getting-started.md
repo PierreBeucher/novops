@@ -33,8 +33,6 @@ Consider a typical workflow: run build and deployment with **secrets from Hashic
 Create `.novops.yml` and commit it safely - it does not contain any secret:
 
 ```yaml
-name: aws-creds-and-hashicorp-vault-secrets-example
-
 environments:
   dev:
     

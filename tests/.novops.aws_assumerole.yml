@@ -1,6 +1,4 @@
 # AWS Assume role
-name: aws-assumerole
-
 environments:
   dev:
 

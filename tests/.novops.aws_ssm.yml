@@ -1,6 +1,4 @@
 # AWS Systems Manager (SSM)
-name: aws-ssm
-
 environments:
   dev:
     variables:

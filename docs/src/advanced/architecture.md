@@ -96,7 +96,6 @@ For instance:
 ```rust
 #[derive(/* ... */ JsonSchema)]
 pub struct NovopsConfigFile {
-    pub name: String,
     pub environments: HashMap<String, NovopsEnvironmentInput>,
     pub config: Option<NovopsConfig>
 }
@@ -105,8 +104,6 @@ pub struct NovopsConfigFile {
 Define top-level Novops config schema:
 
 ```yaml
-name: my-app
-
 environments:
   dev: # ...
   prod: # ...
