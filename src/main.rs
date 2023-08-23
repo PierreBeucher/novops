@@ -36,7 +36,7 @@ fn build_cli() -> Command {
         .required(false);
 
     let arg_dryrun = Arg::new("dry_run")
-        .help("Perform a dry-run: not external service will be called and dummy outputs is written to disk. Used for testing purposes.")
+        .help("Perform a dry-run: no external service will be called and dummy secrets are generated.")
         .long("dry-run")
         .value_name("DRY_RUN")
         .action(ArgAction::SetTrue)
@@ -100,6 +100,7 @@ fn build_cli() -> Command {
             )
             .arg(Arg::new("shell")
                 .action(ArgAction::Set)
+                .value_name("SHELL")
                 .value_parser(value_parser!(Shell))
                 .required(true)
             )
