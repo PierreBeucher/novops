@@ -17,3 +17,4 @@ jobs:
       - uses: google-github-actions/release-please-action@v3
         with:
           command: manifest
+          token: ${{ secrets.RELEASE_TOKEN }} # use token to trigger another workflow on tag
