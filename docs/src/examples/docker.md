@@ -42,26 +42,11 @@ services:
 Include `novops` in your Dockerfile such a:
 
 ```Dockerfile
-# Intermediate image to download novops in
-FROM alpine AS novops
+# Multi-stage build to copy novops binary from existing image
+FROM crafteo/novops:0.7.0 AS novops
 
-# See https://github.com/PierreBeucher/novops/releases for latest version
-ARG NOVOPS_VERSION=0.6.0
-
-RUN apk add curl unzip
-
-RUN curl -L "https://github.com/PierreBeucher/novops/releases/download/v${NOVOPS_VERSION}/novops-X64-Linux.zip" -o novops.zip && \
-    unzip novops.zip && \
-    mv novops /usr/local/bin/novops
-
-# Final image where novops is added
+# Final image where novops is copied
 FROM alpine AS app
 
-# ...
-
-COPY --from=novops /usr/local/bin/novops /usr/local/bin/novops
-
-# ... 
+COPY --from=novops /novops /usr/local/bin/novops
 ```
-
-_NOTE: Novops Docker image is not yet published on public Hubs but it will be soon !_
