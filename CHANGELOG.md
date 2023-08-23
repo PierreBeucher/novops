@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.7.0](https://github.com/PierreBeucher/novops/compare/v0.6.1...v0.7.0) (2023-08-23)
+
+
+### Features
+
+* multiple export format, default to stdout and only use stderr for logging ([78b17c4](https://github.com/PierreBeucher/novops/commit/78b17c4e0ef32bde7740c21216cbf4b20a99104a))
+* novops run: subprocess with loaded environment ([fede6cb](https://github.com/PierreBeucher/novops/commit/fede6cba0a51d74e5f02c95b968b6fd782a6415c))
+* remove required top-level name ([a60aec7](https://github.com/PierreBeucher/novops/commit/a60aec7b77d6a1e2198e395bd7bf11806319a955))
+
+
+### Bug Fixes
+
+* incorrect permission for /tmp subdirectory when fallbacking from XDG_RUNTIME_DIR ([1056c60](https://github.com/PierreBeucher/novops/commit/1056c60a9cacb1ac72f6e17b507ef0103831048f))
+
 ## [0.6.1](https://github.com/PierreBeucher/novops/compare/v0.6.0...v0.6.1) (2023-06-25)
 
 
