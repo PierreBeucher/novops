@@ -5,7 +5,7 @@ mod test_utils;
 #[cfg(test)]
 mod tests {
     use novops::modules::variables::VariableOutput;
-    use novops::{prepare_variable_outputs, format_variable_outputs};
+    use novops::{sanitize_variable_outputs, build_source_file_content};
     use crate::test_utils::test_setup;
 
     
@@ -28,7 +28,7 @@ mod tests {
 
         let vars = Vec::from([var1, var2]);
 
-        let result = prepare_variable_outputs(&vars);
+        let result = sanitize_variable_outputs(&vars);
 
         assert_eq!(result[0].value, val1);
         assert_eq!(result[1].value, "special_char_'\"'\"'\"'\"'\"'\"'\"'\"'!?`$abc_#~%*µ€{}[]-°+@à^ç=\\");
@@ -52,15 +52,15 @@ mod tests {
         let vars = Vec::from([var1, var2]);
 
         // dotenv
-        let result_dotenv = format_variable_outputs("dotenv", &vars)?;
-        assert_eq!(result_dotenv, "VAR1='VALUE1'\nVAR2='VALUE2'\n");
+        let result_dotenv = build_source_file_content("dotenv", &vars)?;
+        assert_eq!(result_dotenv, "VAR1='VALUE1'\nVAR2='VALUE2'\n\nunload () {\n  unset -f unload\n  unset VAR1\n  unset VAR2\n}\n\n");
 
         // dotenv-export
-        let result_dotenv_export = format_variable_outputs("dotenv-export", &vars)?;
-        assert_eq!(result_dotenv_export, "export VAR1='VALUE1'\nexport VAR2='VALUE2'\n");
+        let result_dotenv_export = build_source_file_content("dotenv-export", &vars)?;
+        assert_eq!(result_dotenv_export, "export VAR1='VALUE1'\nexport VAR2='VALUE2'\n\nunload () {\n  unset -f unload\n  unset VAR1\n  unset VAR2\n}\n\n");
 
         // unknown format expect error
-        let result_unknown = format_variable_outputs("unknown-zzzz", &vars);
+        let result_unknown = build_source_file_content("unknown-zzzz", &vars);
         assert!(result_unknown.is_err());
 
         Ok(())

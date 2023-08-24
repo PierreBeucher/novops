@@ -137,7 +137,7 @@ async fn main() -> Result<(), anyhow::Error> {
             dry_run: load_subc.get_one::<bool>("dry_run").map(|e| *e)
         };
 
-        novops::load_environment_write_vars(&args, &symlink, &env_format).await
+        novops::load_environment_and_output_vars(&args, &symlink, &env_format).await
             .with_context(|| "Failed to load environment. Set environment variable RUST_LOG=[trace|debug|info|warn] or RUST_BACKTRACE=1 for more verbosity.")?;
 
         exit(0)

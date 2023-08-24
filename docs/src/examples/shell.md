@@ -18,6 +18,14 @@ You can also create an alias such as
 alias nload="source <(novops load)"
 ```
 
+Run `unload` to unload to unset variables sourced by `novops load`
+
+```
+unload
+```
+
+`unload` is a function declared when using `source <(novops load)`. It `unset` itself and all variables loaded by Novops. 
+
 ## Run sub-process
 
 Run a sub-process or command loaded with environment variables:

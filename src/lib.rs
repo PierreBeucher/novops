@@ -45,37 +45,27 @@ pub struct NovopsOutputs {
     pub files: HashMap<String, FileOutput>
 }
 
-pub async fn load_environment_write_vars(args: &NovopsLoadArgs, symlink: &Option<String>, format: &str) -> Result<(), anyhow::Error> {
+/**
+ * Used by novops load
+ */
+pub async fn load_environment_and_output_vars(args: &NovopsLoadArgs, symlink: &Option<String>, format: &str) -> Result<(), anyhow::Error> {
 
-    let outputs = load_environment_no_write_vars(&args).await?;
+    let outputs = load_environment(&args).await?;
 
     let voutputs: Vec<VariableOutput> = outputs.variables.clone().into_iter().map(|(_, v)| v).collect();
     export_variable_outputs(format, symlink, &voutputs, &outputs.context.workdir)?;
 
-    info!("Novops environment loaded ! Export variables with:");
-    info!("  source {:?}", &outputs.context.env_var_filepath);
+    info!("Novops environment loaded !");
 
     Ok(())
 }
 
-pub async fn load_environment_no_write_vars(args: &NovopsLoadArgs) -> Result<NovopsOutputs, anyhow::Error> {
-
-    init_logger();
-
-    // Read config from args and resolve all inputs to their concrete outputs
-    let outputs = load_context_and_resolve(&args).await?;
-
-    // Export output to user as per input (stdout or file)
-    let foutputs: Vec<FileOutput> = outputs.files.clone().into_iter().map(|(_, f)| f).collect();
-    export_file_outputs(&foutputs)?;
-
-    Ok(outputs)
-
-}
-
+/**
+ * Used by novops run
+ */
 pub async fn load_environment_and_exec(args: &NovopsLoadArgs, command_args: Vec<&String>) -> Result<(), anyhow::Error> {
 
-    let outputs = load_environment_no_write_vars(&args).await?;
+    let outputs = load_environment(&args).await?;
     let vars : Vec<VariableOutput> = outputs.variables.into_values().collect();
 
     let mut cmd = prepare_exec_command(command_args, &vars);
@@ -85,8 +75,14 @@ pub async fn load_environment_and_exec(args: &NovopsLoadArgs, command_args: Vec<
     Ok(())
 }
 
-pub async fn load_context_and_resolve(args: &NovopsLoadArgs) -> Result<NovopsOutputs, anyhow::Error> {
+/**
+ * Load an environment and return Outputs
+ */
+pub async fn load_environment(args: &NovopsLoadArgs) -> Result<NovopsOutputs, anyhow::Error> {
 
+    init_logger();
+
+    // Read config from args and resolve all inputs to their concrete outputs
     debug!("Loading context for {:?}", &args);
 
     let ctx = make_context(&args).await?;
@@ -96,11 +92,18 @@ pub async fn load_context_and_resolve(args: &NovopsLoadArgs) -> Result<NovopsOut
     let (var_out, file_out) = 
         resolve_environment_inputs(&ctx, novops_env).await?;
 
-    return Ok(NovopsOutputs { 
+    let outputs = NovopsOutputs { 
         context: ctx, 
         variables: var_out, 
         files: file_out 
-    })
+    };
+
+    // Write file outputs
+    let foutputs: Vec<FileOutput> = outputs.files.clone().into_iter().map(|(_, f)| f).collect();
+    export_file_outputs(&foutputs)?;
+
+    Ok(outputs)
+
 }
 
 pub fn prepare_exec_command(mut command_args: Vec<&String>, variables: &Vec<VariableOutput>) -> Command{
@@ -487,18 +490,12 @@ fn export_file_outputs(files: &Vec<FileOutput>) -> Result<(), anyhow::Error>{
 // }
 
 /**
- * Write a sourceable environment variable file to disk
- * With a content like
- * '
- *  export VAR=value
- *  export FOO=bar
- * '  
- * 
+ * Write sourceable environment variable file to disk or stdout from outputs
  */
 fn export_variable_outputs(format: &str, symlink: &Option<String>, vars: &Vec<VariableOutput>, working_dir: &PathBuf) -> Result<(), anyhow::Error>{
 
-    let safe_vars = prepare_variable_outputs(vars);
-    let vars_string = format_variable_outputs(format, &safe_vars)?;
+    let safe_vars = sanitize_variable_outputs(vars);
+    let source_file_content = build_source_file_content(format, &safe_vars)?;
     
     // If symlink option provided, create symlink
     // otherwise show variables in stdout
@@ -507,7 +504,7 @@ fn export_variable_outputs(format: &str, symlink: &Option<String>, vars: &Vec<Va
             let workdir_var_file = working_dir.join("vars");
             info!("Writing variable file in working directory at {:?}", &workdir_var_file);
 
-            fs::write(&workdir_var_file, vars_string)
+            fs::write(&workdir_var_file, source_file_content)
                 .with_context(|| format!("Error writing file output at {:?}", &workdir_var_file))?;
                     
             let lnk = PathBuf::from(&lnk_str);
@@ -515,7 +512,7 @@ fn export_variable_outputs(format: &str, symlink: &Option<String>, vars: &Vec<Va
                 .with_context(|| format!("Couldn't create symlink {:}", lnk_str))?
         },
         None => {
-            println!("{:}", vars_string)
+            println!("{:}", source_file_content)
         }
     }
 
@@ -530,7 +527,7 @@ fn export_variable_outputs(format: &str, symlink: &Option<String>, vars: &Vec<Va
  * first ' ends initial quoation, then wrap our quote with "'" and start a new quotation with '
  * for example password ` abc'def ` will become ` export pass='abc'"'"'def' `
  */
-pub fn prepare_variable_outputs(vars: &Vec<VariableOutput>) ->  Vec<VariableOutput> {
+pub fn sanitize_variable_outputs(vars: &Vec<VariableOutput>) ->  Vec<VariableOutput> {
     let mut safe_vars : Vec<VariableOutput> = Vec::new();
     for v in vars{
         let safe_val = v.value.replace("'", "'\"'\"'");
@@ -541,9 +538,10 @@ pub fn prepare_variable_outputs(vars: &Vec<VariableOutput>) ->  Vec<VariableOutp
 }
 
 /**
- * Transform VariableOutputs to string according to given format 
+ * Transform VariableOutputs to string according to given format
+ * Also define 'unload' command to easily unload environment
  */
-pub fn format_variable_outputs(format: &str, safe_vars: &Vec<VariableOutput>) -> Result<String, anyhow::Error> {
+pub fn build_source_file_content(format: &str, safe_vars: &Vec<VariableOutput>) -> Result<String, anyhow::Error> {
     let mut vars_string = String::new();
 
     if format == FORMAT_DOTENV_EXPORT {
@@ -570,8 +568,36 @@ pub fn format_variable_outputs(format: &str, safe_vars: &Vec<VariableOutput>) ->
         return Err(anyhow::format_err!("Unknown format {:}. Available formats: {:?}", format, FORMAT_ALL))
     }
 
+    // set the unload function unsetting everything set by Novops such as
+    //
+    // unload () {
+    //   unset FOO
+    //   unset BAR
+    // }
+    let mut unload_function = String::from("\nunload () {\n  unset -f unload\n");
+    for v in safe_vars{
+        unload_function.push_str(&format!("  unset {:}\n", &v.name));
+    }
+    unload_function.push_str("}\n\n");
+
+    vars_string.push_str(&unload_function);
+
     return Ok(vars_string);
 
+}
+
+/**
+ * Transform variable output into a file content with 'unset' instructions
+ */
+pub fn build_unload_file_content(vars: &Vec<VariableOutput>) -> String{
+    let mut unload_content = String::new();
+
+    for v in vars{
+        let s = format!("unset {:}\n", &v.name);
+        unload_content.push_str(&s);
+    }
+
+    unload_content
 }
 
 fn create_symlink(lnk: &PathBuf, target: &PathBuf) -> Result<(), anyhow::Error> {

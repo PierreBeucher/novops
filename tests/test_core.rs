@@ -5,7 +5,7 @@ mod test_utils;
 #[cfg(test)]
 mod tests {
     use novops::modules::variables::VariableOutput;
-    use novops::{make_context, NovopsLoadArgs, load_environment_write_vars, prepare_exec_command};
+    use novops::{make_context, NovopsLoadArgs, load_environment_and_output_vars, prepare_exec_command};
     use novops::core::{NovopsContext, NovopsConfig, NovopsConfigFile, NovopsConfigDefault, NovopsEnvironmentInput};
     use std::collections::HashMap;
     use std::ffi::OsStr;
@@ -80,7 +80,7 @@ mod tests {
 
         let workdir = clean_and_setup_test_dir("test_simple_run")?;
 
-        load_environment_write_vars(&NovopsLoadArgs { 
+        load_environment_and_output_vars(&NovopsLoadArgs { 
                 config: String::from(CONFIG_STANDALONE),
                 env: Some(String::from("dev")), 
                 working_directory: Some(workdir.clone().into_os_string().into_string().unwrap()),
@@ -131,7 +131,7 @@ mod tests {
         let workdir = clean_and_setup_test_dir("test_symlink_flag")?;
 
         let expect_symlink_at = PathBuf::from(TEST_DIR).join("test-symlink");
-        load_environment_write_vars(&NovopsLoadArgs { 
+        load_environment_and_output_vars(&NovopsLoadArgs { 
                 config: String::from(CONFIG_STANDALONE),
                 env: Some(String::from("dev")),
                 working_directory: Some(workdir.clone().into_os_string().into_string().unwrap()),
@@ -151,7 +151,7 @@ mod tests {
         // run again with different symlink dest
         // expect existing symlink to be overriden
         let workdir_override = clean_and_setup_test_dir("test_symlink_flag_override")?;
-        load_environment_write_vars(&NovopsLoadArgs { 
+        load_environment_and_output_vars(&NovopsLoadArgs { 
                 config: String::from(CONFIG_STANDALONE),
                 env: Some(String::from("staging")),
                 working_directory: Some(workdir_override.clone().into_os_string().into_string().unwrap()), 
@@ -181,7 +181,7 @@ mod tests {
         fs::File::create(&symlink_path)?;
         
         // expect error as we cannot erase existing file
-        let result = load_environment_write_vars(&NovopsLoadArgs { 
+        let result = load_environment_and_output_vars(&NovopsLoadArgs { 
                 config: String::from(CONFIG_STANDALONE),
                 env: Some(String::from("dev")), 
                 working_directory: Some(workdir.clone().into_os_string().into_string().unwrap()), 

@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 use std::fs;
 use std::env;
-use novops::{NovopsOutputs, NovopsLoadArgs, load_context_and_resolve};
+use novops::{NovopsOutputs, NovopsLoadArgs, load_environment};
 use novops::core::{NovopsContext, NovopsConfig, NovopsConfigFile, NovopsConfigDefault};
 use std::collections::HashMap;
 use log::debug;
@@ -49,7 +49,7 @@ async fn _load_env_for(conf_name: &str, env: &str, dry_run: bool) -> Result<Novo
     dry_run: Some(dry_run)
   };
 
-  let outputs = load_context_and_resolve(&args).await?;
+  let outputs = load_environment(&args).await?;
 
   return Ok(outputs);
 }
