@@ -45,6 +45,10 @@ environments:
           hvault_kv2:
             path: crafteo/app/dev
             key: db_password
+       
+      # Plain string are also supported
+      - name: DATABASE_USER
+        value: root
     
     # Generate temporary AWS credentials for IAM Role
     # Provide environment variables:
@@ -63,7 +67,7 @@ Load secrets as environment variables:
 source <(novops load)
 
 # Or run sub-process directly
-novops run -- terraform apply
+novops run -- make deploy
 ```
 
 Secrets are now available:
