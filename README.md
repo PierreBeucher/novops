@@ -1,14 +1,23 @@
 # Novops
 
-Platform-agnostic secret manager for local development and CI.
-
-Load secrets from their sources directly in memory. Avoid spreading secrets across CI tools and developers environments without needing to sync or encrypt them into yet-another place.
-
 ![novops-features](docs/src/assets/novops-features.jpg)
 
-- [Features](#features)
+Novops is like `.env`, but on steroïd 💪 
+
+- Load secrets directly in memory from any source (AWS, GCloud, Azure...)
+- Manage multiple environments
+- Set plain variables, secrets, files and generate temporary credentials
+- Stop spreading secrets across CI tools and dev environments
+
+Use Novops to easily setup secrets and variables in your development environment or CI platform. Stop having developers setup their own `.env.prod`, `.bashrc` - Novops takes care of it and make sure everyone's on the same page. 
+
+![](docs/demo.gif)
+
+---
+
 - [Getting Started](#getting-started)
 - [🔐 Security](#-security)
+- [Features](#features)
 - [Example usage](#example-usage)
   - [Shell](#shell)
   - [🐳 Docker & Podman](#-docker--podman)
@@ -27,18 +36,9 @@ Load secrets from their sources directly in memory. Avoid spreading secrets acro
 - [License](#license)
 - [Acknowledgment](#acknowledgment)
 
-## Features
-
-- Securely load secrets and generate temporary credentials directly in memory as environment variables or temporary files
-- Fetch secrets at their source. No more syncing secrets between local tool, CI/CD, and Cloud secret service
-- Fetch secrets from anywhere: Hashicorp Vault, AWS, Google Cloud, Azure...
-- Provide secrets directly to process, easing usage of IaC tools like Terraform, Pulumi, Ansible...
-- Manage multi-environments setup
-- Easy installation with fully static binary or Nix 
-
 ## Getting Started
 
-Consider a typical workflow: run build and deployment with **secrets from Hashicorp Vault** and **temporary AWS credentials**.
+Let's deploy an application with **secret password and SSH key from Hashicorp Vault** and **temporary AWS credentials**.
 
 Install static binary (or [use Nix](https://pierrebeucher.github.io/novops/install.html#nix)):
 
@@ -61,12 +61,20 @@ environments:
       - name: DATABASE_PASSWORD
         value:
           hvault_kv2:
-            path: crafteo/app/dev
+            path: app/dev
             key: db_password
 
       # Plain string are also supported
       - name: DATABASE_USER
         value: root
+    
+    # Load files in memory (not written on disk)
+    files:
+      - variable: APP_SSH_KEY # Will point to generated file
+        content:
+          hvault_kv2:
+            path: app/dev
+            key: ssh_key
     
     # Generate temporary AWS credentials for IAM Role
     # Provide environment variables:
@@ -81,11 +89,12 @@ environments:
 Load secrets as environment variables:
 
 ```sh
-# Source directly into your shell
-source <(novops load)
+# Run a sub-process with secrets
+# Secrets are cleaned-up on exit
+novops run -- sh
 
-# Or run sub-process directly
-novops run -- make deploy
+# Or source directly into your shell
+source <(novops load)
 ```
 
 Secrets are now available:
@@ -93,6 +102,10 @@ Secrets are now available:
 ```sh
 echo $DATABASE_PASSWORD
 # passxxxxxxx
+
+echo $APP_SSH_KEY
+# /run/user/1000/novops/... 
+# Files are not written on disk but remain in memory
 
 env | grep AWS
 # AWS_ACCESS_KEY_ID=AKIAXXX
@@ -105,6 +118,15 @@ env | grep AWS
 Novops loads secrets in memory and does not write anything to disk. Secrets are loaded temporarily and kept only for as long as they are needed.
 
 See [Novops Security Model](https://pierrebeucher.github.io/novops/security.html) for details
+
+## Features
+
+- Securely load secrets and generate temporary credentials directly in memory as environment variables or temporary files
+- Fetch secrets at their source. No more syncing secrets between local tool, CI/CD, and Cloud secret service
+- Fetch secrets from anywhere: Hashicorp Vault, AWS, Google Cloud, Azure...
+- Provide secrets directly to process, easing usage of IaC tools like Terraform, Pulumi, Ansible...
+- Manage multi-environments setup
+- Easy installation with fully static binary or Nix 
 
 ## Example usage
 
