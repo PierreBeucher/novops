@@ -42,12 +42,19 @@
             add-deps = {
               buildInputs = [
                 pkgs.openssl.dev
+
                 pkgs.pkg-config
                 pkgs.mdbook
                 pkgs.mdbook-linkcheck
                 pkgs.google-cloud-sdk
                 pkgs.bitwarden-cli
                 pkgs.json-schema-for-humans
+                pkgs.podman
+                pkgs.podman-compose
+                pkgs.gnumake
+                pkgs.zip
+                pkgs.gh
+                pkgs.nodejs-slim # for npx release-please
               ];
 
               # Skip tests as most are integration tests requiring setup

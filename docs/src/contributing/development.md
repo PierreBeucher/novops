@@ -6,31 +6,41 @@ Every command below must be run under [Nix Flake development shell](https://nixo
 nix develop
 ```
 
+All commands are CI-agnostic: they work the same locally and on CI by leveraging Nix and cache-reuse. If it works locally, it will work on CI.
+
 - [Build](#build)
-- [Run test](#run-test)
-- [Update JSON Schema](#update-json-schema)
-- [Serve documentation locally](#serve-documentation-locally)
-- [Releasing](#releasing)
+- [Test](#test)
+- [Doc](#doc)
+- [Release](#release)
 
 ## Build
 
-Novops is built with Docker BuildKit. Built binary is fully static. See [Dockerfile](https://github.com/PierreBeucher/novops/blob/main/Dockerfile).
+Novops is built in multiple flavors:
 
-```sh
-# Result in ./build/novops
-make build
-```
+- Static binary (Podman local output)
+  ```sh
+  # Result in ./build/novops
+  make build-image
+  ```
+- Docker image (Podman)
+  ```
+  make build-image
+  ``` 
+- Nix
+  ```
+  make build-nix
+  ``` 
 
-## Run test
+## Test
 
-Integration tests are run when possible real service, falling back to emulator or dry-run when not practical:
+Integration tests are run when possible with real services, falling back to emulator or dry-run when not practical:
 - AWS: [LocalStack](https://localstack.cloud) server
 - Hashivault: [Vault Docker image](https://hub.docker.com/_/vault)
 - Google Cloud: `--dry-run` mode 
 - Azure: `--dry-run` mode 
 
 ```sh
-# Run Docker Compose stack and run tests
+# Run Compose stack and run tests
 make test
 
 # Alternatively, run Docker stack and specific tests
@@ -40,22 +50,20 @@ RUST_LOG=novops=debug cargo test --test test_aws -- --nocapture
 
 Tests are run on CI for any non-`master` branch using the same procedure.
 
-## Update JSON Schema
+## Doc
 
-JSON Schema is generated from [schemars](https://docs.rs/schemars/latest/schemars/)
+Doc is built with [`mdBook`](https://github.com/rust-lang/mdBook) and JSON Schema generated from [schemars](https://docs.rs/schemars/latest/schemars/).
 
-```
+Doc is published from `main` branch by CI
+
+```sh
+# Build doc
 make doc
-```
 
-## Serve documentation locally
-
-Doc is built with [`mdBook`](https://github.com/rust-lang/mdBook)
-
-```
+# Serve at locahost:3000
 make doc-serve
 ```
 
-## Releasing
+## Release
 
 `release-please` should create/update Release PRs automatically on `main` changes. Merging automatically creates release and related artifacts. 
