@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.0](https://github.com/PierreBeucher/novops/compare/v0.7.0...v0.8.0) (2023-08-27)
+
+
+### Features
+
+* check if stdout is tty to prevent secret leak on screen ([4894031](https://github.com/PierreBeucher/novops/commit/48940311e8b15aee7e5fdf41d05add15457cf209))
+
 ## [0.7.0](https://github.com/PierreBeucher/novops/compare/v0.6.1...v0.7.0) (2023-08-23)
 
 
