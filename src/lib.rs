@@ -4,7 +4,7 @@ pub mod modules;
 use crate::core::{ResolveTo, NovopsEnvironmentInput, NovopsConfigFile, NovopsContext};
 use crate::modules::files::FileOutput;
 use crate::modules::variables::VariableOutput;
-use log::{info, debug};
+use log::{info, debug, error};
 
 use std::os::linux::fs::MetadataExt;
 use std::os::unix::prelude::OpenOptionsExt;
@@ -14,6 +14,7 @@ use anyhow::{self, Context};
 use std::os::unix;
 use std::path::PathBuf;
 use std::env;
+use is_terminal::IsTerminal; // todo use std::io::IsTerminal; rust 1.71+
 use std::collections::HashMap;
 use schemars::schema_for;
 use std::process::Command;
@@ -45,15 +46,19 @@ pub struct NovopsOutputs {
     pub files: HashMap<String, FileOutput>
 }
 
-pub async fn load_environment_write_vars(args: &NovopsLoadArgs, symlink: &Option<String>, format: &str) -> Result<(), anyhow::Error> {
+/// Load environment and write variables to stdout or file
+/// Checks if stdout is tty for safety to avoid showing secrets on screen
+pub async fn load_environment_write_vars(args: &NovopsLoadArgs, symlink: &Option<String>, format: &str, skip_tty_check: bool) -> Result<(), anyhow::Error> {
+
+    // safety checks
+    check_stdout_tty_and_exit(&skip_tty_check);
 
     let outputs = load_environment_no_write_vars(&args).await?;
 
     let voutputs: Vec<VariableOutput> = outputs.variables.clone().into_iter().map(|(_, v)| v).collect();
     export_variable_outputs(format, symlink, &voutputs, &outputs.context.workdir)?;
 
-    info!("Novops environment loaded ! Export variables with:");
-    info!("  source {:?}", &outputs.context.env_var_filepath);
+    info!("Novops environment loaded !");
 
     Ok(())
 }
@@ -61,7 +66,6 @@ pub async fn load_environment_write_vars(args: &NovopsLoadArgs, symlink: &Option
 pub async fn load_environment_no_write_vars(args: &NovopsLoadArgs) -> Result<NovopsOutputs, anyhow::Error> {
 
     init_logger();
-
     // Read config from args and resolve all inputs to their concrete outputs
     let outputs = load_context_and_resolve(&args).await?;
 
@@ -595,4 +599,15 @@ pub fn get_config_schema() -> Result<String, anyhow::Error>{
     let output = serde_json::to_string_pretty(&schema)
         .with_context(|| "Couldn't convert JSON schema to pretty string.")?;
     return Ok(output)
+}
+
+/// Check if stdout is a tty
+/// Exit with non-0 if true to avoid showing secrets on console
+fn check_stdout_tty_and_exit(skip_tty_check: &bool) {
+    if !skip_tty_check && std::io::stdout().is_terminal() {
+        error!("Stdout is a terminal, secrets won't be loaded to avoid exposing them. \
+            Either use 'novops load' with -s/--symlink to write in a secure directory, 'source<(novops load [OPTIONS]) or 'novops run' to load secrets directly in process memory. \
+            If you really want to show secrets on terminal, use --skip-tty-check to skip this check.");
+        std::process::exit(3)
+    }
 }

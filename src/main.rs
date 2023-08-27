@@ -67,6 +67,13 @@ fn build_cli() -> Command {
                 .value_name("FORMAT")
                 .default_value("dotenv-export")
             )
+            .arg(Arg::new("skip_tty_check")
+                .help("Do not check if stdout is a tty (terminal), risking exposing secrets on screen. This is unsecure.")
+                .long("skip-tty-check")
+                .value_name("DRY_RUN")
+                .action(ArgAction::SetTrue)
+                .required(false)
+            )
         )
         .subcommand(
             Command::new("run")
@@ -129,6 +136,9 @@ async fn main() -> Result<(), anyhow::Error> {
         let env_format = load_subc.get_one::<String>("format")
             .ok_or(anyhow::anyhow!("Format is None. This is probably a bug as CLI defines default value."))?.clone();
 
+        let skip_tty_check = load_subc.get_one::<bool>("skip_tty_check").map(|e| *e)
+            .ok_or(anyhow::anyhow!("skip_tty_check is None. This is probably a bug as CLI defines default value."))?.clone();
+
         let args = novops::NovopsLoadArgs{ 
             config: load_subc.get_one::<String>("config")
                 .ok_or(anyhow::anyhow!("Config is None. This is probably a bug as CLI defines default value."))?.clone(),
@@ -137,7 +147,7 @@ async fn main() -> Result<(), anyhow::Error> {
             dry_run: load_subc.get_one::<bool>("dry_run").map(|e| *e)
         };
 
-        novops::load_environment_write_vars(&args, &symlink, &env_format).await
+        novops::load_environment_write_vars(&args, &symlink, &env_format, skip_tty_check).await
             .with_context(|| "Failed to load environment. Set environment variable RUST_LOG=[trace|debug|info|warn] or RUST_BACKTRACE=1 for more verbosity.")?;
 
         exit(0)

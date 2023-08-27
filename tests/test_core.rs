@@ -87,7 +87,8 @@ mod tests {
                 dry_run: None
             },
             &Some(String::from(".envrc")),
-            &String::from("dotenv-export")
+            &String::from("dotenv-export"),
+            true
         ).await?;   
 
         let expected_var_file = PathBuf::from(&workdir).join("vars");
@@ -138,7 +139,8 @@ mod tests {
                 dry_run: None
             },
             &Some(expect_symlink_at.clone().into_os_string().into_string().unwrap()),
-            &String::from("dotenv-export")
+            &String::from("dotenv-export"),
+            true
         ).await?;
 
         let symlink_metadata = fs::symlink_metadata(&expect_symlink_at)?;
@@ -159,6 +161,7 @@ mod tests {
             },
             &Some(expect_symlink_at.clone().into_os_string().into_string().unwrap()),
             &String::from("dotenv-export"),
+            true
         ).await?;
 
         let overriden_symlink_dest = fs::read_link(&expect_symlink_at).unwrap();
@@ -189,6 +192,7 @@ mod tests {
             }, 
             &Some(symlink_path.clone().into_os_string().into_string().unwrap()),
             &String::from("dotenv-export"),
+            true
         ).await;
 
         result.expect_err("Expected an error when loading with symlink trying to override existing file, got OK.");
