@@ -29,21 +29,31 @@ build-binary: build-cache-dir
 build-nix:
 	nix build -o build/nix
 
+.PHONY: test
+test: test-docker test-doc test-cargo
+
 .PHONY: test-docker
 test-docker:
 	podman-compose -f tests/docker-compose.yml up -d
 
-.PHONY: test
-test: test-docker
+.PHONY: test-cargo
+test-cargo:
 	cargo test
+
+# Fails if doc is not up to date with current code
+.PHONY: test-doc
+test-doc: doc
+	git diff --exit-code docs/schema/config-schema.json
+	git diff --exit-code docs/schema/index.html
 
 # Build doc with mdBook and json-schema-for-humans
 # See:
 # - https://github.com/actions/starter-workflows/blob/main/pages/mdbook.yml
 # - https://coveooss.github.io/json-schema-for-humans/#/
+.PHONY: doc
 doc:
 	mdbook build ./docs/
-	cargo run -- schema > docs/schema/config-schema.json 
+	cargo run -- schema > docs/schema/config-schema.json
 	generate-schema-doc --config footer_show_time=false --config link_to_reused_ref=false --config expand_buttons=true docs/schema/config-schema.json  docs/schema/index.html
 
 doc-serve:
@@ -63,10 +73,14 @@ docker-publish:
 	podman push novops:local ${DOCKER_REPOSITORY}:${GITHUB_REF_NAME}
 	podman push novops:local ${DOCKER_REPOSITORY}:latest
 
-.PHONY: release
-release:
-	npx release-please release-pr --repo-url https://github.com/PierreBeucher/novops --token=${GITHUB_TOKEN}
+.PHONY: release-tag
+release-tag:
 	npx release-please github-release --repo-url https://github.com/PierreBeucher/novops --token=${GITHUB_TOKEN}
+
+.PHONY: release-pr
+release-pr:
+	npx release-please release-pr --repo-url https://github.com/PierreBeucher/novops --token=${GITHUB_TOKEN}
+
 
 RUNNER_ARCH ?= X64
 RUNNER_OS ?= Linux
