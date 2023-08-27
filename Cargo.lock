@@ -1667,6 +1667,7 @@ dependencies = [
  "google-secretmanager1",
  "home",
  "http",
+ "is-terminal",
  "log",
  "pretty_assertions",
  "rand 0.5.6",
