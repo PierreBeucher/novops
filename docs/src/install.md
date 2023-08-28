@@ -30,6 +30,14 @@ Novops is currently only available for x86-64 systems. More will come soon!
 
 To update Novops, simply replace binary with a new one.
 
+## Arch Linux
+
+Available in the AUR (Arch User Repository)
+
+```sh
+yay -S novops-git
+```
+
 ## Nix
 
 Use a `flake.nix` such as:
@@ -45,13 +53,13 @@ Use a `flake.nix` such as:
 
   outputs = { self, nixpkgs, novops, flake-utils }:
     flake-utils.lib.eachDefaultSystem (system:
-      let 
+      let
         pkgs = nixpkgs.legacyPackages.${system};
-        novopsPackage = novops.packages.${system}.novops; 
+        novopsPackage = novops.packages.${system}.novops;
       in {
         devShells = {
           default = pkgs.mkShell {
-            packages = [ 
+            packages = [
               novopsPackage # Include Novops package in your shell
             ];
             shellHook = ''
@@ -61,7 +69,7 @@ Use a `flake.nix` such as:
           };
         };
       }
-    );    
+    );
 }
 ```
 
@@ -70,7 +78,7 @@ Use a `flake.nix` such as:
 Requirements:
 
 - Make
-- Docker 
+- Docker
 
 Clone [Novops repository](https://github.com/PierreBeucher/novops) and run:
 
