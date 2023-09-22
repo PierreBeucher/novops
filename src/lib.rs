@@ -51,7 +51,7 @@ pub struct NovopsOutputs {
 pub async fn load_environment_write_vars(args: &NovopsLoadArgs, symlink: &Option<String>, format: &str, skip_tty_check: bool) -> Result<(), anyhow::Error> {
 
     // safety checks
-    check_stdout_tty_and_exit(&skip_tty_check);
+    check_stdout_tty_and_exit(skip_tty_check, &symlink);
 
     let outputs = load_environment_no_write_vars(&args).await?;
 
@@ -601,13 +601,34 @@ pub fn get_config_schema() -> Result<String, anyhow::Error>{
     return Ok(output)
 }
 
-/// Check if stdout is a tty
-/// Exit with non-0 if true to avoid showing secrets on console
-fn check_stdout_tty_and_exit(skip_tty_check: &bool) {
-    if !skip_tty_check && std::io::stdout().is_terminal() {
+/// See should_error_tty
+fn check_stdout_tty_and_exit(skip_tty_check: bool, symlink: &Option<String>) {
+
+    let terminal_is_tty = std::io::stdout().is_terminal();
+
+    if should_error_tty(terminal_is_tty, skip_tty_check, symlink) {
         error!("Stdout is a terminal, secrets won't be loaded to avoid exposing them. \
             Either use 'novops load' with -s/--symlink to write in a secure directory, 'source<(novops load [OPTIONS]) or 'novops run' to load secrets directly in process memory. \
             If you really want to show secrets on terminal, use --skip-tty-check to skip this check.");
         std::process::exit(3)
     }
+}
+
+/// Check whether novops whould error and exi to avoid outputting secrets on stoud
+/// If skip_tty_check is trued, check is ignored
+/// Otherwise, if tty is a terminal and symlink is none, secrets may be outputted directly in terminal
+/// Novops failsafe in such case to avoid exposing secret
+pub fn should_error_tty(terminal_is_tty: bool, skip_tty_check: bool, symlink: &Option<String>) -> bool {
+
+    // conditions could have been wrote in a single line 
+    // but keep explicit structure for readibility
+    if skip_tty_check {
+        return false
+    } 
+    
+    if terminal_is_tty && symlink.is_none() {
+        return true
+    }
+
+    return false
 }
