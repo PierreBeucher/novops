@@ -5,7 +5,7 @@ mod test_utils;
 #[cfg(test)]
 mod tests {
     use novops::modules::variables::VariableOutput;
-    use novops::{make_context, NovopsLoadArgs, load_environment_write_vars, prepare_exec_command};
+    use novops::{make_context, NovopsLoadArgs, load_environment_write_vars, prepare_exec_command, should_error_tty};
     use novops::core::{NovopsContext, NovopsConfig, NovopsConfigFile, NovopsConfigDefault, NovopsEnvironmentInput};
     use std::collections::HashMap;
     use std::ffi::OsStr;
@@ -263,6 +263,28 @@ mod tests {
         let result_args : Vec<&OsStr> = result.get_args().map(|arg| arg).collect();
         assert_eq!(result_args, vec![OsStr::new(&arg1), OsStr::new(&arg2)]);
         
+        Ok(())
+    }
+
+
+    #[tokio::test]
+    async fn test_should_error_tty() -> Result<(), anyhow::Error> {
+
+        let symlink_none = None;
+        let symlink_some = Some(String::from(".envrc"));
+
+        // terminal is tty
+        assert_eq!(should_error_tty(true, true, &symlink_none), false, "Skipped tty check should not provoke failsafe");
+        assert_eq!(should_error_tty(true, true, &symlink_some), false, "Skipped tty check should not provoke failsafe");
+        assert_eq!(should_error_tty(true, false, &symlink_none), true, "tty terminal without symlink should provoke failsafe");
+        assert_eq!(should_error_tty(true, false, &symlink_some), false, "tty terminal with symlink should not provoke failsafe");
+
+        // terminal is NOT tty
+        assert_eq!(should_error_tty(false, true, &symlink_none), false, "Non-tty terminal should not cause failsafe");
+        assert_eq!(should_error_tty(false, true, &symlink_some), false, "Non-tty terminal should not cause failsafe");
+        assert_eq!(should_error_tty(false, false, &symlink_none), false, "Non-tty terminal should not cause failsafe");
+        assert_eq!(should_error_tty(false, false, &symlink_some), false, "Non-tty terminal should not cause failsafe");
+
         Ok(())
     }
 
