@@ -44,7 +44,6 @@ test-cargo:
 .PHONY: test-doc
 test-doc: doc
 	git diff --exit-code docs/schema/config-schema.json
-	git diff --exit-code docs/schema/index.html
 
 # Build doc with mdBook and json-schema-for-humans
 # See:
@@ -54,7 +53,7 @@ test-doc: doc
 doc:
 	mdbook build ./docs/
 	cargo run -- schema > docs/schema/config-schema.json
-	generate-schema-doc --config footer_show_time=false --config link_to_reused_ref=false --config expand_buttons=true docs/schema/config-schema.json  docs/schema/index.html
+	generate-schema-doc --config footer_show_time=false --config link_to_reused_ref=false --config expand_buttons=true docs/schema/config-schema.json  docs/book/config/schema.html
 
 doc-serve:
 	(cd docs/ && mdbook serve -o)
