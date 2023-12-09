@@ -46,6 +46,8 @@ pub struct NovopsOutputs {
     pub files: HashMap<String, FileOutput>
 }
 
+
+/// Use by `novops load` to load environment and write variables to stdout or file
 /// Load environment and write variables to stdout or file
 /// Checks if stdout is tty for safety to avoid showing secrets on screen
 pub async fn load_environment_write_vars(args: &NovopsLoadArgs, symlink: &Option<String>, format: &str, skip_tty_check: bool) -> Result<(), anyhow::Error> {
@@ -53,35 +55,30 @@ pub async fn load_environment_write_vars(args: &NovopsLoadArgs, symlink: &Option
     // safety checks
     check_stdout_tty_and_exit(skip_tty_check, &symlink);
 
-    let outputs = load_environment_no_write_vars(&args).await?;
+    let outputs = load_context_and_resolve(&args).await?;
 
-    let voutputs: Vec<VariableOutput> = outputs.variables.clone().into_iter().map(|(_, v)| v).collect();
-    export_variable_outputs(format, symlink, &voutputs, &outputs.context.workdir)?;
+    // Write files to filesystem
+    export_file_outputs(&outputs)?;
+
+    // Write env file to filesystem
+    let vars: Vec<VariableOutput> = outputs.variables.clone().into_values().collect();
+    export_variable_outputs(format, symlink, &vars, &outputs.context.workdir)?;
 
     info!("Novops environment loaded !");
 
     Ok(())
 }
 
-pub async fn load_environment_no_write_vars(args: &NovopsLoadArgs) -> Result<NovopsOutputs, anyhow::Error> {
-
-    init_logger();
-    // Read config from args and resolve all inputs to their concrete outputs
-    let outputs = load_context_and_resolve(&args).await?;
-
-    // Export output to user as per input (stdout or file)
-    let foutputs: Vec<FileOutput> = outputs.files.clone().into_iter().map(|(_, f)| f).collect();
-    export_file_outputs(&foutputs)?;
-
-    Ok(outputs)
-
-}
-
+/// Used by `novops run` to load environment and run child process
 pub async fn load_environment_and_exec(args: &NovopsLoadArgs, command_args: Vec<&String>) -> Result<(), anyhow::Error> {
 
-    let outputs = load_environment_no_write_vars(&args).await?;
-    let vars : Vec<VariableOutput> = outputs.variables.into_values().collect();
+    let outputs = load_context_and_resolve(&args).await?;
 
+    // Write files to filesystem
+    export_file_outputs(&outputs)?;
+
+    // Run child process with variables
+    let vars : Vec<VariableOutput> = outputs.variables.clone().into_values().collect();
     let mut cmd = prepare_exec_command(command_args, &vars);
     exec_replace(&mut cmd)
         .with_context(|| format!("Error running process {:?} {:?}", &cmd.get_program(), &cmd.get_args()))?;
@@ -89,7 +86,9 @@ pub async fn load_environment_and_exec(args: &NovopsLoadArgs, command_args: Vec<
     Ok(())
 }
 
+/// Load an environment without side effect and return outputs
 pub async fn load_context_and_resolve(args: &NovopsLoadArgs) -> Result<NovopsOutputs, anyhow::Error> {
+    init_logger();
 
     debug!("Loading context for {:?}", &args);
 
@@ -415,7 +414,10 @@ fn prompt_for_environment(config_file_data: &NovopsConfigFile) -> Result<String,
 /**
  * Write resolved files to disk
  */
-fn export_file_outputs(files: &Vec<FileOutput>) -> Result<(), anyhow::Error>{
+fn export_file_outputs(outputs: &NovopsOutputs) -> Result<(), anyhow::Error>{
+    
+    let files: Vec<FileOutput> = outputs.files.clone().into_values().collect();
+
     for f in files {
         let mut fd = fs::OpenOptions::new()
             .create(true)
