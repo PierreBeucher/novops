@@ -102,6 +102,12 @@ jobs:
       - name: novops run and check var
         run: |
           build/novops run -c tests/.novops.plain-strings.yml -e dev -- sh -c "env | grep DOG_PATH"
+      
+      - name: novops run with builtin env variables
+        run: |
+          export NOVOPS_CONFIG=tests/.novops.plain-strings.yml
+          export NOVOPS_ENVIRONMENT=dev
+          build/novops run -- sh -c "env | grep DOG_PATH"
 
   # Upload artifacts for release tags only
   release-artifacts:
