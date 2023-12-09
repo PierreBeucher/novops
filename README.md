@@ -20,7 +20,7 @@ Use Novops to easily setup secrets and variables in your development environment
 - [Features](#features)
 - [Example usage](#example-usage)
   - [Shell](#shell)
-  - [🐳 Docker & Podman](#-docker--podman)
+  - [🐳 Docker \& Podman](#-docker--podman)
   - [Multi-environment context](#multi-environment-context)
   - [Temporary files](#temporary-files)
   - [Plain strings](#plain-strings)
@@ -30,6 +30,7 @@ Use Novops to easily setup secrets and variables in your development environment
   - [AWS](#aws)
   - [All modules: AWS, Hashicorp Vault, GCloud, Azure...](#all-modules-aws-hashicorp-vault-gcloud-azure)
 - [Full Documentation](#full-documentation)
+- [Community and Support](#community-and-support)
 - [Roadmap](#roadmap)
 - [Contributing](#contributing)
 - [Inspiration and similar tools](#inspiration-and-similar-tools)
@@ -354,6 +355,13 @@ environments:
 ## Full Documentation
 
 [Checkout full documentation](https://pierrebeucher.github.io/novops/intro.html)
+
+## Community and Support
+
+A question? A problem? A bug to report?
+
+- [Join Discord channel](https://discord.gg/R3jzTcBEsQ)
+- [File an issue](https://github.com/PierreBeucher/novops/issues)
 
 ## Roadmap
 
