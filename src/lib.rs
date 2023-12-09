@@ -406,56 +406,6 @@ fn prompt_for_environment(config_file_data: &NovopsConfigFile) -> Result<String,
 }
 
 /**
- * Parse configuration and resolve file and variables into concrete values 
- * Return a Vector of tuples for variables and files and their resolved values
- */
-// fn parse_environment(env_config: &NovopsEnvironment, env_name: &String, workdir_root: &String) -> (Vec<VariableOutput>, Vec<FileOutput>) {
-//     resolve variables
-//     straightforward: variable name is key in config, value is resolvable
-//     let mut variable_vec: Vec<VariableOutput> = Vec::new();
-//     for (var_key, var_value) in &env_config.variables {
-//         let resolved = VariableOutput{
-//             name: var_key.clone(),
-//             value: var_value.resolve()
-//         };
-//         variable_vec.push(resolved);
-//     }
-
-//     // // resolve file
-//     let mut file_vec: Vec<FileOutput> = Vec::new();
-//     for (file_key, file_def) in &env_config.files {
-
-//         // if dest provided, use it
-//         // otherwise use working directory
-//         let dest = match &file_def.dest {
-//             Some(s) => s.clone(),
-//             None => format!("{:}/file_{:}", workdir_root, file_key)
-//         };
-
-//         // variable pointing to file path
-//         // if variable name is provided, use it
-//         // otherwise default to NOVOPS_<env>_<key>
-//         let variable_name = match &file_def.variable {
-//             Some(v) => v.clone(),
-//             None => format!("NOVOPS_FILE_{:}_{:}", env_name.to_uppercase(), file_key.to_uppercase()),
-//         };
-        
-//         let resolved_file = FileOutput {
-//             dest: dest.clone(),
-//             variable: VariableOutput {
-//                 name: variable_name,
-//                 value: dest.clone()
-//             },
-//             content: file_def.content.resolve()
-//         };
-
-//         file_vec.push(resolved_file);
-//     }
-
-//     return (variable_vec, file_vec)
-// }
-
-/**
  * Write resolved files to disk
  */
 fn export_file_outputs(files: &Vec<FileOutput>) -> Result<(), anyhow::Error>{
@@ -473,22 +423,6 @@ fn export_file_outputs(files: &Vec<FileOutput>) -> Result<(), anyhow::Error>{
 
     Ok(())
 }
-
-// fn build_exportable_vars(vars: &Vec<VariableOutput>) -> String{
-//     let mut exportable_vars = String::new();
-//     for v in vars{
-//         // use single quotes to avoid interpolation
-//         // if single quote "'" are in password, replace them by ` '"'"' ` 
-//         // which will cause bash to interpret them properly
-//         // first ' ends initial quoation, then wrap our quote with "'" and start a new quotation with '
-//         // for example password ` abc'def ` will become ` export pass='abc'"'"'def' `
-//         let safe_val = &v.value.replace("'", "'\"'\"'");
-//         let s = format!("export {:}='{:}'\n", &v.name, safe_val);
-//         exportable_vars.push_str(&s);
-//     }
-
-//     return exportable_vars;
-// }
 
 /**
  * Write a sourceable environment variable file to disk

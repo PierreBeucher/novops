@@ -15,8 +15,8 @@ use crate::modules::bitwarden;
 use crate::modules::aws;
 use crate::modules::gcloud;
 use crate::modules::azure;
-use crate::modules::files::{FileInput};
-use crate::modules::variables::{VariableInput};
+use crate::modules::files::FileInput;
+use crate::modules::variables::VariableInput;
 
 /// Available environments. Keys are environment names. 
 type NovopsEnvironments = HashMap<String, NovopsEnvironmentInput>;
