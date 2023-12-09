@@ -5,10 +5,12 @@
 - [`novops run`](#novops-run)
 - [`novops completion`](#novops-completion)
 - [`novops schema`](#novops-schema)
+- [Built-in environment variables](#built-in-environment-variables)
 - [Examples](#examples)
   - [Override default config path](#override-default-config-path)
   - [Run a sub-process](#run-a-sub-process)
   - [Specify environment without prompt](#specify-environment-without-prompt)
+  - [Use built-in environment variables](#use-built-in-environment-variables)
   - [Writing .env to secure directory](#writing-env-to-secure-directory)
   - [Change working directory](#change-working-directory)
   - [Dry-run](#dry-run)
@@ -22,6 +24,8 @@ Novops commands:
 - `completion` -  Output completion code for various shells
 - `schema` - Output Novops confg JSON schema
 - `help` - Show help and usage
+
+All commands and flags are specified in [`main.rs`](../../src/main.rs)
 
 ## `novops load`
 
@@ -102,6 +106,18 @@ novops schema
 
 Output Novops config JSON schema. 
 
+## Built-in environment variables
+
+CLI flags can be specified via environment variables `NOVOPS_*`:
+
+- `NOVOPS_CONFIG` - global flag `-c, --config`
+- `NOVOPS_ENVIRONMENT` - global flag `-e, --env`
+- `NOVOPS_WORKDIR` - global flag `-w, --working-dir`
+- `NOVOPS_DRY_RUN` - global flag `--dry-run`
+- `NOVOPS_LOAD_SYMLINK` - load subcommand flag `-s, --symlink`
+- `NOVOPS_LOAD_FORMAT` - load subcommand flag `-f, --format `
+- `NOVOPS_LOAD_SKIP_TTY_CHECK` - load subcommand `--skip-tty-check`
+
 ## Examples
 
 ### Override default config path
@@ -132,6 +148,29 @@ Use `novops load -e ENV` to load environment without prompting
 
 ```sh
 source <(novops load -e dev)
+```
+
+### Use built-in environment variables
+
+Sometime you want to change behavior according to environment variables, such as running Novops on CI.
+
+Use built-in environment variables:
+
+```sh
+# Set environment variable
+# Typically done via CI config or similar
+# Using export for example
+export NOVOPS_ENVIRONMENT=dev
+export NOVOPS_LOAD_SYMLINK=/tmp/.env
+
+# Novops will load dev environment and create /tmp/.env symlink
+novops load 
+```
+
+Equivalent to
+
+```sh
+novops load -e dev -s /tmp/.env
 ```
 
 ### Writing .env to secure directory
