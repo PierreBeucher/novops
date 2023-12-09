@@ -70,7 +70,6 @@
             nativeBuildInputs = with pkgs; [
               rust-toolchain
             ];
-            RUST_BACKTRACE = 1;
           };
 
 
