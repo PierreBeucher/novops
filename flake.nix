@@ -71,6 +71,7 @@
               zip
               gh
               nodejs-slim # for npx release-please
+              cachix
             ];
             nativeBuildInputs = with pkgs; [
               rust-toolchain
