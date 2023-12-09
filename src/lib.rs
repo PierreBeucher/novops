@@ -224,6 +224,13 @@ pub async fn resolve_environment_inputs(ctx: &NovopsContext, inputs: NovopsEnvir
 
     let mut variable_outputs: HashMap<String, VariableOutput> = HashMap::new();
     let mut file_outputs: HashMap<String, FileOutput> = HashMap::new();
+
+    // Expose Novops internal variables
+    // Load first so user can override via config if needed
+    variable_outputs.insert(String::from("NOVOPS_ENVIRONMENT"), VariableOutput {
+        name: String::from("NOVOPS_ENVIRONMENT"),
+        value: ctx.env_name.clone()
+    });
     
     for v in &inputs.variables.unwrap_or(vec![]) {
         let val = v.resolve(&ctx).await

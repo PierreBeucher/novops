@@ -6,11 +6,13 @@
 - [`novops completion`](#novops-completion)
 - [`novops schema`](#novops-schema)
 - [Built-in environment variables](#built-in-environment-variables)
+- [Variables loaded by default](#variables-loaded-by-default)
 - [Examples](#examples)
   - [Override default config path](#override-default-config-path)
   - [Run a sub-process](#run-a-sub-process)
   - [Specify environment without prompt](#specify-environment-without-prompt)
   - [Use built-in environment variables](#use-built-in-environment-variables)
+  - [Check environment currently loaded by Novops](#check-environment-currently-loaded-by-novops)
   - [Writing .env to secure directory](#writing-env-to-secure-directory)
   - [Change working directory](#change-working-directory)
   - [Dry-run](#dry-run)
@@ -118,6 +120,12 @@ CLI flags can be specified via environment variables `NOVOPS_*`:
 - `NOVOPS_LOAD_FORMAT` - load subcommand flag `-f, --format `
 - `NOVOPS_LOAD_SKIP_TTY_CHECK` - load subcommand `--skip-tty-check`
 
+## Variables loaded by default
+
+Novops will load some variables by default when running `novops [load|run]`:
+
+- `NOVOPS_ENVIRONMENT` - Name of the loaded environment
+
 ## Examples
 
 ### Override default config path
@@ -172,6 +180,38 @@ Equivalent to
 ```sh
 novops load -e dev -s /tmp/.env
 ```
+
+### Check environment currently loaded by Novops
+
+Novops exposes some variables by default (eg. `NOVOPS_ENVIRONMENT`). You can use them to perform some specific actions.
+
+Simple example: show loaded environment
+
+```sh
+novops run -e dev -- sh -c 'echo "Current Novops environment: $NOVOPS_ENVIRONMENT"'
+```
+
+You can leverage `NOVOPS_ENVIRONMENT` to change behavior on certain environments, such as avoiding destructive action in Prod:
+
+```sh
+# Failsafe: if current environment is prod or contains 'prod', exit with error
+if [[ $NOVOPS_ENVIRONMENT == *"prod"* ]]; then
+  echo "You can't run this script in production or prod-like environments!"
+  exit 1
+fi
+
+# ... some destructive actions
+make destroy-all
+```
+
+`NOVOPS_ENVIRONMENT` is automayically loaded:
+
+```sh
+novops run -e prod -- ./destroy-all.sh  # Won't work
+novops run -e dev -- ./destroy-all.sh   # OK
+```
+
+You may instead add a custom `MY_APP_ENVIRONMENT` on each environment but it's less convenient. 
 
 ### Writing .env to secure directory
 

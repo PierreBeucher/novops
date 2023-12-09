@@ -266,7 +266,6 @@ mod tests {
         Ok(())
     }
 
-
     #[tokio::test]
     async fn test_should_error_tty() -> Result<(), anyhow::Error> {
 
@@ -284,6 +283,16 @@ mod tests {
         assert_eq!(should_error_tty(false, true, &symlink_some), false, "Non-tty terminal should not cause failsafe");
         assert_eq!(should_error_tty(false, false, &symlink_none), false, "Non-tty terminal should not cause failsafe");
         assert_eq!(should_error_tty(false, false, &symlink_some), false, "Non-tty terminal should not cause failsafe");
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_default_loaded_vars() -> Result<(), anyhow::Error> {
+
+        let result = load_env_dryrun_for("empty", "dev").await?;
+
+        assert_eq!(result.variables.get("NOVOPS_ENVIRONMENT").unwrap().value, "dev");
 
         Ok(())
     }
