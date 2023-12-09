@@ -73,11 +73,11 @@
         "systems": "systems"
       },
       "locked": {
-        "lastModified": 1702118969,
-        "narHash": "sha256-VtuZ2TGR/h/oxb3LkiVFzY526GEsmWLR/s9mEAlgMbw=",
+        "lastModified": 1702121057,
+        "narHash": "sha256-fInUxHopR5I4vJ+NXfRRg7av88hoGvhOYE27YGi1WV4=",
         "owner": "PierreBeucher",
         "repo": "novops",
-        "rev": "045cca1b4ce7034580aca38b7b5d8d4efc9fa927",
+        "rev": "174112dabc39b37ff1b1e280636bbe5f9724225e",
         "type": "github"
       },
       "original": {
