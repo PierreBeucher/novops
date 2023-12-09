@@ -2,6 +2,7 @@
 
 - [Linux](#linux)
   - [Updating](#updating)
+- [Arch Linux](#arch-linux)
 - [Nix](#nix)
 - [From source](#from-source)
 
@@ -42,10 +43,20 @@ yay -S novops-git
 
 Use a `flake.nix` such as:
 
-```
+```nix
 {
   description = "Example Flake using Novops";
 
+  # Optional: use Cachix cache to avoid re-building Novops
+  nixConfig = {
+    extra-substituters = [
+      "https://novops.cachix.org"
+    ];
+    extra-trusted-public-keys = [
+      "novops.cachix.org-1:xm1fF2MoVYRmg89wqgQlM15u+2bk0LBfVktN9EgDaHY="
+    ];
+  };
+    
   inputs = {
     novops.url = "github:PierreBeucher/novops"; # Add novops input
     flake-utils.url = "github:numtide/flake-utils";
