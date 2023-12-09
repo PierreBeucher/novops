@@ -1,67 +1,79 @@
 {
-  description = "Novops flake";
+  description = "Novops, the cross-platform secret manager for development and CI environments";
 
+  # Flake config inspired from https://github.com/srid/rust-nix-template/blob/master/flake.nix
   inputs = {
-    dream2nix.url = "github:nix-community/dream2nix";
-    nixpkgs.url = "github:NixOS/nixpkgs/release-23.05";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    flake-parts.url = "github:hercules-ci/flake-parts";
+    systems.url = "github:nix-systems/default";
+
   };
 
-  outputs = { self, nixpkgs, dream2nix }:
-    let 
-      system = "x86_64-linux";
-      pkgs = nixpkgs.legacyPackages.${system};
-    in 
-      dream2nix.lib.makeFlakeOutputs {
-        systems = [ system ];
-        
-        config.projectRoot = ./.;
-        source = ./.;
-        projects = ./projects.toml;
+  outputs = inputs:
+    inputs.flake-parts.lib.mkFlake { inherit inputs; } {
+      systems = import inputs.systems;
+      perSystem = { config, self', pkgs, lib, system, ... }:
+        let
+          cargoToml = builtins.fromTOML (builtins.readFile ./Cargo.toml);
 
-        packageOverrides = {
+          rust-toolchain = pkgs.symlinkJoin {
+            name = "rust-toolchain";
+            paths = [ pkgs.rustc pkgs.cargo pkgs.cargo-watch pkgs.rust-analyzer pkgs.rustPlatform.rustcSrc ];
+          };
+
+        in {
           
-          # Use more recent rust toolchain
-          "^.*".set-toolchain.overrideRustToolchain = old: {
-            inherit (pkgs) cargo rustc;
-          };
-
-          # Add build dependencies
-          # dream2nix uses crane and generate 2 derivations novops and novops-deps
-          # Each needs additional build inputs
-          # See https://nix-community.github.io/dream2nix/subsystems/rust.html#override-gotchas
-          novops-deps = {
-            add-deps = {
-              nativeBuildInputs = old: old ++ [
-                pkgs.pkg-config
-                pkgs.openssl.dev
-              ];
+          # Rust package
+          packages.default = pkgs.rustPlatform.buildRustPackage {
+            inherit (cargoToml.package) name version;
+            src = ./.;
+            cargoLock = {
+              lockFile = ./Cargo.lock;
+              outputHashes = {
+                "vaultrs-0.7.0" = "sha256-aRbduZEQQ+4Rmk/g757yiZ8IkWemoALcPjHh9Q5tLTU=";
+              };
             };
+
+            doCheck = false;
+
+            nativeBuildInputs = with pkgs; [
+              pkg-config
+            ];
+
+            buildInputs = with pkgs; [
+              openssl.dev
+            ];
           };
 
-          novops = {
-            add-deps = {
-              buildInputs = [
-                pkgs.openssl.dev
-
-                pkgs.pkg-config
-                pkgs.mdbook
-                pkgs.mdbook-linkcheck
-                pkgs.google-cloud-sdk
-                pkgs.bitwarden-cli
-                pkgs.json-schema-for-humans
-                pkgs.podman
-                pkgs.podman-compose
-                pkgs.gnumake
-                pkgs.zip
-                pkgs.gh
-                pkgs.nodejs-slim # for npx release-please
-              ];
-
-              # Skip tests as most are integration tests requiring setup
-              # Tests are run outside of Nix context for now 
-              doCheck = false;
-            };
+          # Rust dev environment
+          devShells.default = pkgs.mkShell {
+            shellHook = ''
+              # For rust-analyzer 'hover' tooltips to work.
+              export RUST_SRC_PATH=${pkgs.rustPlatform.rustLibSrc}
+            '';
+            
+            buildInputs = with pkgs; [
+              pkg-config
+              openssl.dev
+              mdbook
+              mdbook-linkcheck
+              google-cloud-sdk
+              bitwarden-cli
+              json-schema-for-humans
+              podman
+              podman-compose
+              gnumake
+              zip
+              gh
+              nodejs-slim # for npx release-please
+            ];
+            nativeBuildInputs = with pkgs; [
+              rust-toolchain
+            ];
+            RUST_BACKTRACE = 1;
           };
+
+
         };
-      };
+    };
 }

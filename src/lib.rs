@@ -240,8 +240,8 @@ pub async fn resolve_environment_inputs(ctx: &NovopsContext, inputs: NovopsEnvir
             .ok_or(anyhow::anyhow!("Couldn't convert PathBuf '{:?}' to String", &r.dest))?;
 
         // FileInput generates both var and file output
-        variable_outputs.insert(fpath_str.clone().to_string(), r.variable.clone());
-        file_outputs.insert(fpath_str.clone().to_string(), r.clone());
+        variable_outputs.insert(fpath_str.to_string(), r.variable.clone());
+        file_outputs.insert(fpath_str.to_string(), r.clone());
     };
 
     match &inputs.aws {
