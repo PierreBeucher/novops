@@ -24,26 +24,31 @@
         in {
           
           # Rust package
-          packages.default = pkgs.rustPlatform.buildRustPackage {
-            inherit (cargoToml.package) name version;
-            src = ./.;
-            cargoLock = {
-              lockFile = ./Cargo.lock;
-              outputHashes = {
-                "vaultrs-0.7.0" = "sha256-aRbduZEQQ+4Rmk/g757yiZ8IkWemoALcPjHh9Q5tLTU=";
+          packages = rec {
+            default = novops;
+            novops = pkgs.rustPlatform.buildRustPackage {
+              inherit (cargoToml.package) name version;
+              src = ./.;
+              cargoLock = {
+                lockFile = ./Cargo.lock;
+                outputHashes = {
+                  "vaultrs-0.7.0" = "sha256-aRbduZEQQ+4Rmk/g757yiZ8IkWemoALcPjHh9Q5tLTU=";
+                };
               };
+
+              doCheck = false;
+
+              nativeBuildInputs = with pkgs; [
+                pkg-config
+              ];
+
+              buildInputs = with pkgs; [
+                openssl.dev
+              ];
             };
-
-            doCheck = false;
-
-            nativeBuildInputs = with pkgs; [
-              pkg-config
-            ];
-
-            buildInputs = with pkgs; [
-              openssl.dev
-            ];
           };
+
+          
 
           # Rust dev environment
           devShells.default = pkgs.mkShell {
