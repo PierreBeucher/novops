@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.9.0](https://github.com/PierreBeucher/novops/compare/v0.8.0...v0.9.0) (2023-12-09)
+
+
+### Features
+
+* Discord community channel ([b55c4be](https://github.com/PierreBeucher/novops/commit/b55c4bea40660648d1b1a57895f49a624c0ba98b))
+* expose NOVOPS_ENVIRONMENT variable by default ([9fdfb85](https://github.com/PierreBeucher/novops/commit/9fdfb85dc60d1fb8e757fbf8e5dec40314f83406))
+* provide Cachix cache to Nix Flake users ([b5fe8f4](https://github.com/PierreBeucher/novops/commit/b5fe8f427764a7e7fb4090d71e3255e6bee7c0a7))
+* support for NOVOPS_* environment variables ([36dc800](https://github.com/PierreBeucher/novops/commit/36dc800b95858f4b4fa965c1939229bcab93fdde))
+
+
+### Bug Fixes
+
+* tty check logic always failing despite symlink set ([6d49959](https://github.com/PierreBeucher/novops/commit/6d49959184fb7d8c915eb6329b53ee99092d0a3f))
+
 ## [0.8.0](https://github.com/PierreBeucher/novops/compare/v0.7.0...v0.8.0) (2023-08-27)
 
 
