@@ -24,7 +24,7 @@
         in {
           
           # Rust package
-          packages.default = pkgs.rustPlatform.buildRustPackage {
+          packages.novops = pkgs.rustPlatform.buildRustPackage {
             inherit (cargoToml.package) name version;
             src = ./.;
             cargoLock = {
@@ -44,6 +44,8 @@
               openssl.dev
             ];
           };
+
+          packages.default = packages.novops;
 
           # Rust dev environment
           devShells.default = pkgs.mkShell {
