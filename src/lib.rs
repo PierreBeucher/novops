@@ -95,7 +95,7 @@ pub async fn load_context_and_resolve(args: &NovopsLoadArgs) -> Result<NovopsOut
     let ctx = make_context(&args).await?;
     let novops_env = get_current_environment(&ctx).await?;
     
-    // Revole inputs and export (write data to disk)
+    // Revole inputs and export
     let (var_out, file_out) = 
         resolve_environment_inputs(&ctx, novops_env).await?;
 
@@ -412,7 +412,7 @@ fn prompt_for_environment(config_file_data: &NovopsConfigFile) -> Result<String,
 }
 
 /**
- * Write resolved files to disk
+ * Write resolved files to protected directory
  */
 fn export_file_outputs(outputs: &NovopsOutputs) -> Result<(), anyhow::Error>{
     
@@ -434,7 +434,7 @@ fn export_file_outputs(outputs: &NovopsOutputs) -> Result<(), anyhow::Error>{
 }
 
 /**
- * Write a sourceable environment variable file to disk
+ * Write a sourceable environment variable file
  * With a content like
  * '
  *  export VAR=value

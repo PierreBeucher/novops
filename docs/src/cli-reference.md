@@ -215,9 +215,9 @@ You may instead add a custom `MY_APP_ENVIRONMENT` on each environment but it's l
 
 ### Writing .env to secure directory
 
-You can write `.env` variable file to to disk in a secure directory and source it later. **This usage is not recommended** as writing data to disk may represent a risk. 
+Without Novops, you'd write some `.env` variable file directly to disk and source it. But writing data directly to disk may represent a risk. 
 
-`novops load -s SYMLINK` creates a symlink pointing to secret file, easing usage without compromising security:
+`novops load -s SYMLINK` creates a symlink pointing to secret file stored securely in a `tmpfs` directory.
 
 ```sh
 # Creates symlink .envrc -> /run/user/1000/novops/myapp/dev/vars
