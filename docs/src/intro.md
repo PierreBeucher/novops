@@ -28,7 +28,7 @@ Novops is a platform-agnostic secret manager for local development and CI.
 
 ## 🔐 Security
 
-Novops loads secrets in memory and does not write anything to disk. Secrets are loaded temporarily and kept only for as long as they are needed. See [Novops Security Model](./security.md) for details.
+Secrets are loaded temporarily as environment variables or in a protected `tmpfs` directory and kept only for as long as they are needed.. See [Novops Security Model](./security.html) for details
 
 ## Why Novops?
 
