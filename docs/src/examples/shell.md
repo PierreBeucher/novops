@@ -2,7 +2,7 @@
 
 - [Source into current shell](#source-into-current-shell)
 - [Run sub-process](#run-sub-process)
-- [Create `dotenv` file in secure directory with symlink](#create-dotenv-file-in-secure-directory-with-symlink)
+- [Create `dotenv` file in protected directory with symlink](#create-dotenv-file-in-protected-directory-with-symlink)
 
 ## Source into current shell
 
@@ -28,14 +28,12 @@ novops run -- terraform apply
 
 This will ensure secrets are only exists in memory for as long as command run.
 
-## Create `dotenv` file in secure directory with symlink
-
-_Note: this method is not recommended as it will write secrets to disks as `dotenv` file._ If possible, prefer using one of the method above. If you need to pass a file to a process such as Docker, use syntax `COMMAND --env-file <(novops load -f dotenv -e dev) ARG` to pass environment as file to process without writing to disk.
+## Create `dotenv` file in protected directory with symlink
 
 Load secrets and create a `.env -> /run/user/1000/novops/.../vars` symlink pointing to dotenv file sourceable into your environment. 
 
 ```sh
-novops load -s .env
+novops load -s .envrc
 
 # .env is a symlink
 # There's no risk commiting to Git

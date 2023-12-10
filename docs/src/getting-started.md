@@ -5,7 +5,7 @@
 - [🔐 Security](#-security)
 - [Run Novops with...](#run-novops-with)
   - [Shell](#shell)
-  - [🐳 Docker & Podman](#-docker--podman)
+  - [🐳 Docker \& Podman](#-docker--podman)
   - [More examples](#more-examples)
 - [Load and generate temporary secrets](#load-and-generate-temporary-secrets)
   - [Hashicorp Vault](#hashicorp-vault)
@@ -84,7 +84,7 @@ env | grep AWS
 
 ## 🔐 Security
 
-Novops loads secrets in memory and does not write anything to disk. Secrets are loaded temporarily and kept only for as long as they are needed. See [Novops Security Model](./security.md) for details
+Secrets are loaded temporarily in a protected `tmpfs` directory and kept only for as long as they are needed. See [Novops Security Model](https://pierrebeucher.github.io/novops/security.html) for details
 
 ## Run Novops with...
 
@@ -270,7 +270,7 @@ config:
 
 ## Files 
 
-Novops can also write files such as SSH keys. Files are not written to disk but in memory in a secure directory, see [Novops Security Model](./security.html).
+Novops can also write files such as SSH keys. Files are kept in a `tmpfs` secured directory, see [Novops Security Model](./security.html).
 
 ```yaml
 environments:

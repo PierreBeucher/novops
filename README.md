@@ -69,7 +69,7 @@ environments:
       - name: DATABASE_USER
         value: root
     
-    # Load files in memory (not written on disk)
+    # Load files in memory
     files:
       - variable: APP_SSH_KEY # Will point to generated file
         content:
@@ -105,8 +105,7 @@ echo $DATABASE_PASSWORD
 # passxxxxxxx
 
 echo $APP_SSH_KEY
-# /run/user/1000/novops/... 
-# Files are not written on disk but remain in memory
+# /run/user/1000/novops/... (in a tmpfs directory)
 
 env | grep AWS
 # AWS_ACCESS_KEY_ID=AKIAXXX
@@ -116,7 +115,7 @@ env | grep AWS
 
 ## 🔐 Security
 
-Novops loads secrets in memory and does not write anything to disk. Secrets are loaded temporarily and kept only for as long as they are needed.
+Secrets are loaded temporarily in a protected `tmpfs` directory and kept only for as long as they are needed.
 
 See [Novops Security Model](https://pierrebeucher.github.io/novops/security.html) for details
 
@@ -201,7 +200,7 @@ config:
 
 ### Temporary files 
 
-Novops can write secret in files such as SSH keys. Files are not written to disk but in memory under a secure directory, see [Novops Security Model](https://pierrebeucher.github.io/novops/security.html).
+Novops can write secret in files such as SSH keys. Files are written in a `tmpfs` filesystem under a secure directory, see [Novops Security Model](https://pierrebeucher.github.io/novops/security.html).
 
 ```yaml
 environments:
