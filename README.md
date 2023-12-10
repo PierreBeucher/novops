@@ -115,7 +115,7 @@ env | grep AWS
 
 ## 🔐 Security
 
-Secrets are loaded temporarily in a protected `tmpfs` directory and kept only for as long as they are needed.
+Secrets are loaded temporarily as environment variables or in a protected `tmpfs` directory and kept only for as long as they are needed.
 
 See [Novops Security Model](https://pierrebeucher.github.io/novops/security.html) for details
 
