@@ -1,84 +1,65 @@
 {
   description = "Novops, the cross-platform secret manager for development and CI environments";
 
-  # Flake config inspired from https://github.com/srid/rust-nix-template/blob/master/flake.nix
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    flake-parts.url = "github:hercules-ci/flake-parts";
-    systems.url = "github:nix-systems/default";
-
+    flake-utils.url = "github:numtide/flake-utils";
+    crane = {
+      url = "github:ipetkov/crane";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = inputs:
-    inputs.flake-parts.lib.mkFlake { inherit inputs; } {
-      systems = import inputs.systems;
-      perSystem = { config, self', pkgs, lib, system, ... }:
-        let
-          cargoToml = builtins.fromTOML (builtins.readFile ./Cargo.toml);
+  outputs = { self, nixpkgs, flake-utils, crane, ... }:
+    flake-utils.lib.eachDefaultSystem (system:
+      let
+        pkgs = nixpkgs.legacyPackages.${system};        
+        craneLib = crane.lib.${system};
 
-          rust-toolchain = pkgs.symlinkJoin {
-            name = "rust-toolchain";
-            paths = [ pkgs.rustc pkgs.cargo pkgs.cargo-watch pkgs.rust-analyzer pkgs.rustPlatform.rustcSrc ];
-          };
-
-        in {
+        commonArgs = {
+          src = craneLib.cleanCargoSource (craneLib.path ./.);
           
-          # Rust package
-          packages = rec {
-            default = novops;
-            novops = pkgs.rustPlatform.buildRustPackage {
-              inherit (cargoToml.package) name version;
-              src = ./.;
-              cargoLock = {
-                lockFile = ./Cargo.lock;
-                outputHashes = {
-                  "vaultrs-0.7.0" = "sha256-aRbduZEQQ+4Rmk/g757yiZ8IkWemoALcPjHh9Q5tLTU=";
-                };
-              };
+          strictDeps = true;
+          doCheck = false;
 
-              doCheck = false;
+          buildInputs = [
+            pkgs.openssl
+          ];
 
-              nativeBuildInputs = with pkgs; [
-                pkg-config
-              ];
-
-              buildInputs = with pkgs; [
-                openssl.dev
-              ];
-            };
-          };
-
-          
-
-          # Rust dev environment
-          devShells.default = pkgs.mkShell {
-            shellHook = ''
-              # For rust-analyzer 'hover' tooltips to work.
-              export RUST_SRC_PATH=${pkgs.rustPlatform.rustLibSrc}
-            '';
-            
-            buildInputs = with pkgs; [
-              pkg-config
-              openssl.dev
-              mdbook
-              mdbook-linkcheck
-              google-cloud-sdk
-              bitwarden-cli
-              json-schema-for-humans
-              podman
-              podman-compose
-              gnumake
-              zip
-              gh
-              nodejs-slim # for npx release-please
-              cachix
-            ];
-            nativeBuildInputs = with pkgs; [
-              rust-toolchain
-            ];
-          };
-
-
+          nativeBuildInputs = [
+            pkgs.pkg-config
+          ];
         };
-    };
+
+        novopsPackage = craneLib.buildPackage (commonArgs // {
+          cargoArtifacts = craneLib.buildDepsOnly commonArgs;
+        });
+        
+      in {
+
+        packages = {
+          default = novopsPackage;
+          novops = novopsPackage;
+        };
+
+        devShells.default = craneLib.devShell {
+          packages = with pkgs; [
+            pkg-config
+            openssl.dev
+            mdbook
+            mdbook-linkcheck
+            google-cloud-sdk
+            bitwarden-cli
+            json-schema-for-humans
+            podman
+            podman-compose
+            gnumake
+            zip
+            gh
+            nodejs-slim # for npx release-please
+            cachix
+          ];
+        };
+      }
+    );
 }
