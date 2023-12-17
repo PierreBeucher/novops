@@ -11,18 +11,34 @@
     };
     
     inputs = {
-        novops.url = "github:PierreBeucher/novops"; 
+        novops.url = "github:PierreBeucher/novops/nix-cargo-crane"; 
+        flake-utils.url = "github:numtide/flake-utils";
+        nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     };
 
-    outputs = { self, nixpkgs, novops }: {
-        devShells."x86_64-linux".default = nixpkgs.legacyPackages."x86_64-linux".mkShell {
-            packages = [ 
-                novops.packages."x86_64-linux".novops
-            ];
-            shellHook = ''
-                # Run novops on shell startup
-                source <(novops load)
-            '';
-        };
-    };
+    outputs = { self, nixpkgs, novops, flake-utils }:
+        flake-utils.lib.eachDefaultSystem (system: 
+        let
+            novopsPackage = novops.packages.${system}.novops; # Novops package must exists
+            novopsDefaultPackage = novops.packages.${system}.default; # default Novops package must exists
+            pkgs = nixpkgs.legacyPackages.${system};      
+        in {
+            packages = {
+                default = novopsDefaultPackage;
+                novops = novopsPackage;
+            };
+
+            devShells = {
+                default = nixpkgs.legacyPackages.${system}.mkShell {
+                    packages = [ 
+                        novopsPackage
+                        novopsDefaultPackage
+                    ];
+                    shellHook = ''
+                        # Run novops on shell startup
+                        source <(novops load)
+                    '';
+                };
+            };
+        });
 }
