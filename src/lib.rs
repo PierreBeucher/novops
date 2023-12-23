@@ -445,8 +445,13 @@ fn prompt_for_environment(config_file_data: &NovopsConfigFile) -> Result<String,
     };
 }
 
+/**
+ * Return a sorted list of environments from config
+ */
 fn list_environments_from_config(config_file_data: &NovopsConfigFile) -> Vec<String> {
-    config_file_data.environments.keys().cloned().collect::<Vec<String>>()
+    let mut sorted = config_file_data.environments.keys().cloned().collect::<Vec<String>>();
+    sorted.sort();
+    return sorted
 }
 
 /**

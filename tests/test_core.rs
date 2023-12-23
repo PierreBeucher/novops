@@ -304,11 +304,10 @@ mod tests {
         let result = list_environments("tests/.novops.multi-env.yml").await?;
 
         assert_eq!(result.len(), 4);
-        assert!(result.contains(&"dev".to_string()));
-        assert!(result.contains(&"staging".to_string()));
-        assert!(result.contains(&"preprod".to_string()));
-        assert!(result.contains(&"prod".to_string()));
-
+        assert_eq!(result[0], "dev");
+        assert_eq!(result[1], "preprod");
+        assert_eq!(result[2], "prod");
+        assert_eq!(result[3], "staging");
         Ok(())
     }
 
@@ -328,3 +327,4 @@ mod tests {
     }
 
 }
+
