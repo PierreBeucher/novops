@@ -93,6 +93,8 @@ jobs:
       
       - run: nix build --json | jq -r '.[].outputs | to_entries[].value' | cachix push novops
 
+  # Some end-user CLI test
+  # Which cannot be tested easily with unit tests
   test-novops-cli:
     runs-on: ubuntu-latest
     if: " ! startsWith(github.event.ref, 'refs/tags/v')"
@@ -126,6 +128,17 @@ jobs:
           export NOVOPS_ENVIRONMENT=dev
           build/novops run -- sh -c "env | grep DOG_PATH"
 
+      - name: novops list environments
+        run: |
+          build/novops list environments -c tests/.novops.multi-env.yml | grep preprod
+          # json format should return "preprod" with quotes
+          build/novops list environments -c tests/.novops.multi-env.yml -o json | grep '"preprod"'
+      
+      - name: novops list outputs
+        run: |
+          build/novops list outputs -e dev -c tests/.novops.multi-env.yml | grep MY_APP_HOST
+          build/novops list outputs -e dev -c tests/.novops.multi-env.yml -o json | grep '"MY_APP_HOST"'
+          
   # Upload artifacts for release tags only
   release-artifacts:
     needs: build

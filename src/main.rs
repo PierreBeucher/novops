@@ -6,6 +6,11 @@ use clap::{Arg, Command, value_parser, ArgAction, crate_version};
 use novops::{self, init_logger, get_config_schema};
 use clap_complete::{generate, Shell};
 use log::error;
+use std::collections::HashMap;
+
+// Format for novops list commands
+const LIST_CMD_OUTPUT_PLAIN: &str = "plain";
+const LIST_CMD_OUTPUT_JSON: &str = "json";
 
 fn build_cli() -> Command {
     
@@ -45,6 +50,12 @@ fn build_cli() -> Command {
         .value_name("DRY_RUN")
         .action(ArgAction::SetTrue)
         .required(false);
+
+    let arg_output_format = Arg::new("format")
+        .value_name("OUTPUT_FORMAT")
+        .help("Output format.")
+        .short('o')
+        .default_value("plain");
 
     let app = Command::new("novops")
         .about("Cross-plaform secret loader")
@@ -101,6 +112,22 @@ fn build_cli() -> Command {
                 .help("Command to run.")
                 .required(true)
             )
+        )
+        .subcommand(
+            Command::new("list")
+                .subcommand(
+                    Command::new("environments")
+                    .about("List available environments.")                    
+                    .arg(&arg_config)
+                    .arg(&arg_output_format)
+                )
+                .subcommand(
+                    Command::new("outputs")
+                    .about("List outputs for an environment.")
+                    .arg(&arg_config)
+                    .arg(&arg_environment)
+                    .arg(&arg_output_format)
+                )
         )
         .subcommand(
             Command::new("completion")
@@ -178,6 +205,84 @@ async fn main() -> Result<(), anyhow::Error> {
             .with_context(|| "Failed to load environment and exec command. Set environment variable RUST_LOG=[trace|debug|info|warn] or RUST_BACKTRACE=1 for more verbosity.")?;
 
         exit(2)
+    };
+
+    if let Some(list_subc) = m.subcommand_matches("list") {
+
+
+        if let Some(list_envs_subc) = list_subc.subcommand_matches("environments") {
+            let config_file = list_envs_subc.get_one::<String>("config")
+                .ok_or(anyhow::anyhow!("Config is None. This is probably a bug as CLI defines default value."))?.clone();
+
+            let envs = novops::list_environments(&config_file).await
+                .with_context(|| "Failed to list environments. Set environment variable RUST_LOG=[trace|debug|info|warn] or RUST_BACKTRACE=1 for more verbosity.")?;
+
+            let output_format = list_envs_subc.get_one::<String>("format")
+                .ok_or(anyhow::anyhow!("Format is None. This is probably a bug as CLI defines default value."))?.clone();
+
+            match output_format.as_str() {
+                LIST_CMD_OUTPUT_JSON => {
+                    let json = serde_json::to_string(&envs)
+                        .with_context(|| "Failed to serialize environments to JSON. Set environment variable RUST_LOG=[trace|debug|info|warn] or RUST_BACKTRACE=1 for more verbosity.")?;
+                    println!("{}", json);
+                    exit(0)
+                },
+                LIST_CMD_OUTPUT_PLAIN => {
+                    println!("{}", envs.join("\n"));
+                    exit(0)
+                },
+                _ => {
+                    println!("Unknown format: {}", output_format);
+                    exit(1)
+                }
+            }
+        };
+        
+        if let Some(list_outputs_subc) = list_subc.subcommand_matches("outputs") {
+            let config_file = list_outputs_subc.get_one::<String>("config")
+                .ok_or(anyhow::anyhow!("Config is None. This is probably a bug as CLI defines default value."))?.clone();
+
+            let env_name = list_outputs_subc.get_one::<String>("environment").map(String::from);
+
+            let output_format = list_outputs_subc.get_one::<String>("format")
+                .ok_or(anyhow::anyhow!("Format is None. This is probably a bug as CLI defines default value."))?.clone();
+
+            let outputs = novops::list_outputs_for_environment(&config_file, env_name).await
+                .with_context(|| "Failed to list outputs. Set environment variable RUST_LOG=[trace|debug|info|warn] or RUST_BACKTRACE=1 for more verbosity.")?;
+            
+            
+            // Result in the form { "variables": [ "VAR_NAME1", "VAR_NAME2" ], "files": ["/path/to/file1", "/path/to/file2", ...] }
+            let mut result: HashMap<String, Vec<String>> = HashMap::new();
+            result.insert("variables".to_string(), 
+                outputs.variables.iter().map(|e| e.1.name.clone()).collect::<Vec<String>>()
+            );
+            result.insert("files".to_string(), 
+                outputs.files.iter().map(|f| f.0.clone()).collect::<Vec<String>>()
+            );
+
+            match output_format.as_str() {
+                LIST_CMD_OUTPUT_JSON => {
+                    let json = serde_json::to_string(&result)
+                        .with_context(|| "Failed to serialize environments to JSON. Set environment variable RUST_LOG=[trace|debug|info|warn] or RUST_BACKTRACE=1 for more verbosity.")?;
+                    println!("{}", json);
+                    exit(0)
+                },
+                LIST_CMD_OUTPUT_PLAIN => {
+                    println!("Variables:");
+                    println!();
+                    println!("{}", result.get("variables").unwrap().join("\n"));
+                    println!();
+                    println!("Files:");
+                    println!();
+                    println!("{}", result.get("files").unwrap().join("\n"));
+                    exit(0)
+                },
+                _ => {
+                    println!("Unknown format: {}", output_format);
+                    exit(1)
+                }
+            }
+        };
     };
 
     if let Some(cmd) = m.subcommand_matches("completion") {

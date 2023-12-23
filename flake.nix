@@ -59,6 +59,8 @@
             nodejs-slim # for npx release-please
             cachix
           ];
+
+          RUST_SRC_PATH = "${pkgs.rust.packages.stable.rustPlatform.rustLibSrc}";
         };
       }
     );

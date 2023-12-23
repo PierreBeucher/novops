@@ -1,0 +1,24 @@
+environments:
+  dev:
+    variables:
+      - name: MY_APP_HOST
+        value: "localhost"
+    files: 
+      - variable: DOG_PATH
+        content: "woof"
+  staging:
+    variables:
+      - name: MY_APP_HOST
+        value: "staging.app.co"
+  preprod:
+    variables:
+      - name: MY_APP_HOST
+        value: "preprod.app.co"
+  prod:
+    variables:
+      - name: MY_APP_HOST
+        value: "app.co"
+
+config:
+  default:
+    environment: dev

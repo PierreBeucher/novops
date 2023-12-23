@@ -153,6 +153,40 @@ pub fn init_logger() {
 }
 
 /**
+ * List all environments from config file
+ */
+pub async fn list_environments(config_file: &str) -> Result<Vec<String>, anyhow::Error> {
+    init_logger();
+
+    debug!("Listing environments from {:?}", &config_file);
+
+    let config = read_config_file(config_file)
+        .with_context(|| format!("Error reading config file '{:}'", &config_file))?;
+
+    let envs = list_environments_from_config(&config);
+    return Ok(envs)
+}
+
+/**
+ * List all outputs for an environment from config file
+ * Use dry-run mode to generate outputs
+ */
+pub async fn list_outputs_for_environment(config_file: &str, env_name: Option<String>) -> Result<NovopsOutputs, anyhow::Error> {
+    init_logger();
+
+    debug!("Listing outputs for environment {:?} from {:?}", &env_name, &config_file);
+    
+    let dryrun_args = NovopsLoadArgs{ 
+        config: String::from(config_file),
+        env: env_name,
+        working_directory: None,
+        dry_run: Some(true)
+    };
+
+    let outputs = load_context_and_resolve(&dryrun_args).await?;
+    return Ok(outputs)
+}
+/**
  * Generate Novops context from arguments, env vars and Novops config
  */
 pub async fn make_context(args: &NovopsLoadArgs) -> Result<NovopsContext, anyhow::Error> {
@@ -376,7 +410,7 @@ fn prepare_working_directory_tmp(app_name: &String, env_name: &String) -> Result
 fn prompt_for_environment(config_file_data: &NovopsConfigFile) -> Result<String, anyhow::Error>{
 
     // read config for environments and eventual default environment 
-    let environments = config_file_data.environments.keys().cloned().collect::<Vec<String>>();
+    let environments = list_environments_from_config(config_file_data);
     let default_env_value = String::default();
     let default_env = config_file_data.config.as_ref()
         .and_then(|c| c.default.as_ref())
@@ -409,6 +443,15 @@ fn prompt_for_environment(config_file_data: &NovopsConfigFile) -> Result<String,
     } else {
         Ok(selected_env)
     };
+}
+
+/**
+ * Return a sorted list of environments from config
+ */
+fn list_environments_from_config(config_file_data: &NovopsConfigFile) -> Vec<String> {
+    let mut sorted = config_file_data.environments.keys().cloned().collect::<Vec<String>>();
+    sorted.sort();
+    return sorted
 }
 
 /**
