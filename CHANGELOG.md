@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.10.0](https://github.com/PierreBeucher/novops/compare/v0.9.0...v0.10.0) (2023-12-23)
+
+
+### Features
+
+* list environments and outputs ([c2b9787](https://github.com/PierreBeucher/novops/commit/c2b97878081927c8e72941c4bff473e54c1b9f0a))
+* ordered list of environments ([93acf7f](https://github.com/PierreBeucher/novops/commit/93acf7fb2d64d71df817df8e3c3c290b17da5607))
+
 ## [0.9.0](https://github.com/PierreBeucher/novops/compare/v0.8.0...v0.9.0) (2023-12-09)
 
 
