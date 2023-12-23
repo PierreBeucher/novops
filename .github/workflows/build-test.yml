@@ -149,6 +149,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       
+      - uses: cachix/install-nix-action@v20
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+
       - name: download novops artifacts
         uses: actions/download-artifact@v3
         with:

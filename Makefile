@@ -63,9 +63,13 @@ clean:
 	echo "todo"
 
 
+#
+# Relase 
+#
+
 # Publish image to Docker Hub for release or locally for testing
-DOCKER_REPOSITORY ?= oci-archive:/tmp/novops-image-archive
-GITHUB_REF_NAME ?= local
+DOCKER_REPOSITORY ?= docker://docker.io/crafteo/novops
+GITHUB_REF_NAME ?= local # Set by GitHub Actions
 .PHONY: docker-publish
 docker-publish:
 	podman load -i build/image.tar
@@ -80,10 +84,10 @@ release-tag:
 release-pr:
 	npx release-please release-pr --repo-url https://github.com/PierreBeucher/novops --token=${GITHUB_TOKEN}
 
-
+# Publish artifact on GitHub release
 RUNNER_ARCH ?= X64
 RUNNER_OS ?= Linux
-GITHUB_REF_NAME ?= vx.x.x
+GITHUB_REF_NAME ?= local # Set by GitHub Actions
 .PHONY: release-artifacts
 release-artifacts:
 	cp build/novops.zip build/novops-${RUNNER_ARCH}-${RUNNER_OS}.zip
