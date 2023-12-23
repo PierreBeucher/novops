@@ -5,7 +5,7 @@ mod test_utils;
 #[cfg(test)]
 mod tests {
     use novops::modules::variables::VariableOutput;
-    use novops::{make_context, NovopsLoadArgs, load_environment_write_vars, prepare_exec_command, should_error_tty};
+    use novops::{make_context, NovopsLoadArgs, load_environment_write_vars, prepare_exec_command, should_error_tty, list_environments, list_outputs_for_environment};
     use novops::core::{NovopsContext, NovopsConfig, NovopsConfigFile, NovopsConfigDefault, NovopsEnvironmentInput};
     use std::collections::HashMap;
     use std::ffi::OsStr;
@@ -293,6 +293,36 @@ mod tests {
         let result = load_env_dryrun_for("empty", "dev").await?;
 
         assert_eq!(result.variables.get("NOVOPS_ENVIRONMENT").unwrap().value, "dev");
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_list_environments() -> Result<(), anyhow::Error> {
+        test_setup().await?;
+
+        let result = list_environments("tests/.novops.multi-env.yml").await?;
+
+        assert_eq!(result.len(), 4);
+        assert!(result.contains(&"dev".to_string()));
+        assert!(result.contains(&"staging".to_string()));
+        assert!(result.contains(&"preprod".to_string()));
+        assert!(result.contains(&"prod".to_string()));
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_list_environment_output() -> Result<(), anyhow::Error> {
+        test_setup().await?;
+
+        let result = list_outputs_for_environment("tests/.novops.multi-env.yml", Some("dev".to_string())).await?;
+
+        // Assert this
+        assert_eq!(result.variables.len(), 3);
+        assert_eq!(result.variables.get("MY_APP_HOST").unwrap().value, "localhost");
+
+        assert_eq!(result.files.len(), 1);
 
         Ok(())
     }
