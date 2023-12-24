@@ -1,5 +1,7 @@
 use std::path::PathBuf;
 use std::fs;
+use std::fs::Permissions;
+use std::os::unix::fs::PermissionsExt;
 use std::env;
 use novops::{NovopsOutputs, NovopsLoadArgs, load_context_and_resolve};
 use novops::core::{NovopsContext, NovopsConfig, NovopsConfigFile, NovopsConfigDefault};
@@ -23,6 +25,7 @@ pub fn clean_and_setup_test_dir(test_name: &str) -> Result<PathBuf, anyhow::Erro
   }
   
   fs::create_dir_all(&test_output_dir)?;
+  fs::set_permissions(&test_output_dir, Permissions::from_mode(0o700))?;
   return Ok(test_output_dir)
 }
 
