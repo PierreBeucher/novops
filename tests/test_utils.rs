@@ -46,6 +46,7 @@ async fn _load_env_for(conf_name: &str, env: &str, dry_run: bool) -> Result<Novo
     config: format!("tests/.novops.{}.yml", conf_name), 
     env: Some(env.to_string()), 
     working_directory: None,
+    skip_working_directory_check: Some(false),
     dry_run: Some(dry_run)
   };
 

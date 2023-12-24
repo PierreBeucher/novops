@@ -4,7 +4,7 @@ pub mod modules;
 use crate::core::{ResolveTo, NovopsEnvironmentInput, NovopsConfigFile, NovopsContext};
 use crate::modules::files::FileOutput;
 use crate::modules::variables::VariableOutput;
-use log::{info, debug, error};
+use log::{info, debug, error, warn};
 
 use std::os::linux::fs::MetadataExt;
 use std::os::unix::prelude::OpenOptionsExt;
@@ -27,6 +27,8 @@ pub struct NovopsLoadArgs {
     pub env: Option<String>,
 
     pub working_directory: Option<String>,
+
+    pub skip_working_directory_check: Option<bool>,
 
     pub dry_run: Option<bool>
 
@@ -180,6 +182,7 @@ pub async fn list_outputs_for_environment(config_file: &str, env_name: Option<St
         config: String::from(config_file),
         env: env_name,
         working_directory: None,
+        skip_working_directory_check: Some(false),
         dry_run: Some(true)
     };
 
@@ -347,7 +350,19 @@ fn read_environment_name(config: &NovopsConfigFile, flag: &Option<String>) -> Re
 fn prepare_working_directory(args: &NovopsLoadArgs, app_name: &String, env_name: &String) -> Result<PathBuf, anyhow::Error> {
     
     let workdir = match &args.working_directory {
-        Some(wd) => PathBuf::from(wd),
+        Some(custom_workdir) => {
+            
+            // If custom working specified, check permissions
+            if ! args.skip_working_directory_check.unwrap_or(false) {
+                let custom_workdir_path = PathBuf::from(custom_workdir);
+                check_working_dir_permissions(&custom_workdir_path)
+                    .with_context(|| "Working directory permissions are unsafe. Use --skip-workdir-check to skip this check.")?;
+            } else {
+                warn!("Skipping working directory permissions check. This is unsafe !")
+            }
+        
+            PathBuf::from(custom_workdir)
+        },
         None => match prepare_working_directory_xdg(app_name, env_name) {
                 Ok(s) => s,
                 Err(e) => {
@@ -402,6 +417,30 @@ fn prepare_working_directory_tmp(app_name: &String, env_name: &String) -> Result
         .with_context(|| format!("Couldn't create working directory {:?}", &workdir))?;
     
     return Ok(PathBuf::from(workdir));
+}
+
+/**
+ * Check workdir is safe: should not be read/write/executable 
+ * by anyone other than current user or root
+ */
+pub fn check_working_dir_permissions(workdir: &PathBuf) -> Result<(), anyhow::Error> {
+    let metadata = fs::metadata(&workdir)
+        .with_context(|| format!("Couldn't get metadata for working directory {:?}", &workdir))?;
+
+    // check mode is rwx------ (or more restrictive)
+    let mode =  metadata.permissions().mode();
+    if metadata.permissions().mode() & 0o777 != 0o700 {
+        return Err(anyhow::anyhow!("Working directory {:?} mode {:o} (octal) is too large. Only current user should have access.", &workdir, &mode));
+    }
+
+    // check owner is current user or root
+    let workdir_owner_uid = metadata.st_uid();
+    let current_uid = users::get_current_uid();
+    if workdir_owner_uid != current_uid && workdir_owner_uid != 0 {
+        return Err(anyhow::anyhow!("Working directory {:?} ownership is unsafe (owned by {:}). Only current user {:} or root can have ownership.", &workdir, &workdir_owner_uid, &current_uid));
+    }
+
+    return Ok(());
 }
 
 /**

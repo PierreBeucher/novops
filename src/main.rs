@@ -43,6 +43,15 @@ fn build_cli() -> Command {
         .value_name("DIR")
         .required(false);
 
+    let arg_skip_workdir_check = Arg::new("skip_workdir_check")
+        .help("Skip working directory safety checks for permissions and ownership. By default, working directory is ensured to be owned by current user without group or world access.")
+        .long("skip-workdir-check")
+        .env("NOVOPS_SKIP_WORKDIR_CHECK")
+        .value_name("SKIP_WORKDIR_CHECK")
+        .action(ArgAction::SetTrue)
+        .default_value("false")
+        .required(false);
+
     let arg_dryrun = Arg::new("dry_run")
         .help("Perform a dry-run: no external service will be called and dummy secrets are generated.")
         .long("dry-run")
@@ -68,6 +77,7 @@ fn build_cli() -> Command {
             .arg(&arg_environment)
             .arg(&arg_workdir)
             .arg(&arg_dryrun)
+            .arg(&arg_skip_workdir_check)
             .arg(Arg::new("symlink")
                 .help("Create a symlink pointing to generated environment variable file. Implies -o 'workdir'")
                 .long("symlink")
@@ -106,6 +116,7 @@ fn build_cli() -> Command {
             .arg(&arg_environment)
             .arg(&arg_workdir)
             .arg(&arg_dryrun)
+            .arg(&arg_skip_workdir_check)
             .arg(Arg::new("command")
                 .value_name("COMMAND")
                 .action(ArgAction::Append)
@@ -178,6 +189,7 @@ async fn main() -> Result<(), anyhow::Error> {
                 .ok_or(anyhow::anyhow!("Config is None. This is probably a bug as CLI defines default value."))?.clone(),
             env: load_subc.get_one::<String>("environment").map(String::from),
             working_directory: load_subc.get_one::<String>("working_dir").map(String::from),
+            skip_working_directory_check: load_subc.get_one::<bool>("skip_workdir_check").map(|b| *b),
             dry_run: load_subc.get_one::<bool>("dry_run").map(|e| *e)
         };
 
@@ -194,6 +206,7 @@ async fn main() -> Result<(), anyhow::Error> {
                 .ok_or(anyhow::anyhow!("Config is None. This is probably a bug as CLI defines default value."))?.clone(),
             env: load_subc.get_one::<String>("environment").map(String::from),
             working_directory: load_subc.get_one::<String>("working_dir").map(String::from),
+            skip_working_directory_check: load_subc.get_one::<bool>("skip_workdir_check").map(|b| *b),
             dry_run: load_subc.get_one::<bool>("dry_run").map(|e| *e)
         };
 

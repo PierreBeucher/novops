@@ -5,12 +5,14 @@ mod test_utils;
 #[cfg(test)]
 mod tests {
     use novops::modules::variables::VariableOutput;
-    use novops::{make_context, NovopsLoadArgs, load_environment_write_vars, prepare_exec_command, should_error_tty, list_environments, list_outputs_for_environment};
+    use novops::{make_context, NovopsLoadArgs, 
+        load_environment_write_vars, prepare_exec_command, should_error_tty, 
+        list_environments, list_outputs_for_environment, check_working_dir_permissions};
     use novops::core::{NovopsContext, NovopsConfig, NovopsConfigFile, NovopsConfigDefault, NovopsEnvironmentInput};
     use std::collections::HashMap;
     use std::ffi::OsStr;
     use std::path::PathBuf;
-    use std::fs;
+    use std::fs::{self, Permissions};
     use std::os::unix::fs::PermissionsExt;
     use log::info;
     use crate::test_utils::{clean_and_setup_test_dir, TEST_DIR, load_env_dryrun_for, test_setup};
@@ -31,6 +33,7 @@ mod tests {
             config: String::from(CONFIG_EMPTY),
             env: Some(String::from("dev")),
             working_directory: Some(workdir.clone().into_os_string().into_string().unwrap()),
+            skip_working_directory_check: Some(false),
             dry_run: None
         };
         let result = make_context(&args).await?;
@@ -84,6 +87,7 @@ mod tests {
                 config: String::from(CONFIG_STANDALONE),
                 env: Some(String::from("dev")), 
                 working_directory: Some(workdir.clone().into_os_string().into_string().unwrap()),
+                skip_working_directory_check: Some(false),
                 dry_run: None
             },
             &Some(String::from(".envrc")),
@@ -136,6 +140,7 @@ mod tests {
                 config: String::from(CONFIG_STANDALONE),
                 env: Some(String::from("dev")),
                 working_directory: Some(workdir.clone().into_os_string().into_string().unwrap()),
+                skip_working_directory_check: Some(false),
                 dry_run: None
             },
             &Some(expect_symlink_at.clone().into_os_string().into_string().unwrap()),
@@ -157,6 +162,7 @@ mod tests {
                 config: String::from(CONFIG_STANDALONE),
                 env: Some(String::from("staging")),
                 working_directory: Some(workdir_override.clone().into_os_string().into_string().unwrap()), 
+                skip_working_directory_check: Some(false),
                 dry_run: None
             },
             &Some(expect_symlink_at.clone().into_os_string().into_string().unwrap()),
@@ -187,7 +193,8 @@ mod tests {
         let result = load_environment_write_vars(&NovopsLoadArgs { 
                 config: String::from(CONFIG_STANDALONE),
                 env: Some(String::from("dev")), 
-                working_directory: Some(workdir.clone().into_os_string().into_string().unwrap()), 
+                working_directory: Some(workdir.clone().into_os_string().into_string().unwrap()),
+                skip_working_directory_check: Some(false),
                 dry_run: None
             }, 
             &Some(symlink_path.clone().into_os_string().into_string().unwrap()),
@@ -325,6 +332,34 @@ mod tests {
 
         Ok(())
     }
+
+    #[tokio::test]
+    async fn check_working_dir_permissions_test() -> Result<(), anyhow::Error> {
+
+        fn make_tmp_dir(mode: u32) -> PathBuf {
+            let dir = tempfile::tempdir().unwrap().into_path();
+            let perm = Permissions::from_mode(mode);
+            fs::set_permissions(&dir, perm).unwrap();
+            return dir
+        }
+
+        let dir_user = make_tmp_dir(0o700);
+        let dir_group = make_tmp_dir(0o760);
+        let dir_world = make_tmp_dir(0o706);
+        
+        let result_user = check_working_dir_permissions(&dir_user);
+        assert!(result_user.is_ok(), "Directory with user-only permission should pass check, got {:?}", result_user);
+
+        let result_group = check_working_dir_permissions(&dir_group);
+        assert!(result_group.is_err(), "Directory with group permission should not pass check, got {:?}", result_group);
+
+        let result_world = check_working_dir_permissions(&dir_world);
+        assert!(result_world.is_err(), "Directory with world permission should not pass check, got {:?}", result_world);
+
+        Ok(())
+    }
+
+
 
 }
 
