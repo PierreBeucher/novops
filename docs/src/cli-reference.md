@@ -116,9 +116,11 @@ CLI flags can be specified via environment variables `NOVOPS_*`:
 - `NOVOPS_ENVIRONMENT` - global flag `-e, --env`
 - `NOVOPS_WORKDIR` - global flag `-w, --working-dir`
 - `NOVOPS_DRY_RUN` - global flag `--dry-run`
+- `NOVOPS_SKIP_WORKDIR_CHECK` - global flag `--skip-workdir-check`
 - `NOVOPS_LOAD_SYMLINK` - load subcommand flag `-s, --symlink`
 - `NOVOPS_LOAD_FORMAT` - load subcommand flag `-f, --format `
 - `NOVOPS_LOAD_SKIP_TTY_CHECK` - load subcommand `--skip-tty-check`
+
 
 ## Variables loaded by default
 

@@ -55,3 +55,4 @@ features = [
 
 [dev-dependencies]
 pretty_assertions = "1.3.0"
+tempfile = "3.8.1"

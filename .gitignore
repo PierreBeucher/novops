@@ -6,6 +6,7 @@ build/
 tests/output/
 tests/localconfig
 .envrc
+tmp*
 
 # vscode 
 .vscode/settings.json
@@ -15,4 +16,3 @@ result
 
 # mkbook
 docs/book
-
