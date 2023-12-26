@@ -557,6 +557,16 @@
             }
           ]
         },
+        "sops_dotenv": {
+          "description": "Reference SOPS encrypted file(s) as dotenv to load variables",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/SopsDotenvInput"
+          }
+        },
         "variables": {
           "description": "Variables resolving to environment variables from provided source",
           "type": [
@@ -566,6 +576,77 @@
           "items": {
             "$ref": "#/definitions/VariableInput"
           }
+        }
+      }
+    },
+    "SopsDotenvInput": {
+      "description": "SOPS input directly under an environment to load file content as environment variables Encrypted SOPS files must be in a valid dotenv format",
+      "type": "object",
+      "required": [
+        "file"
+      ],
+      "properties": {
+        "additional_flag": {
+          "description": "Additional flags passed to sops",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "extract": {
+          "description": "Extract a specific field via --extract flag",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "file": {
+          "description": "Path to encrypted file",
+          "type": "string"
+        }
+      }
+    },
+    "SopsValueFromFile": {
+      "type": "object",
+      "required": [
+        "file"
+      ],
+      "properties": {
+        "additional_flag": {
+          "description": "Additional flags passed to sops after --decrypt --extract",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "extract": {
+          "description": "Extract a specific field via --extract flag",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "file": {
+          "description": "Path to encrypted file",
+          "type": "string"
+        }
+      }
+    },
+    "SopsValueInput": {
+      "description": "SOPS input to be used as file, variables or other kind of value input",
+      "type": "object",
+      "required": [
+        "sops"
+      ],
+      "properties": {
+        "sops": {
+          "$ref": "#/definitions/SopsValueFromFile"
         }
       }
     },
@@ -595,6 +676,9 @@
         },
         {
           "$ref": "#/definitions/AzureKeyvaultSecretInput"
+        },
+        {
+          "$ref": "#/definitions/SopsValueInput"
         }
       ]
     },

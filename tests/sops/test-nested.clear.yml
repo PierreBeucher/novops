@@ -1,0 +1,4 @@
+nested:
+  data:
+    nestedKey: nestedValue
+another_value: foo

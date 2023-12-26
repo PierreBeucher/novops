@@ -15,4 +15,5 @@ Everything you can use within `.novops.yml`
  - Secret Manager
 - [Azure](microsoft-azure.md)
   - Key Vault
+- [SOPS (Secrets OPerationS)](sops.md)
 - [BitWarden](bitwarden.md)

@@ -1,0 +1,6 @@
+APP_TOKEN: "s3cret!"
+app_host: http://localhost
+WITH_LINES: |
+  foo
+  bar\nbaz\\n\nzzz
+WITH_EQUAL: EQUAL_CHAR=EQUAL_VALUE

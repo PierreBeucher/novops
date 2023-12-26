@@ -78,6 +78,9 @@ pub async fn test_setup() -> Result<(), anyhow::Error>{
   std::env::set_var("AWS_CONFIG_FILE", aws_config.to_str().unwrap());
   std::env::set_var("AWS_SHARED_CREDENTIALS_FILE", &aws_creds.to_str().unwrap());
 
+  // known age keys
+  std::env::set_var("SOPS_AGE_KEY_FILE", "tests/sops/age1");
+
   Ok(())
 }
 

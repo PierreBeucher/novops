@@ -17,6 +17,7 @@ use crate::modules::gcloud;
 use crate::modules::azure;
 use crate::modules::files::FileInput;
 use crate::modules::variables::VariableInput;
+use crate::modules::sops;
 
 /// Available environments. Keys are environment names. 
 type NovopsEnvironments = HashMap<String, NovopsEnvironmentInput>;
@@ -99,7 +100,10 @@ pub struct NovopsEnvironmentInput {
     pub aws: Option<aws::config::AwsInput>,
 
     /// Reference one or more Hashicorp Vault Secret Engines to generate either files or variables.
-    pub hashivault: Option<hashivault::config::HashiVaultInput>
+    pub hashivault: Option<hashivault::config::HashiVaultInput>,
+
+    /// Reference SOPS encrypted file(s) as dotenv to load variables
+    pub sops_dotenv: Option<Vec<sops::SopsDotenvInput>>,
 }
 
 
@@ -145,7 +149,8 @@ pub enum StringResolvableInput {
     AwsSSMParamStoreInput(aws::ssm::AwsSSMParamStoreInput),
     AwsSecretsManagerSecretInput(aws::secretsmanager::AwsSecretsManagerSecretInput),
     GCloudSecretManagerSecretInput(gcloud::secretmanager::GCloudSecretManagerSecretInput),
-    AzureKeyvaultSecretInput(azure::vault::AzureKeyvaultSecretInput)
+    AzureKeyvaultSecretInput(azure::vault::AzureKeyvaultSecretInput),
+    SopsValueInput(sops::SopsValueInput),
 }
 
 
@@ -169,6 +174,7 @@ impl ResolveTo<String> for StringResolvableInput {
             StringResolvableInput::AwsSecretsManagerSecretInput(s) => s.resolve(ctx).await,
             StringResolvableInput::GCloudSecretManagerSecretInput(s) => s.resolve(ctx).await,
             StringResolvableInput::AzureKeyvaultSecretInput(z) => z.resolve(ctx).await,
+            StringResolvableInput::SopsValueInput(s) => s.resolve(ctx).await,
         }
     }
 }

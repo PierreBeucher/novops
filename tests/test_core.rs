@@ -53,6 +53,7 @@ mod tests {
                             files: None,
                             aws: None,
                             hashivault: None,
+                            sops_dotenv: None,
                         })
                     ]),
                     config: Some(NovopsConfig { 
