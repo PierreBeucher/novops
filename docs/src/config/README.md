@@ -12,7 +12,7 @@ Everything you can use within `.novops.yml`
   - STS Assume Role for temporary IAM credentials
   - SSM Parameter Store
 - [Google Cloud](google-cloud.md)
- - Secret Manager
+  - Secret Manager
 - [Azure](microsoft-azure.md)
   - Key Vault
 - [SOPS (Secrets OPerationS)](sops.md)

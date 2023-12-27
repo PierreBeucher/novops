@@ -34,7 +34,7 @@ environments:
   dev:
     variables:
 
-      # Load a single SOPS nexted key as environment variable
+      # Load a single SOPS nested key as environment variable
       # Equivalent of `sops --decrypt --extract '["nested"]["data"]["nestedKey"]' path/to/encrypted.yml`
       - name: SOPS_VALUE
         value:
