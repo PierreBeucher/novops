@@ -32,12 +32,12 @@ impl core::ResolveTo<String> for BitwardenItemInput {
 
         let json_value = match json_result {
             Ok(v) => v,
-            Err(e) => return Err(e.into())
+            Err(e) => return Err(e)
         };
 
         // Novops config let user specify a string like "login.password"
         // we need to retrieve this field nested in our JSON (or fail if not found)
-        let fields = self.bitwarden.field.split(".").map(|s| String::from(s)).collect();
+        let fields = self.bitwarden.field.split('.').map(String::from).collect();
         return Ok(
           get_string_in_value(&json_value, fields)
           .with_context(|| format!("Error retrieving field '{:?}' in value {:?} for input {:?}", self.bitwarden.field, &json_value, &self))?
@@ -91,7 +91,7 @@ pub fn get_item(item: &String) -> Result<serde_json::Value, anyhow::Error> {
     .with_context(|| format!("Couldn't parse Bitwarden stdout as JSON. {:?}", command_context))?;
 
 
-  return Ok(json);
+  Ok(json)
 
 }
 
@@ -107,9 +107,9 @@ pub fn get_string_in_value(value: &serde_json::Value, mut fields: Vec<String>) -
   let found_value = value.get(&field)
     .with_context(|| format!("Couldn't find field '{:}' in value {:?}", field, value))?;
   
-  if fields.len() > 0 {
-    return get_string_in_value(found_value, fields);
+  if !fields.is_empty() {
+    get_string_in_value(found_value, fields)
   } else {
-    return Ok(found_value.as_str().with_context(|| format!("Couldn't convert to string: {:?}", found_value))?.to_string());
+    Ok(found_value.as_str().with_context(|| format!("Couldn't convert to string: {:?}", found_value))?.to_string())
   }
 }

@@ -1,4 +1,4 @@
-use crate::{modules::aws::assume_role::AwsAssumeRoleInput};
+use crate::modules::aws::assume_role::AwsAssumeRoleInput;
 
 use schemars::JsonSchema;
 use serde::Deserialize;
@@ -13,23 +13,17 @@ pub struct AwsInput {
  * Generic AWS Client config xrapped around builder pattern
  * for easy loading from Novops config and per-module override
  */
+#[derive(Default)]
 pub struct AwsClientConfig {
     pub profile: Option<String>,
     pub endpoint: Option<String>
 }
 
-impl Default for AwsClientConfig {
-    fn default() -> Self {
-        AwsClientConfig {
-            profile: None,
-            endpoint: None
-        }
-    }
-}
+
 
 impl From<&AwsConfig> for AwsClientConfig {
     fn from(cf: &AwsConfig) -> AwsClientConfig{
-        return AwsClientConfig {
+        AwsClientConfig {
             profile: cf.profile.clone(),
             endpoint: cf.endpoint.clone()
         }
@@ -51,6 +45,7 @@ impl AwsClientConfig {
 
 /// Global AWS config
 #[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
+#[derive(Default)]
 pub struct AwsConfig {
     
     /// Override endpoint for all AWS services
@@ -64,11 +59,3 @@ pub struct AwsConfig {
     pub profile: Option<String>
 }
 
-impl Default for AwsConfig {
-    fn default() -> AwsConfig {
-        AwsConfig{
-          endpoint: None,
-          profile: None
-        }
-      }
-}

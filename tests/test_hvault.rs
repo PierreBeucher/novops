@@ -19,7 +19,7 @@ use novops::modules::hashivault::{
     client::{load_vault_token, load_vault_address},
     config::HashivaultConfig
 };
-use novops::core::{NovopsConfig, NovopsContext};
+use novops::core::NovopsContext;
 
 
 #[tokio::test]
@@ -95,9 +95,9 @@ async fn test_hashivault_aws() -> Result<(), anyhow::Error> {
 
     info!("Hashivault AWS credentials: {:?}", outputs);
 
-    assert!(outputs.variables.get("AWS_ACCESS_KEY_ID").unwrap().value.len() > 0);
-    assert!(outputs.variables.get("AWS_SECRET_ACCESS_KEY").unwrap().value.len() > 0);
-    assert!(outputs.variables.get("AWS_SESSION_TOKEN").unwrap().value.len() > 0);
+    assert!(!outputs.variables.get("AWS_ACCESS_KEY_ID").unwrap().value.is_empty());
+    assert!(!outputs.variables.get("AWS_SECRET_ACCESS_KEY").unwrap().value.is_empty());
+    assert!(!outputs.variables.get("AWS_SESSION_TOKEN").unwrap().value.is_empty());
 
     Ok(())
 }
@@ -141,7 +141,7 @@ async fn test_hashivault_client_token_load() -> Result<(), anyhow::Error> {
     // Providing token path should read token path before plain token
     let tmp_token_path = "/tmp/token";
     let token_file_content = "token_in_file";
-    fs::write(&tmp_token_path, token_file_content)
+    fs::write(tmp_token_path, token_file_content)
         .with_context(|| format!("Couldn't write test token to {tmp_token_path}"))?;
 
     let ctx_token_path = create_dummy_context_with_hvault(
@@ -210,9 +210,9 @@ async fn enable_engine(client: &VaultClient, path: &str, engine_type: &str, opts
     if ! mounts.contains_key(format!("{:}/", path).as_str()) {
 
         let mut options = vaultrs::api::sys::requests::EnableEngineRequest::builder();
-        if opts.is_some(){
-            options.options(opts.unwrap());
-        };
+        if let Some(opts) = opts {
+            options.options(opts);
+        }
 
         vaultrs::sys::mount::enable(client, path, engine_type, Some(&mut options)).await
             .with_context(|| format!("Couldn!'t enable engine {:} at path {:}", engine_type, path))?;    
@@ -226,16 +226,14 @@ async fn enable_engine(client: &VaultClient, path: &str, engine_type: &str, opts
 fn create_dummy_context_with_hvault(addr: Option<String>, token: Option<String>, token_path: Option<PathBuf>) -> NovopsContext {
     let mut ctx = create_dummy_context();
 
-    let mut novops_config = NovopsConfig::default();
-
-    novops_config.hashivault = Some(HashivaultConfig {
+    let novops_config = novops::core::NovopsConfig { hashivault: Some(HashivaultConfig {
         address: addr,
-        token: token,
-        token_path: token_path,
+        token,
+        token_path,
         verify: Some(false)
-    });
+    }), ..Default::default() };
 
     ctx.config_file_data.config = Some(novops_config);
 
-    return ctx
+    ctx
 }

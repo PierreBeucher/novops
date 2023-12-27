@@ -1,4 +1,4 @@
-use crate::core::{NovopsContext};
+use crate::core::NovopsContext;
 use super::config::AwsClientConfig;
 use aws_sdk_secretsmanager::output::GetSecretValueOutput;
 use aws_sdk_ssm::{output::GetParameterOutput, model::Parameter};
@@ -25,9 +25,9 @@ pub trait AwsClient {
 
 pub async fn get_client(ctx: &NovopsContext) -> Box<dyn AwsClient + Send + Sync> {
     if ctx.dry_run {
-        return Box::new(DryRunAwsClient{})
+        Box::new(DryRunAwsClient{})
     } else {
-        return Box::new(DefaultAwsClient{
+        Box::new(DefaultAwsClient{
             config: build_mutable_client_config_from_context(ctx)
         })
     }
@@ -35,7 +35,7 @@ pub async fn get_client(ctx: &NovopsContext) -> Box<dyn AwsClient + Send + Sync>
 
 pub async fn get_client_with_profile(ctx: &NovopsContext, profile: &Option<String>) -> Box<dyn AwsClient + Send + Sync> {
     if ctx.dry_run {
-        return Box::new(DryRunAwsClient{})
+        Box::new(DryRunAwsClient{})
     } else {
         let mut config = build_mutable_client_config_from_context(ctx);
 
@@ -43,8 +43,8 @@ pub async fn get_client_with_profile(ctx: &NovopsContext, profile: &Option<Strin
             config.profile(p);
         }
         
-        return Box::new(DefaultAwsClient{
-            config: config
+        Box::new(DefaultAwsClient{
+            config
         })
     }
 }
@@ -122,7 +122,9 @@ impl AwsClient for DryRunAwsClient{
 }
 
 pub fn build_mutable_client_config_from_context(ctx: &NovopsContext) -> AwsClientConfig {
-    let client_conf = match &ctx.config_file_data.config {
+    
+
+    match &ctx.config_file_data.config {
         Some(config) => {
             match &config.aws {
                 Some(aws) => {
@@ -132,9 +134,7 @@ pub fn build_mutable_client_config_from_context(ctx: &NovopsContext) -> AwsClien
             }
         },
         None => AwsClientConfig::default()
-    };
-
-    return client_conf;
+    }
 }
 
 /**
@@ -164,7 +164,7 @@ pub async fn get_sdk_config(client_conf: &AwsClientConfig) -> Result<aws_config:
         None => {},
     }
 
-    return Ok(aws_config.load().await);
+    Ok(aws_config.load().await)
     
 }
 
@@ -172,26 +172,26 @@ pub async fn get_iam_client(novops_aws: &AwsClientConfig) -> Result<aws_sdk_iam:
     let conf = get_sdk_config(novops_aws).await?;
     
     debug!("Creating AWS IAM client with config {:?}", conf);
-    return Ok(aws_sdk_iam::Client::new(&conf));
+    Ok(aws_sdk_iam::Client::new(&conf))
 }
 
 pub async fn get_sts_client(novops_aws: &AwsClientConfig) -> Result<aws_sdk_sts::Client, anyhow::Error>{
     let conf = get_sdk_config(novops_aws).await?;
 
     debug!("Creating AWS STS client with config {:?}", conf);
-    return Ok(aws_sdk_sts::Client::new(&conf));
+    Ok(aws_sdk_sts::Client::new(&conf))
 }
 
 pub async fn get_ssm_client(novops_aws: &AwsClientConfig) -> Result<aws_sdk_ssm::Client, anyhow::Error>{
     let conf = get_sdk_config(novops_aws).await?;
 
     debug!("Creating AWS SSM client with config {:?}", conf);
-    return Ok(aws_sdk_ssm::Client::new(&conf));
+    Ok(aws_sdk_ssm::Client::new(&conf))
 }
 
 pub async fn get_secretsmanager_client(novops_aws: &AwsClientConfig) -> Result<aws_sdk_secretsmanager::Client, anyhow::Error>{
     let conf = get_sdk_config(novops_aws).await?;
 
     debug!("Creating AWS Secrets Manager client with config {:?}", conf);
-    return Ok(aws_sdk_secretsmanager::Client::new(&conf));
+    Ok(aws_sdk_secretsmanager::Client::new(&conf))
 }

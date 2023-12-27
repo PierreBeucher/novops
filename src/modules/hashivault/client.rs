@@ -67,7 +67,7 @@ impl HashivaultClient for DefaultHashivaultClient {
         let secret_data: HashMap<String, String> = kv1::get(
             &self.client, 
             mount.clone().unwrap_or("secret".to_string()).as_str(), 
-            &path
+            path
         ).await.with_context(|| format!("Error reading '{:}' mount at path '{:}'", &_mount, &path))?;
 
         return secret_data.get(key)
@@ -152,12 +152,12 @@ impl HashivaultClient for DryRunHashivaultClient {
 
 pub fn get_client(ctx: &NovopsContext) -> Result<Box<dyn HashivaultClient + Send + Sync>, anyhow::Error> {
     if ctx.dry_run {
-        return Ok(Box::new(DryRunHashivaultClient{}))
+        Ok(Box::new(DryRunHashivaultClient{}))
     } else {
         let client = build_client(ctx)
             .with_context(|| "Couldn't build Hashivault client")?;
-        return Ok(Box::new(DefaultHashivaultClient{
-            client: client
+        Ok(Box::new(DefaultHashivaultClient{
+            client
         }))
     }
     
@@ -240,7 +240,7 @@ pub fn load_vault_token(ctx: &NovopsContext, home_var: Option<PathBuf>, token_va
 
     debug!("No vault token found, returning empty string...");
 
-    return Ok(VaultClientSettingsBuilder::default().build()?.token)
+    Ok(VaultClientSettingsBuilder::default().build()?.token)
 
 }
 
@@ -255,7 +255,7 @@ pub fn load_vault_address(ctx: &NovopsContext, addr_var: Option<String>) -> Resu
     if addr_var.is_some() {
         debug!("Found VAULT_ADDR variable, using it.");
 
-        return Ok(parse_vault_addr_str(addr_var.unwrap())?);
+        return parse_vault_addr_str(addr_var.unwrap());
     }
 
     let hvault_config = &ctx.clone().config_file_data.config.unwrap_or_default()
@@ -275,14 +275,14 @@ pub fn load_vault_address(ctx: &NovopsContext, addr_var: Option<String>) -> Resu
 
     debug!("No vault address found, returning empty string...");
 
-    return Ok(VaultClientSettingsBuilder::default().build()?.address)
+    Ok(VaultClientSettingsBuilder::default().build()?.address)
 
 }
 
 fn parse_vault_addr_str(vault_addr_str: String) -> Result<Url, anyhow::Error> {
     let vault_addr = Url::parse(&vault_addr_str)
         .with_context(|| format!("Couldn't parse Vault URL '{:?}'", &vault_addr_str))?;
-    return Ok(vault_addr);
+    Ok(vault_addr)
 }
 
 fn read_vault_token_file(token_path: &PathBuf) -> Result<String, anyhow::Error>{

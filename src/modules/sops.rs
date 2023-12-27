@@ -71,15 +71,13 @@ impl core::ResolveTo<String> for SopsValueInput {
         let mut args = vec![];
         
         // add --extract flag if specidief in input
-        self.sops.extract.clone().map(|e| {
+        if let Some(e) = self.sops.extract.clone() {
           args.push(String::from("--extract"));
           args.push(e);
-        });
+        }
 
         // Add additional flags if any
-        self.sops.additional_flags.clone().map(|af| {
-          args.extend(af);
-        });
+        if let Some(af) = self.sops.additional_flags.clone() { args.extend(af); }
         
         let output = run_sops_decrypt(args, &self.sops.file).with_context(|| "Error running sops command.")?;
 
@@ -95,7 +93,7 @@ impl core::ResolveTo<Vec<VariableOutput>> for SopsDotenvInput {
         if ctx.dry_run {          
           return Ok(vec![VariableOutput {
             name: String::from("RESULT"),
-            value: format!("{}:{}", &self.file, &self.additional_flags.clone().unwrap_or(vec![]).join("-"))
+            value: format!("{}:{}", &self.file, &self.additional_flags.clone().unwrap_or_default().join("-"))
           }]);
         }
 
@@ -105,16 +103,13 @@ impl core::ResolveTo<Vec<VariableOutput>> for SopsDotenvInput {
         ];
 
         // add --extract flag if specidief in input
-        self.extract.clone().map(|e| {
+        if let Some(e) = self.extract.clone() {
           args.push(String::from("--extract"));
           args.push(e);
-        });
+        }
 
         // Add additional flags if any
-        self.additional_flags.clone().map(|af| {
-          args.extend(af);
-        });
-
+        if let Some(af) = self.additional_flags.clone() { args.extend(af); }
 
         let output = run_sops_decrypt(args, &self.file).with_context(|| "Error running sops command.")?;
 
@@ -123,9 +118,9 @@ impl core::ResolveTo<Vec<VariableOutput>> for SopsDotenvInput {
         let mut variables = vec![];
 
         for line in output.lines() {
-          let mut parts = line.splitn(2, "=");
-          let name = parts.next().unwrap();
-          let value = parts.next().unwrap();
+          let (name, value) = line.split_once('=').unwrap();
+          
+          
           variables.push(VariableOutput {
             name: name.to_string(),
             value: value.to_string()
@@ -166,6 +161,6 @@ pub fn run_sops_decrypt(additional_args: Vec<String>, file: &str) -> Result<Stri
     return Err(anyhow!("sops command returned non-0 exit code. args: {:?}, stderr: '{:?}'", &final_args, &stderr));
   };
 
-  return Ok(stdout.to_string());
+  Ok(stdout.to_string())
 
 }

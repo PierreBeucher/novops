@@ -9,17 +9,17 @@ use log::{info, debug, error, warn};
 use std::os::linux::fs::MetadataExt;
 use std::os::unix::prelude::OpenOptionsExt;
 use std::{fs, io::prelude::*, os::unix::prelude::PermissionsExt};
-use users;
+
 use anyhow::{self, Context};
 use std::os::unix;
-use std::path::PathBuf;
+use std::path::{PathBuf, Path};
 use std::env;
 use is_terminal::IsTerminal; // todo use std::io::IsTerminal; rust 1.71+
 use std::collections::HashMap;
 use schemars::schema_for;
 use std::process::Command;
 use std::os::unix::process::CommandExt;
-use dialoguer;
+
 use console::Term;
 
 #[derive(Debug)]
@@ -57,9 +57,9 @@ pub struct NovopsOutputs {
 pub async fn load_environment_write_vars(args: &NovopsLoadArgs, symlink: &Option<String>, format: &str, skip_tty_check: bool) -> Result<(), anyhow::Error> {
 
     // safety checks
-    check_stdout_tty_and_exit(skip_tty_check, &symlink);
+    check_stdout_tty_and_exit(skip_tty_check, symlink);
 
-    let outputs = load_context_and_resolve(&args).await?;
+    let outputs = load_context_and_resolve(args).await?;
 
     // Write files to filesystem
     export_file_outputs(&outputs)?;
@@ -76,7 +76,7 @@ pub async fn load_environment_write_vars(args: &NovopsLoadArgs, symlink: &Option
 /// Used by `novops run` to load environment and run child process
 pub async fn load_environment_and_exec(args: &NovopsLoadArgs, command_args: Vec<&String>) -> Result<(), anyhow::Error> {
 
-    let outputs = load_context_and_resolve(&args).await?;
+    let outputs = load_context_and_resolve(args).await?;
 
     // Write files to filesystem
     export_file_outputs(&outputs)?;
@@ -96,14 +96,14 @@ pub async fn load_context_and_resolve(args: &NovopsLoadArgs) -> Result<NovopsOut
 
     debug!("Loading context for {:?}", &args);
 
-    let ctx = make_context(&args).await?;
+    let ctx = make_context(args).await?;
     let novops_env = get_current_environment(&ctx).await?;
     
     // Revole inputs and export
     let (var_out, file_out) = 
         resolve_environment_inputs(&ctx, novops_env).await?;
 
-    return Ok(NovopsOutputs { 
+    Ok(NovopsOutputs { 
         context: ctx, 
         variables: var_out, 
         files: file_out 
@@ -116,7 +116,7 @@ pub fn prepare_exec_command(mut command_args: Vec<&String>, variables: &Vec<Vari
     let child_program = command_args.remove(0);
     let child_args = command_args;
 
-    let mut command = Command::new(&child_program);
+    let mut command = Command::new(child_program);
     command.args(&child_args);
     
 
@@ -168,7 +168,7 @@ pub async fn list_environments(config_file: &str) -> Result<Vec<String>, anyhow:
         .with_context(|| format!("Error reading config file '{:}'", &config_file))?;
 
     let envs = list_environments_from_config(&config);
-    return Ok(envs)
+    Ok(envs)
 }
 
 /**
@@ -189,7 +189,7 @@ pub async fn list_outputs_for_environment(config_file: &str, env_name: Option<St
     };
 
     let outputs = load_context_and_resolve(&dryrun_args).await?;
-    return Ok(outputs)
+    Ok(outputs)
 }
 /**
  * Generate Novops context from arguments, env vars and Novops config
@@ -221,7 +221,7 @@ pub async fn make_context(args: &NovopsLoadArgs) -> Result<NovopsContext, anyhow
     let env_name = read_environment_name(&config, &args.env)?;
 
     // working directory under which to save files (if any)
-    let workdir = prepare_working_directory(&args, &app_name, &env_name)?;
+    let workdir = prepare_working_directory(args, &app_name, &env_name)?;
     info!("Using workdir: {:?}", &workdir);
 
     // environment variable file which will contain variable output the user can export
@@ -270,15 +270,15 @@ pub async fn resolve_environment_inputs(ctx: &NovopsContext, inputs: NovopsEnvir
         value: ctx.env_name.clone()
     });
     
-    for v in &inputs.variables.unwrap_or(vec![]) {
-        let val = v.resolve(&ctx).await
+    for v in &inputs.variables.unwrap_or_default() {
+        let val = v.resolve(ctx).await
             .with_context(|| format!("Couldn't resolve variable input {:?}", v))?;
         
         variable_outputs.insert(v.name.clone(), val);
     };
 
-    for f in &inputs.files.unwrap_or(vec![]) {
-        let r = f.resolve(&ctx).await
+    for f in &inputs.files.unwrap_or_default() {
+        let r = f.resolve(ctx).await
             .with_context(|| format!("Couldn't resolve file input {:?}", f))?;
         
         let fpath_str = r.dest.to_str()
@@ -291,7 +291,7 @@ pub async fn resolve_environment_inputs(ctx: &NovopsContext, inputs: NovopsEnvir
 
     match &inputs.aws {
         Some(aws) => {
-            let r = aws.assume_role.resolve(&ctx).await
+            let r = aws.assume_role.resolve(ctx).await
                 .with_context(|| format!("Could not resolve AWS input {:?}", aws))?;
 
             for vo in r {
@@ -304,7 +304,7 @@ pub async fn resolve_environment_inputs(ctx: &NovopsContext, inputs: NovopsEnvir
 
     match &inputs.hashivault {
         Some(hashivault) => {
-            let r = hashivault.aws.resolve(&ctx).await
+            let r = hashivault.aws.resolve(ctx).await
                 .with_context(|| format!("Could not resolve Hashivault input {:?}", hashivault))?;
 
             for vo in r {
@@ -318,7 +318,7 @@ pub async fn resolve_environment_inputs(ctx: &NovopsContext, inputs: NovopsEnvir
     match &inputs.sops_dotenv {
         Some(sops_dotenv) => {
             for s in sops_dotenv {
-                let r = s.resolve(&ctx).await
+                let r = s.resolve(ctx).await
                     .with_context(|| format!("Could not resolve SopsDotenv input {:?}", s))?;
 
                 for vo in r {
@@ -338,7 +338,7 @@ fn read_config_file(config_path: &str) -> Result<NovopsConfigFile, anyhow::Error
     let config: NovopsConfigFile = serde_yaml::from_reader(f)
         .with_context(|| "Error parsing config file and Novops config schema. Maybe some config does not match expected schema?")?;
 
-    return Ok(config);
+    Ok(config)
 }
 
 /** 
@@ -390,13 +390,13 @@ fn prepare_working_directory(args: &NovopsLoadArgs, app_name: &String, env_name:
 
     // workdir may be passed as relative path or auto-generated as absolute path
     // to avoid confusion always return it as absolute path
-    return if workdir.is_absolute() {
+    if workdir.is_absolute() {
         Ok(workdir)
     } else {
         Ok(env::current_dir()
         .with_context(|| "Couldn't get process current working directory")?
         .join(&workdir))
-    };
+    }
 }
 
 /** 
@@ -407,9 +407,9 @@ fn prepare_working_directory_xdg(app_name: &String, env_name: &String) -> Result
     let xdg_prefix = format!("novops/{:}/{:}", app_name, env_name);
 
     let xdg_basedir = xdg::BaseDirectories::new()?
-        .create_runtime_directory(&xdg_prefix)?;
+        .create_runtime_directory(xdg_prefix)?;
     
-    return Ok(xdg_basedir);
+    Ok(xdg_basedir)
 }
 
 
@@ -432,7 +432,7 @@ fn prepare_working_directory_tmp(app_name: &String, env_name: &String) -> Result
     fs::create_dir_all(&workdir)
         .with_context(|| format!("Couldn't create working directory {:?}", &workdir))?;
     
-    return Ok(PathBuf::from(workdir));
+    Ok(PathBuf::from(workdir))
 }
 
 /**
@@ -440,7 +440,7 @@ fn prepare_working_directory_tmp(app_name: &String, env_name: &String) -> Result
  * by anyone other than current user or root
  */
 pub fn check_working_dir_permissions(workdir: &PathBuf) -> Result<(), anyhow::Error> {
-    let metadata = fs::metadata(&workdir)
+    let metadata = fs::metadata(workdir)
         .with_context(|| format!("Couldn't get metadata for working directory {:?}", &workdir))?;
 
     // check mode is rwx------ (or more restrictive)
@@ -456,7 +456,7 @@ pub fn check_working_dir_permissions(workdir: &PathBuf) -> Result<(), anyhow::Er
         return Err(anyhow::anyhow!("Working directory {:?} ownership is unsafe (owned by {:}). Only current user {:} or root can have ownership.", &workdir, &workdir_owner_uid, &current_uid));
     }
 
-    return Ok(());
+    Ok(())
 }
 
 /**
@@ -473,7 +473,7 @@ fn prompt_for_environment(config_file_data: &NovopsConfigFile) -> Result<String,
         .and_then(|d| d.environment);
 
     // If no environment, no happy
-    if environments.len() == 0 {
+    if environments.is_empty() {
         return Err(anyhow::anyhow!("No environment configured."));
     }
 
@@ -511,7 +511,7 @@ fn prompt_for_environment(config_file_data: &NovopsConfigFile) -> Result<String,
         None => return Err(anyhow::anyhow!("No environment selected")),
     };
 
-    return Ok(selected);
+    Ok(selected)
 }
 
 /**
@@ -520,7 +520,7 @@ fn prompt_for_environment(config_file_data: &NovopsConfigFile) -> Result<String,
 fn list_environments_from_config(config_file_data: &NovopsConfigFile) -> Vec<String> {
     let mut sorted = config_file_data.environments.keys().cloned().collect::<Vec<String>>();
     sorted.sort();
-    return sorted
+    sorted
 }
 
 /**
@@ -554,7 +554,7 @@ fn export_file_outputs(outputs: &NovopsOutputs) -> Result<(), anyhow::Error>{
  * '  
  * 
  */
-fn export_variable_outputs(format: &str, symlink: &Option<String>, vars: &Vec<VariableOutput>, working_dir: &PathBuf) -> Result<(), anyhow::Error>{
+fn export_variable_outputs(format: &str, symlink: &Option<String>, vars: &Vec<VariableOutput>, working_dir: &Path) -> Result<(), anyhow::Error>{
 
     let safe_vars = prepare_variable_outputs(vars);
     let vars_string = format_variable_outputs(format, &safe_vars)?;
@@ -578,7 +578,7 @@ fn export_variable_outputs(format: &str, symlink: &Option<String>, vars: &Vec<Va
         }
     }
 
-    return Ok(())    
+    Ok(())    
 }
 
 /**
@@ -592,11 +592,11 @@ fn export_variable_outputs(format: &str, symlink: &Option<String>, vars: &Vec<Va
 pub fn prepare_variable_outputs(vars: &Vec<VariableOutput>) ->  Vec<VariableOutput> {
     let mut safe_vars : Vec<VariableOutput> = Vec::new();
     for v in vars{
-        let safe_val = v.value.replace("'", "'\"'\"'");
+        let safe_val = v.value.replace('\'', "'\"'\"'");
         safe_vars.push(VariableOutput { name: v.name.clone(), value: safe_val })
     }
 
-    return safe_vars;
+    safe_vars
 }
 
 /**
@@ -629,23 +629,23 @@ pub fn format_variable_outputs(format: &str, safe_vars: &Vec<VariableOutput>) ->
         return Err(anyhow::format_err!("Unknown format {:}. Available formats: {:?}", format, FORMAT_ALL))
     }
 
-    return Ok(vars_string);
+    Ok(vars_string)
 
 }
 
 fn create_symlink(lnk: &PathBuf, target: &PathBuf) -> Result<(), anyhow::Error> {
-    let attr_result = fs::symlink_metadata(&lnk);
+    let attr_result = fs::symlink_metadata(lnk);
     if attr_result.is_ok() {
         let attr = attr_result?;
         if attr.is_symlink() && attr.st_uid() == users::get_current_uid(){
             debug!("Deleting existing symlink {:?} before creating new one", &lnk);
-            fs::remove_file(&lnk).with_context(|| format!("Couldn't remove existing symlink {:?}", &lnk))?;
+            fs::remove_file(lnk).with_context(|| format!("Couldn't remove existing symlink {:?}", &lnk))?;
         } else {
             return Err(anyhow::anyhow!("Symlink creation error: {:?} already exists and is not a symlink you own.", &lnk));
         }
     } 
     
-    unix::fs::symlink(&target, &lnk)
+    unix::fs::symlink(target, lnk)
         .with_context(|| format!("Couldn't create symlink {:?} -> {:?}", &lnk, &target))
 }
     
@@ -653,7 +653,7 @@ pub fn get_config_schema() -> Result<String, anyhow::Error>{
     let schema = schema_for!(NovopsConfigFile);
     let output = serde_json::to_string_pretty(&schema)
         .with_context(|| "Couldn't convert JSON schema to pretty string.")?;
-    return Ok(output)
+    Ok(output)
 }
 
 /// See should_error_tty
@@ -685,5 +685,5 @@ pub fn should_error_tty(terminal_is_tty: bool, skip_tty_check: bool, symlink: &O
         return true
     }
 
-    return false
+    false
 }

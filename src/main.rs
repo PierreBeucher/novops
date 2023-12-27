@@ -1,7 +1,7 @@
 use std::io;
 
 use anyhow::{Context, anyhow};
-use tokio;
+
 use clap::{Arg, Command, value_parser, ArgAction, crate_version, ArgMatches};
 use novops::{self, init_logger, get_config_schema, NovopsLoadArgs};
 use clap_complete::{generate, Shell};
@@ -65,7 +65,8 @@ fn build_cli() -> Command {
         .short('o')
         .default_value("plain");
 
-    let app = Command::new("novops")
+     
+    Command::new("novops")
         .about("Cross-plaform secret loader")
         .version(crate_version!())
         .author("Pierre Beucher")
@@ -160,8 +161,6 @@ fn build_cli() -> Command {
             Command::new("schema")
             .about("Output Novops config JSON schema")
         )
-    ; 
-    return app
 }
 
 #[tokio::main]
@@ -291,8 +290,8 @@ async fn cmd_load(cmd_args: &ArgMatches) -> Result<(), anyhow::Error> {
     let env_format = cmd_args.get_one::<String>("format")
         .ok_or(anyhow!("Format is None. This is probably a bug as CLI defines default value."))?.clone();
 
-    let skip_tty_check = cmd_args.get_one::<bool>("skip_tty_check").map(|e| *e)
-        .ok_or(anyhow!("skip_tty_check is None. This is probably a bug as CLI defines default value."))?.clone();
+    let skip_tty_check = cmd_args.get_one::<bool>("skip_tty_check").copied()
+        .ok_or(anyhow!("skip_tty_check is None. This is probably a bug as CLI defines default value."))?;
 
     let novops_load_args = build_novops_args(cmd_args)?;
 
@@ -336,8 +335,8 @@ fn build_novops_args(cmd_args: &ArgMatches) -> Result<NovopsLoadArgs, anyhow::Er
             .ok_or(anyhow!("Config is None. This is probably a bug as CLI defines default value."))?.clone(),
         env: cmd_args.get_one::<String>("environment").map(String::from),
         working_directory: cmd_args.get_one::<String>("working_dir").map(String::from),
-        skip_working_directory_check: cmd_args.get_one::<bool>("skip_workdir_check").map(|b| *b),
-        dry_run: cmd_args.get_one::<bool>("dry_run").map(|e| *e)
+        skip_working_directory_check: cmd_args.get_one::<bool>("skip_workdir_check").copied(),
+        dry_run: cmd_args.get_one::<bool>("dry_run").copied()
     };
 
     Ok(args)

@@ -67,7 +67,7 @@ async fn get_authenticator() -> Result<Authenticator<HttpsConnector<HttpConnecto
 
     debug!("Trying to get Service Account authenticator");
     match sa_authenticator {
-        Ok(auth) => return Ok(auth),
+        Ok(auth) => Ok(auth),
         Err(e) => {
             debug!("Couldn't generate Service Account authenticator: ${:?}", e);
 
@@ -76,7 +76,7 @@ async fn get_authenticator() -> Result<Authenticator<HttpsConnector<HttpConnecto
             let user_authenticator = try_user_authenticator().await;
 
             match user_authenticator {
-                Ok(auth) => return Ok(auth),
+                Ok(auth) => Ok(auth),
                 Err(e) => {
                     debug!("Couldn't generate Authorized User Credentials authenticator: ${:?}", e);
                     
@@ -89,7 +89,7 @@ async fn get_authenticator() -> Result<Authenticator<HttpsConnector<HttpConnecto
                         Err(e) => {
                             debug!("Couldn't generate Instance Metadata authenticator: ${:?}", e);
 
-                            return Err(anyhow::anyhow!("Couldn't generate Authenticator for Google client. Did you setup credentials compatible with Application Default Credentials? "))
+                            Err(anyhow::anyhow!("Couldn't generate Authenticator for Google client. Did you setup credentials compatible with Application Default Credentials? "))
                         },
                     }
                 },
@@ -115,7 +115,7 @@ async fn try_metadata_authenticator() -> Result<Authenticator<HttpsConnector<Htt
         ApplicationDefaultCredentialsTypes::ServiceAccount(_) => 
             return Err(anyhow::anyhow!("Expected ServiceAccount authenticator."))
     };
-    return Ok(result);
+    Ok(result)
 }
 
 // Try to generate a Service Account Authenticator using GOOGLE_APPLICATION_CREDENTIALS env var 
@@ -134,7 +134,7 @@ async fn try_service_account_authenticator() -> Result<Authenticator<HttpsConnec
         ApplicationDefaultCredentialsTypes::InstanceMetadata(_) => 
             return Err(anyhow::anyhow!("Expected ServiceAccount authenticator."))
     };
-    return Ok(result);
+    Ok(result)
 
 }
 
@@ -147,13 +147,13 @@ async fn try_user_authenticator() -> Result<Authenticator<HttpsConnector<HttpCon
         };
 
         let user_secret = oauth2::read_authorized_user_secret(home_dir.join(".config/gcloud/application_default_credentials.json"))
-            .await.with_context(|| format!("Couldn't read Google client user secret"))?;
+            .await.with_context(|| "Couldn't read Google client user secret".to_string())?;
 
         let user_authenticator = oauth2::AuthorizedUserAuthenticator::builder(user_secret)
             .build()
-            .await.with_context(|| format!("Couldn't build AuthorizedUserAuthenticator for Google client"))?;
+            .await.with_context(|| "Couldn't build AuthorizedUserAuthenticator for Google client".to_string())?;
 
-        return Ok(user_authenticator);
+        Ok(user_authenticator)
 }
 
 #[async_trait]
@@ -174,8 +174,8 @@ impl GCloudClient for DryRunGCloudClient{
 
 pub async fn get_client(ctx: &NovopsContext) -> Box<dyn GCloudClient + Send + Sync> {
     if ctx.dry_run {
-        return Box::new(DryRunGCloudClient{})
+        Box::new(DryRunGCloudClient{})
     } else {
-        return Box::new(DefaultGCloudClient{})
+        Box::new(DefaultGCloudClient{})
     }
 }

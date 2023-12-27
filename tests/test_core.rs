@@ -101,7 +101,7 @@ async fn test_simple_run() -> Result<(), anyhow::Error>{
     let file_dog_mode = file_dog_metadata.permissions().mode();
 
     let expected_file_cat_path = PathBuf::from("/tmp/novops_cat");
-    let expected_file_cat_content = fs::read_to_string(&expected_file_cat_path)?;
+    let expected_file_cat_content = fs::read_to_string(expected_file_cat_path)?;
 
     // Expect to match content of CONFIG_STANDALONE
     // use r#"_"# for raw string literal
@@ -218,18 +218,18 @@ async fn test_dry_run() -> Result<(), anyhow::Error> {
     info!("test_dry_run: Found files: {:?}", &result.files);
 
 
-    assert!(result.variables.get("VAR").unwrap().value.len() > 0);
-    assert!(result.variables.get("AWS_SECRETMANAGER").unwrap().value.len() > 0);
-    assert!(result.variables.get("AWS_SSM_PARAMETER").unwrap().value.len() > 0);
-    assert!(result.variables.get("HASHIVAULT_KV_V2").unwrap().value.len() > 0);
-    assert!(result.variables.get("BITWARDEN").unwrap().value.len() > 0);
-    assert!(result.variables.get("GCLOUD_SECRETMANAGER").unwrap().value.len() > 0);
-    assert!(result.files.get("/tmp/novopsfile").unwrap().content.len() > 0);
+    assert!(!result.variables.get("VAR").unwrap().value.is_empty());
+    assert!(!result.variables.get("AWS_SECRETMANAGER").unwrap().value.is_empty());
+    assert!(!result.variables.get("AWS_SSM_PARAMETER").unwrap().value.is_empty());
+    assert!(!result.variables.get("HASHIVAULT_KV_V2").unwrap().value.is_empty());
+    assert!(!result.variables.get("BITWARDEN").unwrap().value.is_empty());
+    assert!(!result.variables.get("GCLOUD_SECRETMANAGER").unwrap().value.is_empty());
+    assert!(!result.files.get("/tmp/novopsfile").unwrap().content.is_empty());
 
     // aws.assumerole
-    assert!(result.variables.get("AWS_ACCESS_KEY_ID").unwrap().value.len() > 0);
-    assert!(result.variables.get("AWS_SESSION_TOKEN").unwrap().value.len() > 0);
-    assert!(result.variables.get("AWS_SECRET_ACCESS_KEY").unwrap().value.len() > 0);
+    assert!(!result.variables.get("AWS_ACCESS_KEY_ID").unwrap().value.is_empty());
+    assert!(!result.variables.get("AWS_SESSION_TOKEN").unwrap().value.is_empty());
+    assert!(!result.variables.get("AWS_SECRET_ACCESS_KEY").unwrap().value.is_empty());
 
     Ok(())
 }
@@ -264,7 +264,7 @@ async fn test_run_prepare_process() -> Result<(), anyhow::Error> {
 
     assert_eq!(result.get_program(), OsStr::new("sh"));
 
-    let result_args : Vec<&OsStr> = result.get_args().map(|arg| arg).collect();
+    let result_args : Vec<&OsStr> = result.get_args().collect();
     assert_eq!(result_args, vec![OsStr::new(&arg1), OsStr::new(&arg2)]);
     
     Ok(())
@@ -277,16 +277,16 @@ async fn test_should_error_tty() -> Result<(), anyhow::Error> {
     let symlink_some = Some(String::from(".envrc"));
 
     // terminal is tty
-    assert_eq!(should_error_tty(true, true, &symlink_none), false, "Skipped tty check should not provoke failsafe");
-    assert_eq!(should_error_tty(true, true, &symlink_some), false, "Skipped tty check should not provoke failsafe");
-    assert_eq!(should_error_tty(true, false, &symlink_none), true, "tty terminal without symlink should provoke failsafe");
-    assert_eq!(should_error_tty(true, false, &symlink_some), false, "tty terminal with symlink should not provoke failsafe");
+    assert!(!should_error_tty(true, true, &symlink_none), "Skipped tty check should not provoke failsafe");
+    assert!(!should_error_tty(true, true, &symlink_some), "Skipped tty check should not provoke failsafe");
+    assert!(should_error_tty(true, false, &symlink_none), "tty terminal without symlink should provoke failsafe");
+    assert!(!should_error_tty(true, false, &symlink_some), "tty terminal with symlink should not provoke failsafe");
 
     // terminal is NOT tty
-    assert_eq!(should_error_tty(false, true, &symlink_none), false, "Non-tty terminal should not cause failsafe");
-    assert_eq!(should_error_tty(false, true, &symlink_some), false, "Non-tty terminal should not cause failsafe");
-    assert_eq!(should_error_tty(false, false, &symlink_none), false, "Non-tty terminal should not cause failsafe");
-    assert_eq!(should_error_tty(false, false, &symlink_some), false, "Non-tty terminal should not cause failsafe");
+    assert!(!should_error_tty(false, true, &symlink_none), "Non-tty terminal should not cause failsafe");
+    assert!(!should_error_tty(false, true, &symlink_some), "Non-tty terminal should not cause failsafe");
+    assert!(!should_error_tty(false, false, &symlink_none), "Non-tty terminal should not cause failsafe");
+    assert!(!should_error_tty(false, false, &symlink_some), "Non-tty terminal should not cause failsafe");
 
     Ok(())
 }
@@ -337,7 +337,7 @@ async fn check_working_dir_permissions_test() -> Result<(), anyhow::Error> {
         let dir = tempfile::tempdir().unwrap().into_path();
         let perm = Permissions::from_mode(mode);
         fs::set_permissions(&dir, perm).unwrap();
-        return dir
+        dir
     }
 
     let dir_user = make_tmp_dir(0o700);
