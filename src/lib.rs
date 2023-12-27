@@ -19,6 +19,8 @@ use std::collections::HashMap;
 use schemars::schema_for;
 use std::process::Command;
 use std::os::unix::process::CommandExt;
+use dialoguer;
+use console::Term;
 
 #[derive(Debug)]
 pub struct NovopsLoadArgs {
@@ -458,44 +460,58 @@ pub fn check_working_dir_permissions(workdir: &PathBuf) -> Result<(), anyhow::Er
 }
 
 /**
- * Prompt user for environment name
+ * Prompt user for environment name using dialoguer for nice UI
  */
 fn prompt_for_environment(config_file_data: &NovopsConfigFile) -> Result<String, anyhow::Error>{
 
-    // read config for environments and eventual default environment 
-    let environments = list_environments_from_config(config_file_data);
-    let default_env_value = String::default();
-    let default_env = config_file_data.config.as_ref()
-        .and_then(|c| c.default.as_ref())
-        .and_then(|d| d.environment.as_ref())
-        .unwrap_or(&default_env_value);
+    let environments = config_file_data.environments.iter()
+        .map(|e| e.0.clone())
+        .collect::<Vec<String>>();
 
-    // prompt user, show default environment if any
-    // only show 'default: xxx' if default environment is defined
-    let mut prompt_msg = format!("Select environment: {:}", environments.join(", "));
+    let default = config_file_data.config.clone()
+        .and_then(|c| c.default)
+        .and_then(|d| d.environment);
 
-    if ! default_env.is_empty() {
-        prompt_msg.push_str(&format!(" (default: {:})", &default_env))
+    // If no environment, no happy
+    if environments.len() == 0 {
+        return Err(anyhow::anyhow!("No environment configured."));
+    }
+
+    // If only one environment, no need to prompt
+    if environments.len() == 1 {
+        debug!("Only one environment configured, using it by default");
+        return Ok(environments[0].clone());
+    }
+
+    // Look for default environment index in environment list
+    // to point to this environment by default.
+    // Error if default environment not found in environment list
+    let default_index = match default {
+        Some(d) => {
+            let idx = environments.iter().position(|e | e == &d);
+            match idx {
+                Some(i) => i,
+                None => {
+                    return Err(anyhow::anyhow!("Default environment '{:}' not found in config", &d));
+                },
+            }
+        },
+        None => 0,
     };
-    
-    // use println, we want to prompt user not log something
-    eprintln!("{prompt_msg}");
-    
-    let mut read_env = String::new();
-    std::io::stdin().read_line(&mut read_env)
-        .with_context(|| "Error reading stdin for environment name user input.")?;
 
-    let selected_env = read_env.trim_end().to_string();
+    let selection = dialoguer::Select::with_theme(&dialoguer::theme::ColorfulTheme::default())
+        .with_prompt("Select environment")
+        .default(default_index)
+        .items(&environments)
+        .interact_on_opt(&Term::stderr())
+        .with_context(|| "Couldn't prompt for environment")?;
 
-    return if selected_env.is_empty() {
-        if default_env.is_empty() {
-            Err(anyhow::anyhow!("No environment selected and no default in config."))
-        } else {
-            Ok(default_env.clone())
-        }
-    } else {
-        Ok(selected_env)
+    let selected = match selection {
+        Some(index) => environments[index].clone(),
+        None => return Err(anyhow::anyhow!("No environment selected")),
     };
+
+    return Ok(selected);
 }
 
 /**
