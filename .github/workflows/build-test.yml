@@ -155,6 +155,11 @@ jobs:
         with:
           nix_path: nixpkgs=channel:nixos-unstable
 
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - name: download novops artifacts
         uses: actions/download-artifact@v3
         with:
