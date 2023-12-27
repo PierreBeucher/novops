@@ -2,7 +2,7 @@
 
 ![novops-features](docs/src/assets/novops-features.jpg)
 
-Novops, the universal secret and configuration manager for development, applications and CI:
+Novops, the universal secret and configuration manager for development, applications and CI.
 
 - **Secret management**: Load secrets safely from any source, including Hashicorp Vault, AWS, GCloud, Azure, SOPS [and more](https://novops.dev/config/index.html)
 - **Configuration as code**: Seamlessly manage and set secure files and environment variables for your local development, applications, and CI pipelines.

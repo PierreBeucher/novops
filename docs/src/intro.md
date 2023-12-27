@@ -1,13 +1,12 @@
 # Introduction
 
-Novops, the universal secret and configuration manager for development, applications and CI:
+Novops, the universal secret and configuration manager for development, applications and CI.
 
 - [Features](#features)
 - [Getting Started](#getting-started)
 - [🔐 Security](#-security)
 - [Why Novops?](#why-novops)
 - [How is Novops different than other secret management tools?](#how-is-novops-different-than-other-secret-management-tools)
-
 
 ## Features
 

@@ -13,6 +13,7 @@
   - [AWS](config/aws.md)
   - [Google Cloud](config/google-cloud.md)
   - [Microsoft Azure](config/microsoft-azure.md)
+  - [SOPS (Secrets OPerationS)](config/sops.md)
   - [BitWarden](config/bitwarden.md)
 - [Examples and Use Cases](examples/README.md)
   - [Shell - sh, bash, zsh...](examples/shell.md)
