@@ -586,7 +586,7 @@
         "file"
       ],
       "properties": {
-        "additional_flag": {
+        "additional_flags": {
           "description": "Additional flags passed to sops",
           "type": [
             "array",
@@ -615,7 +615,7 @@
         "file"
       ],
       "properties": {
-        "additional_flag": {
+        "additional_flags": {
           "description": "Additional flags passed to sops after --decrypt --extract",
           "type": [
             "array",

@@ -33,7 +33,7 @@ pub struct SopsValueFromFile {
     * Additional flags passed to sops
     * after --decrypt --extract
     */
-    additional_flag: Option<Vec<String>>,
+    additional_flags: Option<Vec<String>>,
 }
 
 /**
@@ -52,7 +52,7 @@ pub struct SopsDotenvInput {
     /**
      * Additional flags passed to sops
      */
-    additional_flag: Option<Vec<String>>,
+    additional_flags: Option<Vec<String>>,
 
     /**
     * Extract a specific field via --extract flag
@@ -68,14 +68,17 @@ impl core::ResolveTo<String> for SopsValueInput {
           return Ok(format!("RESULT:{:}:{:}", &self.sops.file, &self.sops.extract.clone().unwrap_or(String::from(""))));
         }
 
-        let mut args = vec![
-          String::from("--decrypt")
-        ];
+        let mut args = vec![];
         
         // add --extract flag if specidief in input
         self.sops.extract.clone().map(|e| {
           args.push(String::from("--extract"));
           args.push(e);
+        });
+
+        // Add additional flags if any
+        self.sops.additional_flags.clone().map(|af| {
+          args.extend(af);
         });
         
         let output = run_sops_decrypt(args, &self.sops.file).with_context(|| "Error running sops command.")?;
@@ -92,12 +95,11 @@ impl core::ResolveTo<Vec<VariableOutput>> for SopsDotenvInput {
         if ctx.dry_run {          
           return Ok(vec![VariableOutput {
             name: String::from("RESULT"),
-            value: format!("{}:{}", &self.file, &self.additional_flag.clone().unwrap_or(vec![]).join("-"))
+            value: format!("{}:{}", &self.file, &self.additional_flags.clone().unwrap_or(vec![]).join("-"))
           }]);
         }
 
         let mut args = vec![
-          String::from("--decrypt"),
           String::from("--output-type"),
           String::from("dotenv")
         ];
@@ -108,7 +110,8 @@ impl core::ResolveTo<Vec<VariableOutput>> for SopsDotenvInput {
           args.push(e);
         });
 
-        self.additional_flag.clone().map(|af| {
+        // Add additional flags if any
+        self.additional_flags.clone().map(|af| {
           args.extend(af);
         });
 
@@ -145,7 +148,6 @@ pub fn run_sops_decrypt(additional_args: Vec<String>, file: &str) -> Result<Stri
 
   debug!("Running sops command with args: {:?}", &final_args);
 
-
   let output = Command::new("sops")
     .args(&final_args)
     .output()
@@ -156,6 +158,9 @@ pub fn run_sops_decrypt(additional_args: Vec<String>, file: &str) -> Result<Stri
   
   let stderr = std::str::from_utf8(&output.stderr)
     .with_context(|| format!("Couldn't decode stderr as UTF-8 for sops command with args: {:?}", &final_args))?;
+
+  // sops should not output any secret 
+  debug!("sops stderr: '{:}'", &stderr);
 
   if ! output.status.success() {
     return Err(anyhow!("sops command returned non-0 exit code. args: {:?}, stderr: '{:?}'", &final_args, &stderr));

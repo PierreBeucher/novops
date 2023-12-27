@@ -59,7 +59,7 @@ Create `.novops.yml` and commit it safely - it does not contain any secret:
 environments:
 
   # Your development environment.
-  # Novops support multiple environments:
+  # Novops supports multiple environments:
   # you can add integ, preprod, prod... 
   # with their own config.
   dev:
@@ -88,7 +88,7 @@ environments:
             path: app/dev
             key: ssh_key
     
-    # Generate temporary AWS credentials for IAM Role
+    # Generate temporary AWS credentials for an IAM Role
     # Provide environment variables:
     # - AWS_ACCESS_KEY_ID
     # - AWS_SECRET_ACCESS_KEY
