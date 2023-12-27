@@ -36,7 +36,7 @@ impl core::ResolveTo<String> for BitwardenItemInput {
         };
 
         // Novops config let user specify a string like "login.password"
-        // we need to retrieve this field nexted in our JSON (or fail if not found)
+        // we need to retrieve this field nested in our JSON (or fail if not found)
         let fields = self.bitwarden.field.split(".").map(|s| String::from(s)).collect();
         return Ok(
           get_string_in_value(&json_value, fields)

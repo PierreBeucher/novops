@@ -44,20 +44,25 @@
 
         devShells.default = craneLib.devShell {
           packages = with pkgs; [
+            # Dev tools
             pkg-config
             openssl.dev
             mdbook
             mdbook-linkcheck
-            google-cloud-sdk
-            bitwarden-cli
             json-schema-for-humans
-            podman
-            podman-compose
             gnumake
             zip
             gh
             nodejs-slim # for npx release-please
             cachix
+
+            # Module testing
+            podman
+            podman-compose
+            google-cloud-sdk
+            bitwarden-cli
+            sops
+            age 
           ];
 
           RUST_SRC_PATH = "${pkgs.rust.packages.stable.rustPlatform.rustLibSrc}";

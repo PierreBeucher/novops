@@ -313,6 +313,20 @@ pub async fn resolve_environment_inputs(ctx: &NovopsContext, inputs: NovopsEnvir
         None => (),
     }
 
+    match &inputs.sops_dotenv {
+        Some(sops_dotenv) => {
+            for s in sops_dotenv {
+                let r = s.resolve(&ctx).await
+                    .with_context(|| format!("Could not resolve SopsDotenv input {:?}", s))?;
+
+                for vo in r {
+                    variable_outputs.insert(vo.name.clone(), vo);
+                }
+            }
+        },
+        None => (),
+    }
+
     Ok((variable_outputs, file_outputs))
 
 }
