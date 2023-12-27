@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.11.0](https://github.com/PierreBeucher/novops/compare/v0.10.0...v0.11.0) (2023-12-27)
+
+
+### Features
+
+* console drop-down for environment selection ([d908e51](https://github.com/PierreBeucher/novops/commit/d908e518f3d529ed3388f6d2b650a12ce2077bee))
+* safety check for custom workdir permissions and ownership ([dce1c02](https://github.com/PierreBeucher/novops/commit/dce1c02783a3799c73b6c10d4c536430c3917d3c))
+* SOPS (Secrets OPerationS) module ([a19861c](https://github.com/PierreBeucher/novops/commit/a19861c2a929106f7c5ab520220f9bb862d63953))
+
 ## [0.10.0](https://github.com/PierreBeucher/novops/compare/v0.9.0...v0.10.0) (2023-12-23)
 
 
