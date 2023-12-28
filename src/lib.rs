@@ -12,9 +12,9 @@ use std::{fs, io::prelude::*, os::unix::prelude::PermissionsExt};
 
 use anyhow::{self, Context};
 use std::os::unix;
+use std::io::IsTerminal;
 use std::path::{PathBuf, Path};
 use std::env;
-use is_terminal::IsTerminal; // todo use std::io::IsTerminal; rust 1.71+
 use std::collections::HashMap;
 use schemars::schema_for;
 use std::process::Command;
