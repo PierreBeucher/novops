@@ -33,7 +33,7 @@ impl ResolveTo<VariableOutput> for VariableInput {
         return Ok(
             VariableOutput { 
                 name: self.name.clone(), 
-                value: value
+                value
             }
         )
     }

@@ -23,7 +23,7 @@ impl AzureClient for DefaultAzureClient{
 
         let credential = DefaultAzureCredential::default();
         let url = &format!("https://{}.vault.azure.net", vault);
-        let client = KeyvaultClient::new(&url, std::sync::Arc::new(credential))
+        let client = KeyvaultClient::new(url, std::sync::Arc::new(credential))
             .with_context(|| format!("Couldn't create Azure Vault client for {:}", url))?
             .secret_client();
 
@@ -57,8 +57,8 @@ impl AzureClient for DryRunAzureClient{
 
 pub fn get_client(ctx: &NovopsContext) -> Box<dyn AzureClient + Send + Sync> {
     if ctx.dry_run {
-        return Box::new(DryRunAzureClient{})
+        Box::new(DryRunAzureClient{})
     } else {
-        return Box::new(DefaultAzureClient{})
+        Box::new(DefaultAzureClient{})
     }
 }

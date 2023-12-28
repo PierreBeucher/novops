@@ -30,7 +30,7 @@ build-nix:
 	nix build -o build/nix
 
 .PHONY: test
-test: test-docker test-doc test-cargo
+test: test-docker test-doc test-clippy test-cargo 
 
 .PHONY: test-docker
 test-docker:
@@ -39,6 +39,10 @@ test-docker:
 .PHONY: test-cargo
 test-cargo:
 	cargo test
+
+.PHONY: test-clippy
+test-clippy:
+	cargo clippy -- -D warnings
 
 # Fails if doc is not up to date with current code
 .PHONY: test-doc

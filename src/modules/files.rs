@@ -7,7 +7,7 @@ use sha2::{Sha256, Digest};
 use schemars::JsonSchema;
 
 use crate::core::{ResolveTo, NovopsContext, BytesResolvableInput};
-use crate::modules::variables::{VariableOutput};
+use crate::modules::variables::VariableOutput;
 
 
 /// 
@@ -92,7 +92,7 @@ impl ResolveTo<FileOutput> for FileInput {
                     name: variable_name,
                     value: file_path_str
                 },
-                content: content
+                content
             }
         )
 

@@ -26,7 +26,7 @@ pub fn clean_and_setup_test_dir(test_name: &str) -> Result<PathBuf, anyhow::Erro
 
     fs::create_dir_all(&test_output_dir)?;
     fs::set_permissions(&test_output_dir, Permissions::from_mode(0o700))?;
-    return Ok(test_output_dir);
+    Ok(test_output_dir)
 }
 
 /**
@@ -61,7 +61,7 @@ async fn _load_env_for(
 
     let outputs = load_context_and_resolve(&args).await?;
 
-    return Ok(outputs);
+    Ok(outputs)
 }
 
 /**
@@ -84,7 +84,7 @@ pub async fn test_setup() -> Result<(), anyhow::Error> {
     let aws_creds = std::env::current_dir()?.join("tests/aws/credentials");
 
     std::env::set_var("AWS_CONFIG_FILE", aws_config.to_str().unwrap());
-    std::env::set_var("AWS_SHARED_CREDENTIALS_FILE", &aws_creds.to_str().unwrap());
+    std::env::set_var("AWS_SHARED_CREDENTIALS_FILE", aws_creds.to_str().unwrap());
 
     // known age keys
     std::env::set_var("SOPS_AGE_KEY_FILE", "tests/sops/age1");
@@ -96,7 +96,7 @@ pub async fn test_setup() -> Result<(), anyhow::Error> {
 pub fn aws_test_config() -> AwsClientConfig {
     let mut aws_conf = AwsClientConfig::default();
     aws_conf.endpoint("http://localhost:4566/"); // Localstack
-    return aws_conf;
+    aws_conf
 }
 
 /**
@@ -107,12 +107,9 @@ pub async fn aws_ensure_role_exists(role_name: &str) -> Result<(), anyhow::Error
     let client = get_iam_client(&aws_test_config()).await?;
     let existing_role_result = client.get_role().role_name(role_name).send().await;
 
-    match existing_role_result {
-        Ok(_) => {
-            // role exists, clean before running test
-            client.delete_role().role_name(role_name).send().await?;
-        }
-        Err(_) => {} // role do not exists, do nothing
+    if existing_role_result.is_ok() {
+        // role exists, clean before running test
+        client.delete_role().role_name(role_name).send().await?;
     }
 
     client

@@ -1,11 +1,9 @@
 pub mod test_lib;
 
-
 use novops::modules::aws::client::{get_ssm_client, get_secretsmanager_client};
 use aws_sdk_ssm::model::ParameterType;
 use aws_smithy_types::Blob;
 use test_lib::{load_env_for, test_setup, aws_ensure_role_exists, aws_test_config};
-
 use log::info;
 
 #[tokio::test]
@@ -18,9 +16,9 @@ async fn test_assume_role() -> Result<(), anyhow::Error> {
 
     info!("test_assume_role: Found variables: {:?}", outputs.variables);
 
-    assert!(outputs.variables.get("AWS_ACCESS_KEY_ID").unwrap().value.len() > 0);
-    assert!(outputs.variables.get("AWS_SECRET_ACCESS_KEY").unwrap().value.len() > 0);
-    assert!(outputs.variables.get("AWS_SESSION_TOKEN").unwrap().value.len() > 0);
+    assert!(!outputs.variables.get("AWS_ACCESS_KEY_ID").unwrap().value.is_empty());
+    assert!(!outputs.variables.get("AWS_SECRET_ACCESS_KEY").unwrap().value.is_empty());
+    assert!(!outputs.variables.get("AWS_SESSION_TOKEN").unwrap().value.is_empty());
 
     Ok(())
 }
@@ -113,22 +111,19 @@ async fn ensure_test_secret_exists(sname: &str, string_value: Option<String>, bi
         -> Result<(), anyhow::Error> {
     let client = get_secretsmanager_client(&aws_test_config()).await?;
 
-    match client.describe_secret().secret_id(sname).send().await {
-        Ok(r) => {
-            info!("Secret {} already exists, deleting...", sname);
+    if let Ok(r) = client.describe_secret().secret_id(sname).send().await {
+        info!("Secret {} already exists, deleting...", sname);
 
-            client.delete_secret()
-                .secret_id(r.arn().unwrap())
-                .force_delete_without_recovery(true)
-                .send().await?;
-        },
-        Err(_) => {}, // secret does not exists, ignore
+        client.delete_secret()
+            .secret_id(r.arn().unwrap())
+            .force_delete_without_recovery(true)
+            .send().await?;
     }
 
     let r = client.create_secret()
         .name(sname)
         .set_secret_string(string_value)
-        .set_secret_binary(binary_value.map(|b| Blob::new(b)))
+        .set_secret_binary(binary_value.map(Blob::new))
         .send().await?;
 
     info!("Create AWS secret {} response: {:?}", sname, r);

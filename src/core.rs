@@ -46,6 +46,7 @@ pub struct NovopsConfigFile {
 /// Global Novops configuration defining behavior for modules
 /// 
 #[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
+#[derive(Default)]
 pub struct NovopsConfig {
     /// Novops default configurations
     pub default: Option<NovopsConfigDefault>,
@@ -57,29 +58,16 @@ pub struct NovopsConfig {
     pub aws: Option<aws::config::AwsConfig>
 }
 
-impl Default for NovopsConfig {
-    fn default() -> NovopsConfig {
-        NovopsConfig {
-            default: None,
-            hashivault: None,
-            aws: None
-        }
-    }
-}
+
 
 #[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]    
+#[derive(Default)]
 pub struct NovopsConfigDefault {
     /// Default environment name, selected by default if no user input is provided
     pub environment: Option<String>,
 }
 
-impl Default for NovopsConfigDefault {
-    fn default() -> NovopsConfigDefault {
-        NovopsConfigDefault {
-            environment: None,
-        }
-    }
-}
+
 
 
 /// Modules to be loaded for an environment. Each module defines one or more Input

@@ -79,5 +79,5 @@ async fn retrieve_secret_bytes_for(ctx: &NovopsContext, secret: &GCloudSecretMan
             &secret.name, expected_checksum, calculated_checksum));
     }
     
-    return Ok(payload_data);
+    Ok(payload_data)
 }

@@ -14,6 +14,7 @@ pub struct HashiVaultInput {
 
 
 #[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]  
+#[derive(Default)]
 pub struct HashivaultConfig {
   /// Address in form http(s)://HOST:PORT
   /// 
@@ -35,13 +36,4 @@ pub struct HashivaultConfig {
   pub verify: Option<bool>
 }
 
-impl Default for HashivaultConfig {
-  fn default() -> HashivaultConfig {
-    HashivaultConfig{
-      address: None,
-      token: None,
-      token_path: None,
-      verify: None
-    }
-  }
-}
+

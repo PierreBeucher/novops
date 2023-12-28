@@ -76,10 +76,10 @@ async fn retrieve_secret(ctx: &NovopsContext, input: &AwsSecretsManagerSecretInp
     let client = get_client(ctx).await;
 
     let output = client.get_secret_value(
-        &input.aws_secret.id.as_str(), 
+        input.aws_secret.id.as_str(), 
         input.aws_secret.version_id.clone(), 
         input.aws_secret.version_stage.clone()
     ).await?;
     
-    return Ok(output);
+    Ok(output)
 }
