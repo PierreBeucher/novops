@@ -7,7 +7,6 @@ edition = "2021"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_yaml = "0.8"
-enum_dispatch = "0.3.8"
 clap = { version = "4.0.18", features = ["derive", "cargo", "env"] }
 clap_complete = "*"
 xdg = "2.1"
@@ -27,7 +26,6 @@ azure_identity = "0.9.0"
 azure_security_keyvault = "0.8.0"
 time = "0.3.17"
 reqwest = "0.11.13"
-tracing-subscriber = { version = "0.3.15", features = ["env-filter"] }
 tokio = { version = "1", features = ["full"] }
 convert_case = "0.5.0"
 async-trait = "0.1.68"
@@ -43,7 +41,6 @@ sha2 = "0.10.6"
 digest = "0.10.6"
 home = "0.5.5"
 google-secretmanager1 = "5.0.2"
-is-terminal = "0.4.9"
 dialoguer = "0.11.0"
 console = "0.15.7"
 
