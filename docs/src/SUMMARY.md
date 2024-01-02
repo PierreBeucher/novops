@@ -3,6 +3,7 @@
 - [Introduction](intro.md)
 - [Installation](install.md)
 - [Getting started](getting-started.md)
+- [Why Novops?](why-novops.md)
 - [Security Model](security.md)
 - [CLI reference and examples](cli-reference.md)
 - [Configuration and Modules](config/README.md)
