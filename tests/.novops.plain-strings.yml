@@ -12,8 +12,12 @@ environments:
     
       # Bunch of special characters which should be properly interpreted and exported
       - name: SPECIAL_CHARACTERS
-        value: "special_char_'!?`$abc_#~%*µ€{}[]-°+@à^ç=\\"
+        value: "special_char\"_'!?`$abc_#~%*µ€{}[]-°+@à^ç=\\"
       
+      - name: SPECIAL_CHARACTERS_DOUBLE
+        value: "special_char\"_'!?`$abc_#~%*µ€{}[]-°+@à^ç=\\"
+        quote_method: double
+
     files: 
       - variable: DOG_PATH
         content: "woof"

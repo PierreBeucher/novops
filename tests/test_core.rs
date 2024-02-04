@@ -107,7 +107,8 @@ async fn test_simple_run() -> Result<(), anyhow::Error>{
     // use r#"_"# for raw string literal
     // check if our file content contains expected export
     // naïve but sufficient for our needs
-    assert!(&expected_var_content.contains(r#"export SPECIAL_CHARACTERS='special_char_'"'"'!?`$abc_#~%*µ€{}[]-°+@à^ç=\'"#));
+    assert!(&expected_var_content.contains(r#"export SPECIAL_CHARACTERS='special_char"_'"'"'!?`$abc_#~%*µ€{}[]-°+@à^ç=\'"#));
+    assert!(&expected_var_content.contains(r#"export SPECIAL_CHARACTERS_DOUBLE="special_char"'"'"_'!?`$abc_#~%*µ€{}[]-°+@à^ç=\""#));
     assert!(&expected_var_content.contains( "export MY_APP_HOST='localhost'"));
     assert!(&expected_var_content.contains( &format!("export DOG_PATH='{:}'",
         &expected_file_dog_path.clone().into_os_string().into_string().unwrap())));
@@ -252,7 +253,8 @@ async fn test_run_prepare_process() -> Result<(), anyhow::Error> {
     let val1 = "barzzz";
     let vars : Vec<VariableOutput> = vec![VariableOutput{ 
         name: String::from(var1), 
-        value: String::from(val1)
+        value: String::from(val1),
+        quote_method: None
     }];
 
     let result = prepare_exec_command(args, &vars);
@@ -322,7 +324,7 @@ async fn test_list_environment_output() -> Result<(), anyhow::Error> {
     let result = list_outputs_for_environment("tests/.novops.multi-env.yml", Some("dev".to_string())).await?;
 
     // Assert this
-    assert_eq!(result.variables.len(), 3);
+    assert_eq!(result.variables.len(), 5);
     assert_eq!(result.variables.get("MY_APP_HOST").unwrap().value, "localhost");
 
     assert_eq!(result.files.len(), 1);

@@ -71,9 +71,9 @@ impl ResolveTo<Vec<VariableOutput>> for AwsAssumeRoleInput {
         
         return Ok(
             vec![
-                VariableOutput{name: "AWS_ACCESS_KEY_ID".into(), value: access_key.clone()},
-                VariableOutput{name: "AWS_SECRET_ACCESS_KEY".into(), value: secret_key.clone()},
-                VariableOutput{name: "AWS_SESSION_TOKEN".into(), value: session_token.clone()} 
+                VariableOutput{name: "AWS_ACCESS_KEY_ID".into(), value: access_key.clone(), quote_method: None},
+                VariableOutput{name: "AWS_SECRET_ACCESS_KEY".into(), value: secret_key.clone(), quote_method: None},
+                VariableOutput{name: "AWS_SESSION_TOKEN".into(), value: session_token.clone(), quote_method: None} 
             ]
         )
     }

@@ -693,6 +693,13 @@
           "description": "Environment variable name, such as `NPM_TOKEN`",
           "type": "string"
         },
+        "quote_method": {
+          "description": "Method used to quote variables using either single quote (`'`) or double quotes (`\"`).\n\nVariables are wrapped between single quotes by default to prevent any interpolation of special characters. For example a string with special characters `$\"!<>_'` will be exported as `export MYVAR='$\"!<>'\"'\"`). Only single quote character `'` is escaped as `\"'\"` so that it's interpreted as a single quote.\n\nWith double quotes, the same principle applies except double quotes `\"` are exported as `'\"'`. While it may be practical in some situations to leverage interpolation, it may represent a risk as interpolation can cause unwanted behavior. For example string `(rm /tmp/important_file)` would be loaded as `export MYVAR=\"$(rm /tmp/important_file)\"`.\n\nOnly use double quote from trusted source.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "value": {
           "description": "Source of truth for variable",
           "allOf": [

@@ -259,17 +259,10 @@ pub async fn get_current_environment(ctx: &NovopsContext) -> Result<NovopsEnviro
 pub async fn resolve_environment_inputs(ctx: &NovopsContext, inputs: NovopsEnvironmentInput) 
         -> Result<(HashMap<String, VariableOutput>, HashMap<String, FileOutput>), anyhow::Error>
     {
-
-    let mut variable_outputs: HashMap<String, VariableOutput> = HashMap::new();
+    
+    let mut variable_outputs: HashMap<String, VariableOutput> = HashMap::from(generate_builtin_variable_outputs(&ctx));
     let mut file_outputs: HashMap<String, FileOutput> = HashMap::new();
 
-    // Expose Novops internal variables
-    // Load first so user can override via config if needed
-    variable_outputs.insert(String::from("NOVOPS_ENVIRONMENT"), VariableOutput {
-        name: String::from("NOVOPS_ENVIRONMENT"),
-        value: ctx.env_name.clone()
-    });
-    
     for v in &inputs.variables.unwrap_or_default() {
         let val = v.resolve(ctx).await
             .with_context(|| format!("Couldn't resolve variable input {:?}", v))?;
@@ -339,6 +332,34 @@ fn read_config_file(config_path: &str) -> Result<NovopsConfigFile, anyhow::Error
         .with_context(|| "Error parsing config file and Novops config schema. Maybe some config does not match expected schema?")?;
 
     Ok(config)
+}
+
+fn generate_builtin_variable_outputs(ctx: &NovopsContext) -> HashMap<String, VariableOutput> {
+    let mut vars : HashMap<String, VariableOutput> = HashMap::new();
+
+    // Expose current Novops environment as variable internal variables
+    // Load first so user can override via config if needed
+    vars.insert(String::from("NOVOPS_ENVIRONMENT"), VariableOutput {
+        name: String::from("NOVOPS_ENVIRONMENT"),
+        value: ctx.env_name.clone(),
+        quote_method: None,
+    });
+
+    vars.insert(String::from("NOVOPS_CURRENT_ENVIRONMENT"), VariableOutput {
+        name: String::from("NOVOPS_CURRENT_ENVIRONMENT"),
+        value: ctx.env_name.clone(),
+        quote_method: None,
+    });
+
+    // Set PS1 as current environment except if disabled in config
+    // TODO check config for disable
+    vars.insert(String::from("PS1"), VariableOutput {
+        name: String::from("PS1"),
+        value: format!("({:}) $PS1", ctx.env_name.clone()),
+        quote_method: Some(String::from(QUOTE_METHOD_DOUBLE)),
+    });
+
+    vars
 }
 
 /** 
@@ -556,8 +577,7 @@ fn export_file_outputs(outputs: &NovopsOutputs) -> Result<(), anyhow::Error>{
  */
 fn export_variable_outputs(format: &str, symlink: &Option<String>, vars: &Vec<VariableOutput>, working_dir: &Path) -> Result<(), anyhow::Error>{
 
-    let safe_vars = prepare_variable_outputs(vars);
-    let vars_string = format_variable_outputs(format, &safe_vars)?;
+    let vars_string = format_variable_outputs(format, &vars)?;
     
     // If symlink option provided, create symlink
     // otherwise show variables in stdout
@@ -581,52 +601,52 @@ fn export_variable_outputs(format: &str, symlink: &Option<String>, vars: &Vec<Va
     Ok(())    
 }
 
-/**
- * make sure our variables can be exported and return safe VariableOutput values 
- * use single quotes to avoid interpolation
- * if single quote "'" are in password, replace them by ` '"'"' ` 
- * which will cause bash to interpret them properly
- * first ' ends initial quoation, then wrap our quote with "'" and start a new quotation with '
- * for example password ` abc'def ` will become ` export pass='abc'"'"'def' `
- */
-pub fn prepare_variable_outputs(vars: &Vec<VariableOutput>) ->  Vec<VariableOutput> {
-    let mut safe_vars : Vec<VariableOutput> = Vec::new();
-    for v in vars{
-        let safe_val = v.value.replace('\'', "'\"'\"'");
-        safe_vars.push(VariableOutput { name: v.name.clone(), value: safe_val })
-    }
+const QUOTE_METHOD_SINGLE: &str = "single";
+const QUOTE_METHOD_DOUBLE: &str = "double";
 
-    safe_vars
+pub fn wrap_var_output_in_quotes(var: &VariableOutput) -> Result<String, anyhow::Error> {
+
+    let quoted_val = match var.quote_method.as_deref() {
+        
+        // 'somevalue'
+        Some(QUOTE_METHOD_SINGLE) | None => {
+            let escaped_val = var.value.replace("'", "'\"'\"'"); // 'a'b' => 'a'"'"'b'
+            format!("'{:}'", escaped_val)
+        }
+
+        // "somevalue"
+        Some(QUOTE_METHOD_DOUBLE) => {
+            let escaped_val = var.value.replace("\"", "\"'\"'\""); // "a"b" => "a"'"'"b"
+            format!("\"{:}\"", escaped_val)
+        }
+        
+        Some(qm) => return Err(anyhow::anyhow!("Unkwon quote method '{:?}' for {:?}", qm, var)),
+    };
+
+    Ok(quoted_val)
 }
 
 /**
- * Transform VariableOutputs to string according to given format 
+ * Transform VariableOutputs to string according to given format
+ * and escape quotes
  */
-pub fn format_variable_outputs(format: &str, safe_vars: &Vec<VariableOutput>) -> Result<String, anyhow::Error> {
+pub fn format_variable_outputs(format: &str, vars: &Vec<VariableOutput>) -> Result<String, anyhow::Error> {
     let mut vars_string = String::new();
 
-    if format == FORMAT_DOTENV_EXPORT {
-        // build a string such as
-        //  '
-        //   export VAR="value"
-        //   export FOO="bar"
-        //  '
-        for v in safe_vars{
-            let s = format!("export {:}='{:}'\n", &v.name, &v.value);
-            vars_string.push_str(&s);
-        }
-    } else if format == FORMAT_DOTENV_PLAIN {
-        // build a string such as
-        //  '
-        //   VAR="value"
-        //   FOO="bar"
-        //  '
-        for v in safe_vars{
-            let s = format!("{:}='{:}'\n", &v.name, &v.value);
-            vars_string.push_str(&s);
-        }
-    } else {
-        return Err(anyhow::format_err!("Unknown format {:}. Available formats: {:?}", format, FORMAT_ALL))
+    // Prefix to build string such as `export MYVAR='xxx'` or `MYVAR=xxx` wihout export
+    // TODO deprecated this global 'format' flag in favor of per-variable option
+    let variable_prefix = match format {
+        FORMAT_DOTENV_EXPORT => "export ",
+        FORMAT_DOTENV_PLAIN => "",
+        _ => return Err(anyhow::anyhow!("Unknown format {:}. Available formats: {:?}", format, FORMAT_ALL))
+    };
+
+    for v in vars {
+        
+        let quoted_val = wrap_var_output_in_quotes(&v)?;
+
+        let val_line = format!("{:}{:}={:}\n", &variable_prefix, &v.name, &quoted_val);
+        vars_string.push_str(&val_line);
     }
 
     Ok(vars_string)

@@ -43,6 +43,29 @@
         novopsPackage = craneLib.buildPackage (commonArgs // {
           cargoArtifacts = craneLib.buildDepsOnly commonArgs;
         });
+
+        devShellPackages = with pkgs; [
+          # Dev tools
+          pkg-config
+          openssl.dev
+          mdbook
+          mdbook-linkcheck
+          json-schema-for-humans
+          gnumake
+          zip
+          gh
+          nodejs-slim # for npx release-please
+          cachix
+
+          # Module testing
+          podman
+          podman-compose
+          google-cloud-sdk
+          bitwarden-cli
+          sops
+          age
+          quickemu
+        ];
         
       in {
 
@@ -53,27 +76,7 @@
 
         devShells = {
           default = craneLib.devShell {
-            packages = with pkgs; [
-              # Dev tools
-              pkg-config
-              openssl.dev
-              mdbook
-              mdbook-linkcheck
-              json-schema-for-humans
-              gnumake
-              zip
-              gh
-              nodejs-slim # for npx release-please
-              cachix
-
-              # Module testing
-              podman
-              podman-compose
-              google-cloud-sdk
-              bitwarden-cli
-              sops
-              age 
-            ];
+            packages = devShellPackages;
 
             RUST_SRC_PATH = "${pkgs.rust.packages.stable.rustPlatform.rustLibSrc}";
           };
@@ -98,28 +101,8 @@
             craneLib = (crane.mkLib pkgs).overrideToolchain rustToolchain;
 
           in craneLib.devShell {
-            packages = with pkgs; [
-              # Dev tools
-              pkg-config
-              openssl.dev
-              mdbook
-              mdbook-linkcheck
-              json-schema-for-humans
-              gnumake
-              zip
-              gh
-              nodejs-slim # for npx release-please
-              cachix
-
-              # Module testing
-              podman
-              podman-compose
-              google-cloud-sdk
-              bitwarden-cli
-              sops
-              age 
-            ];
-
+            packages = devShellPackages;
+            
             RUST_SRC_PATH = "${pkgs.rust.packages.stable.rustPlatform.rustLibSrc}";
           };
         };

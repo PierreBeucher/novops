@@ -93,7 +93,8 @@ impl core::ResolveTo<Vec<VariableOutput>> for SopsDotenvInput {
         if ctx.dry_run {          
           return Ok(vec![VariableOutput {
             name: String::from("RESULT"),
-            value: format!("{}:{}", &self.file, &self.additional_flags.clone().unwrap_or_default().join("-"))
+            value: format!("{}:{}", &self.file, &self.additional_flags.clone().unwrap_or_default().join("-")),
+            quote_method: None
           }]);
         }
 
@@ -123,7 +124,8 @@ impl core::ResolveTo<Vec<VariableOutput>> for SopsDotenvInput {
           
           variables.push(VariableOutput {
             name: name.to_string(),
-            value: value.to_string()
+            value: value.to_string(),
+            quote_method: None
           });
         }
 

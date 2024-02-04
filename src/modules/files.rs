@@ -90,7 +90,8 @@ impl ResolveTo<FileOutput> for FileInput {
                 dest:  PathBuf::from(&dest),
                 variable: VariableOutput {
                     name: variable_name,
-                    value: file_path_str
+                    value: file_path_str,
+                    quote_method: None
                 },
                 content
             }
