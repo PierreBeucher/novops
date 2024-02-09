@@ -6,9 +6,9 @@ use crate::modules::files::FileOutput;
 use crate::modules::variables::VariableOutput;
 use log::{info, debug, error, warn};
 
-use std::os::linux::fs::MetadataExt;
-use std::os::unix::prelude::OpenOptionsExt;
-use std::{fs, io::prelude::*, os::unix::prelude::PermissionsExt};
+use std::os::unix::prelude::{OpenOptionsExt, PermissionsExt};
+use std::os::unix::fs::MetadataExt;
+use std::{fs, io::prelude::*};
 
 use anyhow::Context;
 use std::os::unix;
@@ -481,7 +481,7 @@ pub fn check_working_dir_permissions(workdir: &PathBuf) -> Result<(), anyhow::Er
     }
 
     // check owner is current user or root
-    let workdir_owner_uid = metadata.st_uid();
+    let workdir_owner_uid = metadata.uid();
     let current_uid = users::get_current_uid();
     if workdir_owner_uid != current_uid && workdir_owner_uid != 0 {
         return Err(anyhow::anyhow!("Working directory {:?} ownership is unsafe (owned by {:}). Only current user {:} or root can have ownership.", &workdir, &workdir_owner_uid, &current_uid));
@@ -668,7 +668,7 @@ fn create_symlink(lnk: &PathBuf, target: &PathBuf) -> Result<(), anyhow::Error> 
     let attr_result = fs::symlink_metadata(lnk);
     if attr_result.is_ok() {
         let attr = attr_result?;
-        if attr.is_symlink() && attr.st_uid() == users::get_current_uid(){
+        if attr.is_symlink() && attr.uid() == users::get_current_uid(){
             debug!("Deleting existing symlink {:?} before creating new one", &lnk);
             fs::remove_file(lnk).with_context(|| format!("Couldn't remove existing symlink {:?}", &lnk))?;
         } else {
