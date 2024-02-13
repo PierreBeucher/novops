@@ -52,7 +52,7 @@ async fn _load_env_for(
     dry_run: bool,
 ) -> Result<NovopsOutputs, anyhow::Error> {
     let args = NovopsLoadArgs {
-        config: format!("tests/.novops.{}.yml", conf_name),
+        config: Some(format!("tests/.novops.{}.yml", conf_name)),
         env: Some(env.to_string()),
         working_directory: None,
         skip_working_directory_check: Some(false),

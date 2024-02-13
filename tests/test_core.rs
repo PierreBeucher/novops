@@ -26,7 +26,7 @@ async fn test_load_simple_config() -> Result<(), anyhow::Error>{
     let workdir = clean_and_setup_test_dir("test_load_simple_config")?;
 
     let args = NovopsLoadArgs {
-        config: String::from(CONFIG_EMPTY),
+        config: Some(String::from(CONFIG_EMPTY)),
         env: Some(String::from("dev")),
         working_directory: Some(workdir.clone().into_os_string().into_string().unwrap()),
         skip_working_directory_check: Some(false),
@@ -81,7 +81,7 @@ async fn test_simple_run() -> Result<(), anyhow::Error>{
     let workdir = clean_and_setup_test_dir("test_simple_run")?;
 
     load_environment_write_vars(&NovopsLoadArgs { 
-            config: String::from(CONFIG_STANDALONE),
+            config: Some(String::from(CONFIG_STANDALONE)),
             env: Some(String::from("dev")), 
             working_directory: Some(workdir.clone().into_os_string().into_string().unwrap()),
             skip_working_directory_check: Some(false),
@@ -134,7 +134,7 @@ async fn test_symlink_flag() -> Result<(), anyhow::Error> {
 
     let expect_symlink_at = PathBuf::from(TEST_DIR).join("test-symlink");
     load_environment_write_vars(&NovopsLoadArgs { 
-            config: String::from(CONFIG_STANDALONE),
+            config: Some(String::from(CONFIG_STANDALONE)),
             env: Some(String::from("dev")),
             working_directory: Some(workdir.clone().into_os_string().into_string().unwrap()),
             skip_working_directory_check: Some(false),
@@ -156,7 +156,7 @@ async fn test_symlink_flag() -> Result<(), anyhow::Error> {
     // expect existing symlink to be overriden
     let workdir_override = clean_and_setup_test_dir("test_symlink_flag_override")?;
     load_environment_write_vars(&NovopsLoadArgs { 
-            config: String::from(CONFIG_STANDALONE),
+            config: Some(String::from(CONFIG_STANDALONE)),
             env: Some(String::from("staging")),
             working_directory: Some(workdir_override.clone().into_os_string().into_string().unwrap()), 
             skip_working_directory_check: Some(false),
@@ -188,7 +188,7 @@ async fn test_symlink_no_file_override() -> Result<(), anyhow::Error> {
     
     // expect error as we cannot erase existing file
     let result = load_environment_write_vars(&NovopsLoadArgs { 
-            config: String::from(CONFIG_STANDALONE),
+            config: Some(String::from(CONFIG_STANDALONE)),
             env: Some(String::from("dev")), 
             working_directory: Some(workdir.clone().into_os_string().into_string().unwrap()),
             skip_working_directory_check: Some(false),
@@ -305,7 +305,7 @@ async fn test_default_loaded_vars() -> Result<(), anyhow::Error> {
 async fn test_list_environments() -> Result<(), anyhow::Error> {
     test_setup().await?;
 
-    let result = list_environments("tests/.novops.multi-env.yml").await?;
+    let result = list_environments(Some(String::from("tests/.novops.multi-env.yml"))).await?;
 
     assert_eq!(result.len(), 4);
     assert_eq!(result[0], "dev");
@@ -319,7 +319,7 @@ async fn test_list_environments() -> Result<(), anyhow::Error> {
 async fn test_list_environment_output() -> Result<(), anyhow::Error> {
     test_setup().await?;
 
-    let result = list_outputs_for_environment("tests/.novops.multi-env.yml", Some("dev".to_string())).await?;
+    let result = list_outputs_for_environment(Some(String::from("tests/.novops.multi-env.yml")), Some("dev".to_string())).await?;
 
     // Assert this
     assert_eq!(result.variables.len(), 3);

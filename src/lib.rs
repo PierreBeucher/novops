@@ -10,7 +10,7 @@ use std::os::linux::fs::MetadataExt;
 use std::os::unix::prelude::OpenOptionsExt;
 use std::{fs, io::prelude::*, os::unix::prelude::PermissionsExt};
 
-use anyhow::{self, Context};
+use anyhow::Context;
 use std::os::unix;
 use std::io::IsTerminal;
 use std::path::{PathBuf, Path};
@@ -24,7 +24,7 @@ use console::Term;
 
 #[derive(Debug)]
 pub struct NovopsLoadArgs {
-    pub config: String,
+    pub config: Option<String>,
 
     pub env: Option<String>,
 
@@ -159,13 +159,13 @@ pub fn init_logger() {
 /**
  * List all environments from config file
  */
-pub async fn list_environments(config_file: &str) -> Result<Vec<String>, anyhow::Error> {
+pub async fn list_environments(config_file: Option<String>) -> Result<Vec<String>, anyhow::Error> {
     init_logger();
 
     debug!("Listing environments from {:?}", &config_file);
 
-    let config = read_config_file(config_file)
-        .with_context(|| format!("Error reading config file '{:}'", &config_file))?;
+    let config = read_config_file(&config_file)
+        .with_context(|| "Error reading Novops config file")?;
 
     let envs = list_environments_from_config(&config);
     Ok(envs)
@@ -175,13 +175,13 @@ pub async fn list_environments(config_file: &str) -> Result<Vec<String>, anyhow:
  * List all outputs for an environment from config file
  * Use dry-run mode to generate outputs
  */
-pub async fn list_outputs_for_environment(config_file: &str, env_name: Option<String>) -> Result<NovopsOutputs, anyhow::Error> {
+pub async fn list_outputs_for_environment(config_file: Option<String>, env_name: Option<String>) -> Result<NovopsOutputs, anyhow::Error> {
     init_logger();
 
     debug!("Listing outputs for environment {:?} from {:?}", &env_name, &config_file);
     
     let dryrun_args = NovopsLoadArgs{ 
-        config: String::from(config_file),
+        config: config_file,
         env: env_name,
         working_directory: None,
         skip_working_directory_check: Some(false),
@@ -197,7 +197,7 @@ pub async fn list_outputs_for_environment(config_file: &str, env_name: Option<St
 pub async fn make_context(args: &NovopsLoadArgs) -> Result<NovopsContext, anyhow::Error> {
     // Read CLI args and load config
     let config = read_config_file(&args.config)
-        .with_context(|| format!("Error reading config file '{:}'", &args.config))?;
+        .with_context(|| "Error reading config file.")?;
 
     // app name may be specififed by user
     // if not, use current directory name
@@ -333,8 +333,27 @@ pub async fn resolve_environment_inputs(ctx: &NovopsContext, inputs: NovopsEnvir
 
 }
 
-fn read_config_file(config_path: &str) -> Result<NovopsConfigFile, anyhow::Error> {
-    let f = std::fs::File::open(config_path)?;
+/**
+ * Read Novops configuration file. Use provided config file if Option is Some, default to .novops.y[a]ml in current directory. 
+ */
+fn read_config_file(config_path_opt: &Option<String>) -> Result<NovopsConfigFile, anyhow::Error> {
+    let cfg_path = match config_path_opt.clone() {
+        Some(e) => e,
+        None => {
+            if Path::new(".novops.yml").exists() {
+                String::from(".novops.yml")
+            } else if Path::new(".novops.yaml").exists() {
+                String::from(".novops.yaml")
+            } else {
+                return Err(anyhow::anyhow!("Couldn't find .novops.yml nor .novops.yaml in current directory."))
+            }
+        },
+    };
+
+    debug!("Loading config file path '{:}'", &cfg_path);
+    
+    let f = std::fs::File::open(&cfg_path)
+        .with_context(|| format!("Failed to open Novops config {:}", &cfg_path))?;  
     let config: NovopsConfigFile = serde_yaml::from_reader(f)
         .with_context(|| "Error parsing config file and Novops config schema. Maybe some config does not match expected schema?")?;
 
