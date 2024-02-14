@@ -4,6 +4,15 @@
 
 See [full `.novops.yml` schema](https://novops.dev/config/schema.html) for all available configurations.
 
+## Configuration path precedence
+
+Novops will load configuration in that order:
+
+- `-c` or `--config` CLI flag if provided
+- `.novops.yaml` in current directory
+- `.novops.yml` in current directory
+- Fail as no config can be found
+
 ## Configuration: Environments, Modules, Inputs and Outputs
 
 `.novops.yml` defines:

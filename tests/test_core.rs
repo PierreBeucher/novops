@@ -3,7 +3,8 @@ mod test_lib;
 use novops::modules::variables::VariableOutput;
 use novops::{make_context, NovopsLoadArgs, 
     load_environment_write_vars, prepare_exec_command, should_error_tty, 
-    list_environments, list_outputs_for_environment, check_working_dir_permissions};
+    list_environments, list_outputs_for_environment, check_working_dir_permissions,
+    get_config_file_path};
 use novops::core::{NovopsContext, NovopsConfig, NovopsConfigFile, NovopsConfigDefault, NovopsEnvironmentInput};
 use std::collections::HashMap;
 use std::ffi::OsStr;
@@ -26,7 +27,7 @@ async fn test_load_simple_config() -> Result<(), anyhow::Error>{
     let workdir = clean_and_setup_test_dir("test_load_simple_config")?;
 
     let args = NovopsLoadArgs {
-        config: String::from(CONFIG_EMPTY),
+        config: Some(String::from(CONFIG_EMPTY)),
         env: Some(String::from("dev")),
         working_directory: Some(workdir.clone().into_os_string().into_string().unwrap()),
         skip_working_directory_check: Some(false),
@@ -81,7 +82,7 @@ async fn test_simple_run() -> Result<(), anyhow::Error>{
     let workdir = clean_and_setup_test_dir("test_simple_run")?;
 
     load_environment_write_vars(&NovopsLoadArgs { 
-            config: String::from(CONFIG_STANDALONE),
+            config: Some(String::from(CONFIG_STANDALONE)),
             env: Some(String::from("dev")), 
             working_directory: Some(workdir.clone().into_os_string().into_string().unwrap()),
             skip_working_directory_check: Some(false),
@@ -134,7 +135,7 @@ async fn test_symlink_flag() -> Result<(), anyhow::Error> {
 
     let expect_symlink_at = PathBuf::from(TEST_DIR).join("test-symlink");
     load_environment_write_vars(&NovopsLoadArgs { 
-            config: String::from(CONFIG_STANDALONE),
+            config: Some(String::from(CONFIG_STANDALONE)),
             env: Some(String::from("dev")),
             working_directory: Some(workdir.clone().into_os_string().into_string().unwrap()),
             skip_working_directory_check: Some(false),
@@ -156,7 +157,7 @@ async fn test_symlink_flag() -> Result<(), anyhow::Error> {
     // expect existing symlink to be overriden
     let workdir_override = clean_and_setup_test_dir("test_symlink_flag_override")?;
     load_environment_write_vars(&NovopsLoadArgs { 
-            config: String::from(CONFIG_STANDALONE),
+            config: Some(String::from(CONFIG_STANDALONE)),
             env: Some(String::from("staging")),
             working_directory: Some(workdir_override.clone().into_os_string().into_string().unwrap()), 
             skip_working_directory_check: Some(false),
@@ -188,7 +189,7 @@ async fn test_symlink_no_file_override() -> Result<(), anyhow::Error> {
     
     // expect error as we cannot erase existing file
     let result = load_environment_write_vars(&NovopsLoadArgs { 
-            config: String::from(CONFIG_STANDALONE),
+            config: Some(String::from(CONFIG_STANDALONE)),
             env: Some(String::from("dev")), 
             working_directory: Some(workdir.clone().into_os_string().into_string().unwrap()),
             skip_working_directory_check: Some(false),
@@ -305,7 +306,7 @@ async fn test_default_loaded_vars() -> Result<(), anyhow::Error> {
 async fn test_list_environments() -> Result<(), anyhow::Error> {
     test_setup().await?;
 
-    let result = list_environments("tests/.novops.multi-env.yml").await?;
+    let result = list_environments(Some(String::from("tests/.novops.multi-env.yml"))).await?;
 
     assert_eq!(result.len(), 4);
     assert_eq!(result[0], "dev");
@@ -319,7 +320,7 @@ async fn test_list_environments() -> Result<(), anyhow::Error> {
 async fn test_list_environment_output() -> Result<(), anyhow::Error> {
     test_setup().await?;
 
-    let result = list_outputs_for_environment("tests/.novops.multi-env.yml", Some("dev".to_string())).await?;
+    let result = list_outputs_for_environment(Some(String::from("tests/.novops.multi-env.yml")), Some("dev".to_string())).await?;
 
     // Assert this
     assert_eq!(result.variables.len(), 3);
@@ -352,6 +353,36 @@ async fn check_working_dir_permissions_test() -> Result<(), anyhow::Error> {
 
     let result_world = check_working_dir_permissions(&dir_world);
     assert!(result_world.is_err(), "Directory with world permission should not pass check, got {:?}", result_world);
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_get_config_file_path() -> Result<(), anyhow::Error> {
+
+    let test_config = "tests/.novops.plain-strings.yml";    
+    
+    // Empty dir, should fail
+    let dir = tempfile::tempdir().unwrap().into_path();
+
+    let result_no_config = get_config_file_path(&dir, &None);
+    assert!(result_no_config.is_err(), "Should fail if no config available.");
+
+    // .yml should be loaded
+    let expect_conf_yml = dir.join(".novops.yml");
+    fs::copy(test_config, &expect_conf_yml)?;
+    let result_yml = get_config_file_path(&dir, &None);
+    assert_eq!(result_yml?, expect_conf_yml);
+
+    // .yaml should be loaded with precedence
+    let expect_conf_yaml = dir.join(".novops.yaml");
+    fs::copy(test_config, &expect_conf_yaml)?;
+    let result_yaml = get_config_file_path(&dir, &None);
+    assert_eq!(result_yaml?, expect_conf_yaml);
+    
+    // custom config should be loaded with precedence
+    let result_custom_path = get_config_file_path(&dir, &Some(String::from(test_config)));
+    assert_eq!(result_custom_path?, PathBuf::from(test_config));
 
     Ok(())
 }

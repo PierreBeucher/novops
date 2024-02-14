@@ -21,8 +21,7 @@ fn build_cli() -> Command {
         .value_name("FILE")
         .help("Configuration to use.")
         .required(false)
-        .num_args(1)
-        .default_value(".novops.yml");
+        .num_args(1);
         
     let arg_environment = Arg::new("environment")
         .help("Environment to load. Prompt if not specified.")
@@ -198,13 +197,12 @@ async fn main() -> Result<(), anyhow::Error> {
 //
 
 async fn cmd_list_envs(cmd_args: &ArgMatches) -> Result<(), anyhow::Error> {
-    let config_file = cmd_args.get_one::<String>("config")
-        .ok_or(anyhow!("Config is None. This is probably a bug as CLI defines default value."))?.clone();
+    let config_file = cmd_args.get_one::<String>("config").cloned();
 
     let output_format = cmd_args.get_one::<String>("format")
         .ok_or(anyhow!("Format is None. This is probably a bug as CLI defines default value."))?.clone();
 
-    let envs = novops::list_environments(&config_file).await
+    let envs = novops::list_environments(config_file).await
         .with_context(|| "Failed to list environments.")?;
 
     match output_format.as_str() {
@@ -226,15 +224,14 @@ async fn cmd_list_envs(cmd_args: &ArgMatches) -> Result<(), anyhow::Error> {
 
 async fn cmd_list_outputs(cmd_args: &ArgMatches) -> Result<(), anyhow::Error> {
 
-    let config_file = cmd_args.get_one::<String>("config")
-        .ok_or(anyhow!("Config is None. This is probably a bug as CLI defines default value."))?.clone();
+    let config_file = cmd_args.get_one::<String>("config").cloned();
 
     let env_name = cmd_args.get_one::<String>("environment").map(String::from);
 
     let output_format = cmd_args.get_one::<String>("format")
         .ok_or(anyhow!("Format is None. This is probably a bug as CLI defines default value."))?.clone();
 
-    let outputs = novops::list_outputs_for_environment(&config_file, env_name).await
+    let outputs = novops::list_outputs_for_environment(config_file, env_name).await
         .with_context(|| "Failed to list outputs.")?;
     
     
@@ -331,8 +328,7 @@ async fn cmd_error() -> Result<(), anyhow::Error> {
  */
 fn build_novops_args(cmd_args: &ArgMatches) -> Result<NovopsLoadArgs, anyhow::Error> {
     let args = novops::NovopsLoadArgs{ 
-        config: cmd_args.get_one::<String>("config")
-            .ok_or(anyhow!("Config is None. This is probably a bug as CLI defines default value."))?.clone(),
+        config: cmd_args.get_one::<String>("config").cloned(),
         env: cmd_args.get_one::<String>("environment").map(String::from),
         working_directory: cmd_args.get_one::<String>("working_dir").map(String::from),
         skip_working_directory_check: cmd_args.get_one::<bool>("skip_workdir_check").copied(),
