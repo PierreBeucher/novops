@@ -3,7 +3,8 @@ mod test_lib;
 use novops::modules::variables::VariableOutput;
 use novops::{make_context, NovopsLoadArgs, 
     load_environment_write_vars, prepare_exec_command, should_error_tty, 
-    list_environments, list_outputs_for_environment, check_working_dir_permissions};
+    list_environments, list_outputs_for_environment, check_working_dir_permissions,
+    get_config_file_path};
 use novops::core::{NovopsContext, NovopsConfig, NovopsConfigFile, NovopsConfigDefault, NovopsEnvironmentInput};
 use std::collections::HashMap;
 use std::ffi::OsStr;
@@ -352,6 +353,36 @@ async fn check_working_dir_permissions_test() -> Result<(), anyhow::Error> {
 
     let result_world = check_working_dir_permissions(&dir_world);
     assert!(result_world.is_err(), "Directory with world permission should not pass check, got {:?}", result_world);
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_get_config_file_path() -> Result<(), anyhow::Error> {
+
+    let test_config = "tests/.novops.plain-strings.yml";    
+    
+    // Empty dir, should fail
+    let dir = tempfile::tempdir().unwrap().into_path();
+
+    let result_no_config = get_config_file_path(&dir, &None);
+    assert!(result_no_config.is_err(), "Should fail if no config available.");
+
+    // .yml should be loaded
+    let expect_conf_yml = dir.join(".novops.yml");
+    fs::copy(test_config, &expect_conf_yml)?;
+    let result_yml = get_config_file_path(&dir, &None);
+    assert_eq!(result_yml?, expect_conf_yml);
+
+    // .yaml should be loaded with precedence
+    let expect_conf_yaml = dir.join(".novops.yaml");
+    fs::copy(test_config, &expect_conf_yaml)?;
+    let result_yaml = get_config_file_path(&dir, &None);
+    assert_eq!(result_yaml?, expect_conf_yaml);
+    
+    // custom config should be loaded with precedence
+    let result_custom_path = get_config_file_path(&dir, &Some(String::from(test_config)));
+    assert_eq!(result_custom_path?, PathBuf::from(test_config));
 
     Ok(())
 }

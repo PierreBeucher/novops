@@ -337,27 +337,39 @@ pub async fn resolve_environment_inputs(ctx: &NovopsContext, inputs: NovopsEnvir
  * Read Novops configuration file. Use provided config file if Option is Some, default to .novops.y[a]ml in current directory. 
  */
 fn read_config_file(config_path_opt: &Option<String>) -> Result<NovopsConfigFile, anyhow::Error> {
-    let cfg_path = match config_path_opt.clone() {
-        Some(e) => e,
-        None => {
-            if Path::new(".novops.yml").exists() {
-                String::from(".novops.yml")
-            } else if Path::new(".novops.yaml").exists() {
-                String::from(".novops.yaml")
-            } else {
-                return Err(anyhow::anyhow!("Couldn't find .novops.yml nor .novops.yaml in current directory."))
-            }
-        },
-    };
+    
+    let current_dir = env::current_dir()?;
+    let cfg_path = get_config_file_path(&current_dir, config_path_opt)?;
 
-    debug!("Loading config file path '{:}'", &cfg_path);
+    debug!("Loading config file path '{:?}'", &cfg_path);
     
     let f = std::fs::File::open(&cfg_path)
-        .with_context(|| format!("Failed to open Novops config {:}", &cfg_path))?;  
+        .with_context(|| format!("Failed to open Novops config {:?}", &cfg_path))?;  
     let config: NovopsConfigFile = serde_yaml::from_reader(f)
-        .with_context(|| "Error parsing config file and Novops config schema. Maybe some config does not match expected schema?")?;
+        .with_context(|| format!("Error parsing config file {:?}. Does it match expected config schema?", &cfg_path))?;
 
     Ok(config)
+}
+
+/**
+ * Return given option value is Some, or found .yml / .yaml config.
+ */
+pub fn get_config_file_path(current_dir: &Path, config_path_opt: &Option<String>) -> Result<PathBuf, anyhow::Error> {
+    let yaml_path = current_dir.join(".novops.yaml");
+    let yml_path = current_dir.join(".novops.yml");
+
+    match config_path_opt.clone() {
+        Some(e) => Ok(PathBuf::from(e)),
+        None => {
+            if yaml_path.exists() {
+                Ok(yaml_path)
+            } else if yml_path.exists() {
+                Ok(yml_path)
+            } else {
+                Err(anyhow::anyhow!("Config file .novops.yml or .novops.yaml not found in current directory. You can set a custom config file path with -c/--config PATH."))
+            }
+        },
+    }
 }
 
 /** 
