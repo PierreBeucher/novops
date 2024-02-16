@@ -1,4 +1,6 @@
-# Build container image and binary via Podman
+# Build via cross
+# Note it requires the .#cross nix development shell
+# 
 # Keep cache under build/cache via bind mounts 
 # (instead of BuildKit cache mount which is harder to cache)
 .PHONY: build-cache-dir
@@ -99,3 +101,17 @@ release-artifacts:
 	gh release upload ${GITHUB_REF_NAME} \
           build/novops-${RUNNER_ARCH}-${RUNNER_OS}.zip \
           build/novops-${RUNNER_ARCH}-${RUNNER_OS}.zip.sha256sum
+
+#
+# Cross build
+# 
+
+# Build all cross targets
+# Use different target dir to avoid glibc version error
+# See https://github.com/cross-rs/cross/issues/724
+.PHONY: cross-build
+cross-build:
+	cross build --target x86_64-apple-darwin --target-dir target/cross/x86_64-darwin --release -j 6
+	cross build --target aarch64-apple-darwin --target-dir target/cross/aarch64-darwin --release -j 6
+	cross build --target x86_64-unknown-linux-musl --target-dir target/cross/x86_64-linux --release -j 6
+	cross build --target aarch64-unknown-linux-musl --target-dir target/cross/aarch64-linux --release -j 6

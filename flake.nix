@@ -90,6 +90,19 @@
             RUST_SRC_PATH = "${pkgs.rust.packages.stable.rustPlatform.rustLibSrc}";
           };
 
+          # Dev shell for cross-compilation with cross
+          # Can't use directly in default shell: cross somehow conflicts with Crane
+          cross = pkgs.mkShell {
+            
+            packages = devShellPackages ++ [
+              pkgs.cargo-cross
+              pkgs.rustup
+            ];
+
+            buildInputs = devShellBuildInputs;
+
+          };
+
           # Dev shell with Nightly Rust
           # Inspired from https://github.com/ipetkov/crane/blob/afdcd41180e3dfe4dac46b5ee396e3b12ccc967a/examples/build-std/flake.nix
           nightly = let
