@@ -94,4 +94,21 @@ make doc-serve
 
 ## Release
 
-`release-please` should create/update Release PRs automatically on `main` changes. Merging automatically creates release and related artifacts. 
+`release-please` should create/update Release PRs automatically on `main` changes. After merge, release tag and artifacts must be created locally:
+
+Run `cross` Nix shell
+
+```sh
+nix develop .#cross
+```
+
+Create release
+
+```sh
+# GITHUB_TOKEN must be set with read/write permissions 
+# on Contents and Pull requests
+export GITHUB_TOKEN=xxx 
+
+git checkout <release_commit_sha>
+hack/create-release.sh
+```
