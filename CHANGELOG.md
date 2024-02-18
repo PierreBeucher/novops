@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.12.0](https://github.com/PierreBeucher/novops/compare/v0.11.0...v0.12.0) (2024-02-18)
+
+
+### Features
+
+* macOS (Darwin) support ([4daa2df](https://github.com/PierreBeucher/novops/commit/4daa2dfc22bbe55dfb53c7e1f8a2ae9960126a69))
+* multi-arch support (x64_64 / aarch64) ([b673e30](https://github.com/PierreBeucher/novops/commit/b673e30e66ce7cb21418c8299a36f921ebdf59c5))
+
+
+### Bug Fixes
+
+* read both .yaml and .yml config file by default ([3e3080c](https://github.com/PierreBeucher/novops/commit/3e3080cd70dc54fc795f3d50ae9efc3ff2cec728))
+
 ## [0.11.0](https://github.com/PierreBeucher/novops/compare/v0.10.0...v0.11.0) (2023-12-27)
 
 
