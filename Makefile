@@ -1,36 +1,20 @@
-# Build container image and binary via Podman
-# Keep cache under build/cache via bind mounts 
-# (instead of BuildKit cache mount which is harder to cache)
-.PHONY: build-cache-dir
-build-cache-dir:
-	mkdir -p build build/cache build/cache/cargo-target build/cache/cargo-reg
-
-.PHONY: build-image
-build-image: build-cache-dir
-	podman build \
-		-v ${PWD}/build/cache/cargo-target:/build/target \
-		-v ${PWD}/build/cache/cargo-reg:/root/.cargo/registry \
-		-t novops:local \
-		.
-	podman save novops:local -o build/image.tar --format=oci-archive
-
-.PHONY: build-binary
-build-binary: build-cache-dir
-	podman build \
-		-v ${PWD}/build/cache/cargo-target:/build/target \
-		-v ${PWD}/build/cache/cargo-reg:/root/.cargo/registry \
-		-o type=local,dest=build \
-		.
-	
-	zip -j build/novops.zip build/novops
-	sha256sum build/novops.zip > build/novops.zip.sha256sum
+# Build all cross targets
+# Use different target dir to avoid glibc version error
+# See https://github.com/cross-rs/cross/issues/724
+.PHONY: build-cross
+build-cross:
+	# Can't include darwin targets as not possible to use it on CI directly
+	# cross build --target x86_64-apple-darwin --target-dir target/cross/x86_64-apple-darwin
+	# cross build --target aarch64-apple-darwin --target-dir target/cross/aarch64-apple-darwin
+	cross build --target x86_64-unknown-linux-musl --target-dir target/cross/x86_64-unknown-linux-musl
+	cross build --target aarch64-unknown-linux-musl --target-dir target/cross/aarch64-unknown-linux-musl
 
 .PHONY: build-nix
 build-nix:
 	nix build -o build/nix
 
 .PHONY: test
-test: test-docker test-doc test-clippy test-cargo 
+test: test-docker test-doc test-clippy test-cargo test-cli
 
 .PHONY: test-docker
 test-docker:
@@ -39,6 +23,9 @@ test-docker:
 .PHONY: test-cargo
 test-cargo:
 	cargo test
+
+test-cli:
+	tests/cli/test-usage.sh
 
 .PHONY: test-clippy
 test-clippy:

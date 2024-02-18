@@ -2,7 +2,7 @@
 
 Every command below must be run under [Nix Flake development shell](https://nixos.wiki/wiki/Flakes):
 
-```
+```sh
 nix develop
 ```
 
@@ -15,21 +15,49 @@ All commands are CI-agnostic: they work the same locally and on CI by leveraging
 
 ## Build
 
-Novops is built in multiple flavors:
+For quick feedback, just run 
 
-- Static binary (Podman local output)
-  ```sh
-  # Result in ./build/novops
-  make build-image
-  ```
-- Docker image (Podman)
-  ```
-  make build-image
-  ``` 
-- Nix
-  ```
-  make build-nix
-  ``` 
+```
+cargo build
+cargo build -j 6
+```
+
+Novops is built for multiple platforms using `cross`:
+
+```sh
+make cross
+```
+
+For Darwin (macOS), you must build Darwin Cross image yourself (Apple does not allow distribution of macOS SDK required for cross-compilation, but you can download it yourself and package Cross image):
+
+- [Download XCode](https://developer.apple.com/xcode/resources/) (see also [here](https://xcodereleases.com/))
+- Follow [osxcross](https://github.com/tpoechtrager/osxcross) instructions to package macOS SDK 
+  - At time of writing this doc, latest supported version of XCode with osxcross was 14.1 (SDK 13.0)
+- Use [https://github.com/cross-rs/cross] and [cross-toolchains](https://github.com/cross-rs/cross-toolchains) to build your image from Darwin Dockerfile
+  - For example:
+    ```sh
+    # Clone repo and submodules
+    git clone https://github.com/cross-rs/cross
+    cd cross
+    git submodule update --init --remote
+
+    # Copy SDK to have it available in build context
+    cd docker
+    mkdir ./macos-sdk
+    cp path/to/sdk/MacOSX13.0.sdk.tar.xz ./macos-sdk/MacOSX13.0.sdk.tar.xz
+
+    # Build images
+    docker build -f ./cross-toolchains/docker/Dockerfile.x86_64-apple-darwin-cross \
+      --build-arg MACOS_SDK_DIR=./macos-sdk \
+      --build-arg MACOS_SDK_FILE="MacOSX13.0.sdk.tar.xz" \
+      -t x86_64-apple-darwin-cross:local .
+
+    docker build -f ./cross-toolchains/docker/Dockerfile.aarch64-apple-darwin-cross \
+      --build-arg MACOS_SDK_DIR=./macos-sdk \
+      --build-arg MACOS_SDK_FILE="MacOSX13.0.sdk.tar.xz" \
+      -t aarch64-apple-darwin-cross:local 
+      .
+    ```
 
 ## Test
 

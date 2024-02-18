@@ -22,10 +22,6 @@ jobs:
         with:
           name: novops
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
-      
-      - run: nix develop -c make release-tag
-        env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
 
       - run: nix develop -c make release-pr
         env:
