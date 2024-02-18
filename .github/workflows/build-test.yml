@@ -138,36 +138,3 @@ jobs:
         run: |
           build/novops list outputs -e dev -c tests/.novops.multi-env.yml | grep MY_APP_HOST
           build/novops list outputs -e dev -c tests/.novops.multi-env.yml -o json | grep '"MY_APP_HOST"'
-          
-  # Upload artifacts for release tags only
-  release-artifacts:
-    needs: build
-    permissions:
-      contents: write
-      pull-requests: write
-    if: startsWith(github.event.ref, 'refs/tags/v')
-    runs-on: ubuntu-latest
-    steps:
-      
-      - uses: actions/checkout@v3
-
-      - uses: cachix/install-nix-action@v20
-        with:
-          nix_path: nixpkgs=channel:nixos-unstable
-
-      - uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: download novops artifacts
-        uses: actions/download-artifact@v3
-        with:
-          name: novops-build
-          path: build
-
-      - run: nix develop -c make docker-publish
-
-      - run: nix develop -c make release-artifacts
-        env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}

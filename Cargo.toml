@@ -44,6 +44,8 @@ google-secretmanager1 = "5.0.2"
 dialoguer = "0.11.0"
 console = "0.15.7"
 
+# Use OpenSSL vendored dependencies on Linux musl
+# As somehow musl fails to build from source 
 [target.x86_64-unknown-linux-musl.dependencies]
 openssl = { version = "0.10.62", features = ["vendored"] }
 

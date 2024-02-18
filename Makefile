@@ -111,7 +111,7 @@ release-artifacts:
 # See https://github.com/cross-rs/cross/issues/724
 .PHONY: cross-build
 cross-build:
-	cross build --target x86_64-apple-darwin --target-dir target/cross/x86_64-darwin --release -j 6
-	cross build --target aarch64-apple-darwin --target-dir target/cross/aarch64-darwin --release -j 6
-	cross build --target x86_64-unknown-linux-musl --target-dir target/cross/x86_64-linux --release -j 6
-	cross build --target aarch64-unknown-linux-musl --target-dir target/cross/aarch64-linux --release -j 6
+	cross build --target x86_64-apple-darwin --target-dir target/cross/x86_64-apple-darwin
+	cross build --target aarch64-apple-darwin --target-dir target/cross/aarch64-apple-darwin
+	cross build --target x86_64-unknown-linux-musl --target-dir target/cross/x86_64-unknown-linux-musl
+	cross build --target aarch64-unknown-linux-musl --target-dir target/cross/aarch64-unknown-linux-musl

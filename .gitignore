@@ -1,6 +1,7 @@
 /target/
 .novops
 build/
+/release/
 
 # Tests output
 tests/output/
