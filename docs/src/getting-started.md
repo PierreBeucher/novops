@@ -93,11 +93,17 @@ Secrets are loaded temporarily as environment variables or in a protected `tmpfs
 Either source directly into your shell or run a sub-process:
 
 ```sh
-# Source directly into your shell
+# bash / ksh: source with process substitution
 source <(novops load)
 
+# zsh: source with process substitution
+source =(novops load)
+
 # Run sub-process directly
-novops run -- terraform apply
+novops run -- some_command
+
+# load in .env file (novops creates a symlink pointing to secure temporary file)
+novops load -s .envrc && source .envrc
 ```
 
 ### 🐳 Docker & Podman
