@@ -101,17 +101,17 @@ environments:
 Run commands with secrets and configs and discard them as soon as they're not needed anymore:
 
 ```sh
-# Run a sub-process with secrets and configs
-# Secrets are discard when command finishes
-novops run -- make deploy-aws-app
-
-# Run a sub-shell with secrets and configs
-# Secrets are discarded on exit
-novops run -- sh
-
-# Or source directly into your shell
-# Secrets are discarded on exit
+# bash: source with process substitution
 source <(novops load)
+
+# zsh / ksh: source with process substitution
+source =(novops load)
+
+# Run sub-process directly
+novops run -- sh # or any other command, like 'terraform apply'
+
+# load in .env file (novops creates a symlink pointing to secure temporary file)
+novops load -s .envrc && source .envrc
 ```
 
 Secrets are available as environment variables and secure in-memory files:

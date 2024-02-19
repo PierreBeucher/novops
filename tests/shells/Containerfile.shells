@@ -1,0 +1,7 @@
+FROM debian:12.5-slim
+
+RUN apt update && apt install -y bash dash zsh fish ksh tcsh csh curl unzip
+
+RUN curl -L "https://github.com/PierreBeucher/novops/releases/download/v0.12.0/novops-X64-Linux.zip" -o novops.zip && \
+    unzip novops.zip && \
+    mv novops /usr/local/bin/novops

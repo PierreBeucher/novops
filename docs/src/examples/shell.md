@@ -6,10 +6,21 @@
 
 ## Source into current shell
 
-Source directly into your shell
+Source into your shell
 
 ```sh
+# bash
 source <(novops load)
+
+# zsh / ksh 
+source =(novops load)
+
+# dash
+novops load -s .envrc
+. ./.envrc
+
+# fish
+source (novops load | psub)
 ```
 
 You can also create an alias such as
@@ -23,7 +34,11 @@ alias nload="source <(novops load)"
 Run a sub-process or command loaded with environment variables:
 
 ```sh
+# Run terraform apply
 novops run -- terraform apply
+
+# Run a sub-shell
+novops run -- sh
 ```
 
 This will ensure secrets are only exists in memory for as long as command run.

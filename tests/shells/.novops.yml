@@ -1,0 +1,14 @@
+environments:
+  dev:
+    variables:
+      - name: MY_APP_HOST
+        value: "localhost"
+ 
+  prod:
+    variables:
+      - name: MY_APP_HOST
+        value: "prod"
+ 
+config:
+  default:
+    environment: dev
