@@ -1,35 +1,93 @@
 # Installation
 
 - [Linux](#linux)
-  - [Updating](#updating)
+- [MacOS (Darwin)](#macos-darwin)
+- [Windows](#windows)
 - [Arch Linux](#arch-linux)
 - [Nix](#nix)
-- [From source](#from-source)
+- [Direct binary download](#direct-binary-download)
+- [Build from source](#build-from-source)
+  - [Updating](#updating)
+
+Novops is distributed as a standalone static binary. No dependencies are required.
 
 ## Linux
 
-Novops is distributed as a standalone static binary. To install, run:
+Download latest Novops binary latest version:
 
 ```sh
-curl -L "https://github.com/PierreBeucher/novops/releases/latest/download/novops-X64-Linux.zip" -o novops.zip
+# x86-64
+curl -L "https://github.com/PierreBeucher/novops/releases/latest/download/novops_linux_x86_64.zip" -o novops.zip
+
+# arm64
+curl -L "https://github.com/PierreBeucher/novops/releases/latest/download/novops_linux_aarch64.zip" -o novops.zip
+```
+
+Or specific version:
+
+```sh
+NOVOPS_VERSION=v0.12.0
+
+# x86-64
+curl -L "https://github.com/PierreBeucher/novops/releases/download/${NOVOPS_VERSION}/novops_linux_x86_64.zip" -o novops.zip
+
+# arm64
+curl -L "https://github.com/PierreBeucher/novops/releases/download/${NOVOPS_VERSION}/novops_linux_aarch64.zip" -o novops.zip
+```
+
+Install it:
+
+```sh
 unzip novops.zip
 sudo mv novops /usr/local/bin/novops
 ```
 
-Install a specific version:
+Check it works:
 
 ```sh
-export NOVOPS_VERSION=0.6.0
-curl -L "https://github.com/PierreBeucher/novops/releases/download/v${NOVOPS_VERSION}/novops-X64-Linux.zip" -o novops.zip
+novops --version
+```
+
+## MacOS (Darwin)
+
+Download latest Novops binary latest version:
+
+```sh
+# x86-64
+curl -L "https://github.com/PierreBeucher/novops/releases/latest/download/novops_macos_x86_64.zip" -o novops.zip
+
+# arm64
+curl -L "https://github.com/PierreBeucher/novops/releases/latest/download/novops_macos_aarch64.zip" -o novops.zip
+```
+
+Or specific version:
+
+```sh
+NOVOPS_VERSION=v0.12.0
+
+# x86-64
+curl -L "https://github.com/PierreBeucher/novops/releases/download/${NOVOPS_VERSION}/novops_macos_x86_64.zip" -o novops.zip
+
+# arm64
+curl -L "https://github.com/PierreBeucher/novops/releases/download/${NOVOPS_VERSION}/novops_macos_aarch64.zip" -o novops.zip
+```
+
+Install it:
+
+```sh
 unzip novops.zip
 sudo mv novops /usr/local/bin/novops
 ```
 
-Novops is currently only available for x86-64 systems. More will come soon!
+Check it works:
 
-### Updating
+```sh
+novops --version
+```
 
-To update Novops, simply replace binary with a new one.
+## Windows
+
+Novops does not offer native Windows ([coming soon](https://github.com/PierreBeucher/novops/issues/90)). You can use [WSL](https://learn.microsoft.com/en-us/windows/wsl/install) in the meantime, following Linux installation.
 
 ## Arch Linux
 
@@ -84,21 +142,14 @@ Use a `flake.nix` such as:
 }
 ```
 
-## From source
+## Direct binary download
 
-Requirements:
+See [GithHub releases](https://github.com/PierreBeucher/novops/releases) to download binaries directly.
 
-- Make
-- Docker
+## Build from source
 
-Clone [Novops repository](https://github.com/PierreBeucher/novops) and run:
+See [Development and contribution guide](contributing/development.md) to build from source.
 
-```
-make build
-```
+### Updating
 
-Binary is built under `build/novops`
-
-```
-build/novops --version
-```
+To update Novops, replace binary with a new one following installation steps above.
