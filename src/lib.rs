@@ -565,6 +565,7 @@ fn export_file_outputs(outputs: &NovopsOutputs) -> Result<(), anyhow::Error>{
         let mut fd = fs::OpenOptions::new()
             .create(true)
             .write(true)
+            .truncate(true)
             .mode(0o600)
             .open(&f.dest)
             .with_context(|| format!("Can't open {:?} for write with mode 0600", &f.dest))?;
