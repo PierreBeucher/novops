@@ -3042,8 +3042,9 @@ dependencies = [
 
 [[package]]
 name = "vaultrs"
-version = "0.7.0"
-source = "git+https://github.com/PierreBeucher/vaultrs?rev=aws-se-2023-05-15#809de3eee0880e6dfb5e7c64784eeb6308a3a11a"
+version = "0.7.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0bb996bb053adadc767f8b0bda2a80bc2b67d24fe89f2b959ae919e200d79a19"
 dependencies = [
  "async-trait",
  "bytes",
