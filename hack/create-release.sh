@@ -11,10 +11,9 @@ set -e
 # If script fails, it can be restarted safely and should be reasonably idempotent
 #
 
-if [ -z ${var+x} ]; then 
+if [ -z ${GITHUB_TOKEN+x} ]; then 
     echo "GITHUB_TOKEN variable must be set (with read/write permissions on content and pull requests)"
-else 
-    echo "var is set to '$var'"
+    exit 1
 fi
 
 echo "Current commit message:"

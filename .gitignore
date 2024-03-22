@@ -2,6 +2,7 @@
 .novops
 build/
 /release/
+.github/token
 
 # Tests output
 tests/output/
