@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.1](https://github.com/PierreBeucher/novops/compare/v0.12.0...v0.12.1) (2024-03-21)
+
+
+### Bug Fixes
+
+* truncate file output before writing ([72756ac](https://github.com/PierreBeucher/novops/commit/72756ac657ae48bcdba59ae961e68c6d80d78f7e))
+
 ## [0.12.0](https://github.com/PierreBeucher/novops/compare/v0.11.0...v0.12.0) (2024-02-18)
 
 
