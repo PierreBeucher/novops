@@ -55,7 +55,7 @@ For Darwin (macOS), you must build Darwin Cross image yourself (Apple does not a
     docker build -f ./cross-toolchains/docker/Dockerfile.aarch64-apple-darwin-cross \
       --build-arg MACOS_SDK_DIR=./macos-sdk \
       --build-arg MACOS_SDK_FILE="MacOSX13.0.sdk.tar.xz" \
-      -t aarch64-apple-darwin-cross:local 
+      -t aarch64-apple-darwin-cross:local \
       .
     ```
 
@@ -110,5 +110,12 @@ Create release
 export GITHUB_TOKEN=xxx 
 
 git checkout <release_commit_sha>
+
+# git checkout main && git pull right after merge should be OK
+
 hack/create-release.sh
 ```
+
+Notes: 
+- Release may take some time as it will cross-build all Novops binaries before running [`release-please`](https://github.com/googleapis/release-please)
+- MacOS build image must be available locally (see Build above)
