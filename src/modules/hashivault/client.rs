@@ -1,13 +1,25 @@
 use crate::core::NovopsContext;
 
-use anyhow::Context;
-use vaultrs::client::{VaultClient, VaultClientSettingsBuilder };
+use anyhow::{Context, Error};
+use vaultrs::client::{Client, VaultClient, VaultClientSettingsBuilder};
 use url::Url;
 use async_trait::async_trait;
 use std::{ collections::HashMap, env, fs, path::{Path, PathBuf}, time::Duration };
-use vaultrs::{kv2, kv1, aws, api::aws::requests::GenerateCredentialsRequest};
+use std::env::VarError;
+use vaultrs::{kv2, kv1, aws, auth, api::aws::requests::GenerateCredentialsRequest};
 use log::debug;
 use home;
+use crate::modules::hashivault::config::{HashiVaultAuth};
+
+
+const KUBERNETES_SA_JWT_PATH: &str = "/var/run/secrets/kubernetes.io/serviceaccount/token";
+const KUBERNETES_SA_JWT_PATH_ENV: &str = "KUBERNETES_SA_JWT_PATH";
+const VAULT_AUTH_MOUNT_PATH_ENV: &str = "VAULT_AUTH_MOUNT_PATH";
+const VAULT_AUTH_ROLE_ENV: &str = "VAULT_AUTH_ROLE";
+const VAULT_AUTH_JWT_TOKEN_ENV: &str = "VAULT_AUTH_JWT_TOKEN";
+const VAULT_AUTH_SECRET_ID_ENV: &str = "VAULT_AUTH_SECRET_ID";
+const VAULT_AUTH_ROLE_ID_ENV: &str = "VAULT_AUTH_ROLE_ID";
+
 
 /// Default client timeout (seconds)
 const CLIENT_TIMEOUT_DEFAULT : u64 = 60;
@@ -153,11 +165,11 @@ impl HashivaultClient for DryRunHashivaultClient {
 }
 
 
-pub fn get_client(ctx: &NovopsContext) -> Result<Box<dyn HashivaultClient + Send + Sync>, anyhow::Error> {
+pub async fn get_client(ctx: &NovopsContext) -> Result<Box<dyn HashivaultClient + Send + Sync>, anyhow::Error> {
     if ctx.dry_run {
         Ok(Box::new(DryRunHashivaultClient{}))
     } else {
-        let client = build_client(ctx)
+        let client = build_client(ctx).await
             .with_context(|| "Couldn't build Hashivault client")?;
         Ok(Box::new(DefaultHashivaultClient{
             client
@@ -166,8 +178,7 @@ pub fn get_client(ctx: &NovopsContext) -> Result<Box<dyn HashivaultClient + Send
     
 }
 
-pub fn build_client(ctx: &NovopsContext) -> Result<VaultClient, anyhow::Error> {
-
+pub async fn build_client(ctx: &NovopsContext) -> Result<VaultClient, anyhow::Error> {
     let default_settings = VaultClientSettingsBuilder::default().build()?;
 
     let hv_config = ctx.config_file_data.config.clone()
@@ -178,23 +189,112 @@ pub fn build_client(ctx: &NovopsContext) -> Result<VaultClient, anyhow::Error> {
     let addr_var = env::var("VAULT_ADDR").ok();
     let home_var = home::home_dir();
 
-    let vault_token = load_vault_token(ctx, home_var, token_var).with_context(|| "Couldn't load Vault token")?;
     let vault_url = load_vault_address(ctx, addr_var).with_context(|| "Couldn't load Vault address")?;
 
     let timeout = hv_config.timeout.unwrap_or(CLIENT_TIMEOUT_DEFAULT);
-   
+
     let settings = VaultClientSettingsBuilder::default()
         .address(vault_url)
-        .token(vault_token)
         .timeout(Some(Duration::new(timeout, 0)))
         .verify(hv_config.verify.unwrap_or(default_settings.verify))
         .build()?;
 
     debug!("Using Vault client timeout: {:?}", settings.timeout);
-    
-    let client = VaultClient::new(settings)?;
+
+    let mut client = VaultClient::new(settings)?;
+
+    if let Some(auth) = hv_config.auth {
+        debug!("Found Vault authentication configuration {:?}", auth);
+
+        vault_login(&mut client, auth).await?;
+    } else {
+        let token = load_vault_token(ctx, home_var, token_var).with_context(|| "Couldn't load Vault token")?;
+        client.set_token(&token);
+    }
     
     Ok(client)
+}
+
+/// Log in on Vault using the provided authentication backend
+async fn vault_login(client: &mut VaultClient, auth: HashiVaultAuth) -> Result<(), Error> {
+    let auth_info = match auth {
+        HashiVaultAuth::Kubernetes { mount_path, role } => {
+            let mount_path = unwrap_or_env(mount_path, VAULT_AUTH_MOUNT_PATH_ENV, "Failed to read Vault auth mount path environment variable")?;
+            let role = unwrap_or_env(role, VAULT_AUTH_ROLE_ENV, "Failed to read Vault auth role environment variable")?;
+
+            debug!("Logging in on Vault using Kubernetes authentication with mount path '{}' and role '{}'", mount_path, role);
+
+            let jwt_file_path = env_or_default(KUBERNETES_SA_JWT_PATH_ENV, KUBERNETES_SA_JWT_PATH)?;
+            let jwt = fs::read_to_string(&jwt_file_path)
+                .with_context(|| format!("Could not read Service Account token at path {}", jwt_file_path))?;
+
+            auth::kubernetes::login(client, &mount_path, &role, &jwt).await
+                .with_context(|| format!("Failed Vault Kubernetes log in using mount path '{}' and role '{}'", mount_path, role))?
+        }
+        HashiVaultAuth::AppRole { mount_path, role_id, secret_id_path } => {
+            let mount_path = unwrap_or_env(mount_path, VAULT_AUTH_MOUNT_PATH_ENV, "Failed to read Vault auth mount path environment variable")?;
+            let role_id = unwrap_or_env(role_id, VAULT_AUTH_ROLE_ID_ENV, "Failed to read Vault auth role id environment variable")?;
+
+            debug!("Logging in on Vault using AppRole authentication with mount path '{}'", mount_path);
+
+            let secret_id = if let Some(path) = secret_id_path {
+                fs::read_to_string(path.clone()).with_context(|| format!("Failed to secret id from path '{}'", path))?
+            } else {
+                match env::var(VAULT_AUTH_SECRET_ID_ENV) {
+                    Ok(v) => v,
+                    Err(env::VarError::NotPresent) => {
+                        debug!("Not informed Secret ID by environment variable '{}'", VAULT_AUTH_SECRET_ID_ENV);
+                        String::new()
+                    },
+                    Err(e) => Err(e).with_context(|| format!("Failed to read secret id from env '{}'", VAULT_AUTH_SECRET_ID_ENV))?
+                }
+            };
+
+            auth::approle::login(client, &mount_path, &role_id, &secret_id).await
+                .with_context(|| format!("Failed Vault AppRole log in using mount path '{}'", mount_path))?
+        }
+        HashiVaultAuth::JWT { mount_path, token_path, role } => {
+            let mount_path = unwrap_or_env(mount_path, VAULT_AUTH_MOUNT_PATH_ENV, "Failed to read Vault auth mount path environment variable")?;
+            let role = unwrap_or_env(role, VAULT_AUTH_ROLE_ENV, "Failed to read Vault auth role environment variable")?;
+            
+            debug!("Logging in on Vault using JWT authentication with mount path '{}' and role '{}'", mount_path, role);
+
+            let token = if let Some(path) = token_path {
+                fs::read_to_string(path.clone()).with_context(|| format!("Failed to read JWT token from path '{}'", path))?
+            } else {
+                env::var(VAULT_AUTH_JWT_TOKEN_ENV).with_context(|| format!("Failed to read JWT token from env '{}'", VAULT_AUTH_JWT_TOKEN_ENV))?
+            };
+
+            auth::oidc::login(client, &mount_path, &token, Some(role.clone())).await
+                .with_context(|| format!("Failed Vault JWT log in using mount path '{}' and role '{}'", mount_path, role))?
+        }
+    };
+
+    client.set_token(&auth_info.client_token);
+
+    debug!("Success on Vault logging");
+
+    Ok(())
+}
+
+/// Unwrap the variable or try to get the value from a environment variable
+fn unwrap_or_env(variable: Option<String>, env: &'static str, error_message: &'static str) -> Result<String, Error> {
+    variable.map(Ok)
+        .unwrap_or_else(||
+            env::var(env)
+                .with_context(|| error_message.to_string() + ": " + env)
+        )
+}
+
+/// Use the environment variable value if present or use the given default value
+fn env_or_default(env: &'static str, value: &'static str) -> Result<String, Error> {
+    match env::var(env) {
+        Ok(v) => Ok(v),
+        Err(VarError::NotPresent) => Ok(value.to_string()),
+        Err(e) => {
+            Err(e).with_context(|| format!("Failed to read value from env '{}'", env))
+        }
+    }
 }
 
 /// Look for token address in this order:
@@ -308,13 +408,13 @@ mod tests {
 
     use super::*;
 
-    #[test]
-    fn test_build_client() {
+    #[tokio::test]
+    async fn test_build_client() {
         init_logger();
 
         let ctx = NovopsContext::default();
-        let client = build_client(&ctx).unwrap();
-        
+        let client = build_client(&ctx).await.unwrap();
+
         assert_eq!(client.settings.timeout, Some(Duration::new(60, 0)));
     }
 

@@ -19,6 +19,9 @@ test: test-docker test-doc test-clippy test-cargo test-cli test-install
 .PHONY: test-docker
 test-docker:
 	podman-compose -f tests/docker-compose.yml up -d
+	kind delete cluster -n novops-auth-test
+	kind create cluster -n novops-auth-test
+	docker network connect tests_default novops-auth-test-control-plane
 
 .PHONY: test-cargo
 test-cargo:

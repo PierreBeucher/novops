@@ -33,7 +33,7 @@ pub struct HashiVaultAWSInput {
 impl ResolveTo<Vec<VariableOutput>> for HashiVaultAWSInput {
   async fn resolve(&self, ctx: &NovopsContext) -> Result<Vec<VariableOutput>, anyhow::Error> {
     
-    let client = get_client(ctx)?;
+    let client = get_client(ctx).await?;
 
     let creds = client.aws_creds(
       &Some(self.mount.clone().unwrap_or("aws".to_string())), 

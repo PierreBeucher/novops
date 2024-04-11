@@ -13,6 +13,26 @@ pub struct HashiVaultInput {
 }
 
 
+#[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
+#[serde(tag = "type")]
+pub enum HashiVaultAuth {
+    Kubernetes {
+        mount_path: Option<String>,
+        role: Option<String>
+    },
+    AppRole {
+        mount_path: Option<String>,
+        role_id: Option<String>,
+        secret_id_path: Option<String>
+    },
+    JWT {
+        token_path: Option<String>,
+        role: Option<String>,
+        mount_path: Option<String>
+    }
+}
+
+
 #[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema, Default)]
 pub struct HashivaultConfig {
   /// Address in form http(s)://HOST:PORT
@@ -35,7 +55,10 @@ pub struct HashivaultConfig {
   pub verify: Option<bool>,
 
   /// Vault client timeout in seconds. Default to 60s.
-  pub timeout: Option<u64>
+  pub timeout: Option<u64>,
+
+  /// Vault authentication to use when a token is not provided
+  pub auth: Option<HashiVaultAuth>
 }
 
 
