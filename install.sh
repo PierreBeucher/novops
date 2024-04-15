@@ -1,7 +1,5 @@
 #!/usr/bin/env sh
 
-set -x
-
 TMP_INSTALL_DIR="${TMPDIR:-/tmp}/novops-install"
 INSTALL_DIR="/usr/local/bin"
 YELLOW='\e[0;33m'
