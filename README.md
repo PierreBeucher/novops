@@ -45,12 +45,10 @@ Novops, the universal secret and configuration manager for development, applicat
 
 Let's deploy an application with **secret password and SSH key from Hashicorp Vault** and **temporary AWS credentials**.
 
-Install Novops static binary ([or use another method](https://novops.dev/install.html)):
+Install Novops ([or use another method](https://novops.dev/install.html)):
 
 ```sh
-curl -L "https://github.com/PierreBeucher/novops/releases/latest/download/novops-X64-Linux.zip" -o novops.zip
-unzip novops.zip
-sudo mv novops /usr/local/bin/novops
+sh -c "$(curl --location https://raw.githubusercontent.com/PierreBeucher/novops/main/install.sh)"
 ```
 
 Create `.novops.yml` and commit it safely - it does not contain any secret:
