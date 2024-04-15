@@ -14,7 +14,7 @@ build-nix:
 	nix build -o build/nix
 
 .PHONY: test
-test: test-docker test-doc test-clippy test-cargo test-cli
+test: test-docker test-doc test-clippy test-cargo test-cli test-install
 
 .PHONY: test-docker
 test-docker:
@@ -35,6 +35,10 @@ test-clippy:
 .PHONY: test-doc
 test-doc: doc
 	git diff --exit-code docs/schema/config-schema.json
+
+.PHONY: test-install
+test-install:
+	tests/install/test-install.sh
 
 # Build doc with mdBook and json-schema-for-humans
 # See:

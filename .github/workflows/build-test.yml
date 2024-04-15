@@ -81,5 +81,5 @@ jobs:
             ~/.local/share/containers/storage/
           key: ${{ runner.os }}-${{ runner.arch }}-podman
 
-      # Plain cargo tests
+      # Run various tests
       - run: nix develop -c make test
