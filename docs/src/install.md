@@ -1,17 +1,31 @@
 # Installation
 
-- [Linux](#linux)
-- [MacOS (Darwin)](#macos-darwin)
-- [Windows](#windows)
-- [Arch Linux](#arch-linux)
-- [Nix](#nix)
-- [Direct binary download](#direct-binary-download)
-- [Build from source](#build-from-source)
-  - [Updating](#updating)
+- [Automated installation (Linux, MacOS and Windows with WSL)](#automated-installation-linux-macos-and-windows-with-wsl)
+- [Manual installation](#manual-installation)
+  - [Linux](#linux)
+  - [MacOS (Darwin)](#macos-darwin)
+  - [Windows](#windows)
+  - [Arch Linux](#arch-linux)
+  - [Nix](#nix)
+  - [Direct binary download](#direct-binary-download)
+  - [Build from source](#build-from-source)
+- [Updating](#updating)
 
 Novops is distributed as a standalone static binary. No dependencies are required.
 
-## Linux
+## Automated installation (Linux, MacOS and Windows with WSL)
+
+Run command:
+
+```sh
+sh -c "$(curl --location https://raw.githubusercontent.com/PierreBeucher/novops/main/install.sh)"
+```
+
+Install script will take care of downloading latest Novops version, verify checksum and make it available on `PATH`.
+
+## Manual installation
+
+### Linux
 
 Download latest Novops binary latest version:
 
@@ -48,7 +62,7 @@ Check it works:
 novops --version
 ```
 
-## MacOS (Darwin)
+### MacOS (Darwin)
 
 Download latest Novops binary latest version:
 
@@ -85,11 +99,11 @@ Check it works:
 novops --version
 ```
 
-## Windows
+### Windows
 
-Novops does not offer native Windows ([coming soon](https://github.com/PierreBeucher/novops/issues/90)). You can use [WSL](https://learn.microsoft.com/en-us/windows/wsl/install) in the meantime, following Linux installation.
+Use [WSL](https://learn.microsoft.com/en-us/windows/wsl/install) and follow [Linux](#linux) installation.
 
-## Arch Linux
+### Arch Linux
 
 Available in the AUR (Arch User Repository)
 
@@ -97,7 +111,7 @@ Available in the AUR (Arch User Repository)
 yay -S novops-git
 ```
 
-## Nix
+### Nix
 
 Use a `flake.nix` such as:
 
@@ -142,14 +156,14 @@ Use a `flake.nix` such as:
 }
 ```
 
-## Direct binary download
+### Direct binary download
 
 See [GithHub releases](https://github.com/PierreBeucher/novops/releases) to download binaries directly.
 
-## Build from source
+### Build from source
 
 See [Development and contribution guide](contributing/development.md) to build from source.
 
-### Updating
+## Updating
 
 To update Novops, replace binary with a new one following installation steps above.
