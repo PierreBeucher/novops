@@ -1,12 +1,18 @@
 
 use anyhow::Context;
-use google_secretmanager1::{SecretManager, 
-    oauth2::{self, authenticator::{Authenticator, ApplicationDefaultCredentialsTypes}, 
-    ApplicationDefaultCredentialsAuthenticator,
-    ApplicationDefaultCredentialsFlowOpts},
-    hyper::{self, client::HttpConnector}, 
-    hyper_rustls::{self, HttpsConnector},
-    api::SecretPayload};
+use google_secretmanager1::{
+        SecretManager, 
+        oauth2::{
+            self, 
+            hyper_rustls::HttpsConnector,
+            authenticator::{Authenticator, ApplicationDefaultCredentialsTypes}, 
+            ApplicationDefaultCredentialsAuthenticator,
+            ApplicationDefaultCredentialsFlowOpts
+        },
+        hyper::{self, client::HttpConnector}, 
+        hyper_rustls,
+        api::SecretPayload
+    };
 use log::debug;
 use async_trait::async_trait;
 use home;
@@ -33,7 +39,7 @@ impl GCloudClient for DefaultGCloudClient{
         
         let hub = SecretManager::new(
             hyper::Client::builder().build(
-                hyper_rustls::HttpsConnectorBuilder::new().with_native_roots().https_or_http().enable_http1().enable_http2().build()
+                hyper_rustls::HttpsConnectorBuilder::new().with_native_roots().https_or_http().enable_http1().build()
             ), 
             authenticator
         );
