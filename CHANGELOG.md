@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.13.0](https://github.com/PierreBeucher/novops/compare/v0.12.1...v0.13.0) (2024-04-20)
+
+
+### Features
+
+* added plain install script ([02839fd](https://github.com/PierreBeucher/novops/commit/02839fdd69f037f7c01c59e5fe553528d0030b4e))
+* update Cargo deps (security issues) ([2778930](https://github.com/PierreBeucher/novops/commit/2778930aeeb81d1db34bda3abdd2c88c7b885f10))
+* update Cargo deps (security issues) ([10c6db5](https://github.com/PierreBeucher/novops/commit/10c6db5463246140a33fa34ff480244ce7de9d1e))
+
+
+### Bug Fixes
+
+* install script checksum verify ([77c59bf](https://github.com/PierreBeucher/novops/commit/77c59bffff60fe69ea6eb18b937bcb27319e6d9e))
+
 ## [0.12.1](https://github.com/PierreBeucher/novops/compare/v0.12.0...v0.12.1) (2024-03-21)
 
 
