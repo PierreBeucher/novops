@@ -7,8 +7,8 @@ use crate::modules::variables::VariableOutput;
 use log::{info, debug, error, warn};
 
 use std::os::unix::prelude::{OpenOptionsExt, PermissionsExt};
-use std::os::unix::fs::MetadataExt;
-use std::{fs, io::prelude::*};
+use std::os::unix::fs::{MetadataExt, symlink};
+use std::{fs::{self, symlink_metadata, remove_file}, io::prelude::*};
 
 use anyhow::Context;
 use std::os::unix;
@@ -62,7 +62,7 @@ pub async fn load_environment_write_vars(args: &NovopsLoadArgs, symlink: &Option
     let outputs = load_context_and_resolve(args).await?;
 
     // Write files to filesystem
-    export_file_outputs(&outputs)?;
+    export_file_outputs(&outputs.files.clone().into_values().collect())?;
 
     // Write env file to filesystem
     let vars: Vec<VariableOutput> = outputs.variables.clone().into_values().collect();
@@ -79,7 +79,7 @@ pub async fn load_environment_and_exec(args: &NovopsLoadArgs, command_args: Vec<
     let outputs = load_context_and_resolve(args).await?;
 
     // Write files to filesystem
-    export_file_outputs(&outputs)?;
+    export_file_outputs(&outputs.files.clone().into_values().collect())?;
 
     // Run child process with variables
     let vars : Vec<VariableOutput> = outputs.variables.clone().into_values().collect();
@@ -557,10 +557,8 @@ fn list_environments_from_config(config_file_data: &NovopsConfigFile) -> Vec<Str
 /**
  * Write resolved files to protected directory
  */
-fn export_file_outputs(outputs: &NovopsOutputs) -> Result<(), anyhow::Error>{
+pub fn export_file_outputs(files: &Vec<FileOutput>) -> Result<(), anyhow::Error>{
     
-    let files: Vec<FileOutput> = outputs.files.clone().into_values().collect();
-
     for f in files {
         let mut fd = fs::OpenOptions::new()
             .create(true)
@@ -572,6 +570,22 @@ fn export_file_outputs(outputs: &NovopsOutputs) -> Result<(), anyhow::Error>{
 
         fd.write_all(&f.content)
             .with_context(|| format!("Can't write to {:?} after opening file descriptor", &f.dest))?;
+
+        if let Some(sl) = &f.symlink {
+            let sl_meta = symlink_metadata(sl);
+
+            if sl_meta.is_ok() {
+                let m = sl_meta.unwrap();
+                if !m.is_symlink() {
+                    return Err(anyhow::anyhow!("{:?} already exists and is not a symlink. Won't overwrite a non-symlink file. Did you specify the right symlink dest?", &sl))
+                } else {
+                    remove_file(sl).with_context(|| format!("Can't remove {:?} prior to creating symlink", &sl))?;
+                }
+            }
+
+            symlink(&f.dest, sl)
+                .with_context(|| format!("Can't create symlink {:?} -> {:?}", &sl, &f.dest))?;
+        }
     }
 
     Ok(())

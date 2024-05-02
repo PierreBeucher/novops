@@ -5,6 +5,7 @@ use serde::Deserialize;
 use anyhow;
 use sha2::{Sha256, Digest};
 use schemars::JsonSchema;
+use log::warn;
 
 use crate::core::{ResolveTo, NovopsContext, BytesResolvableInput};
 use crate::modules::variables::VariableOutput;
@@ -17,16 +18,34 @@ pub struct FileInput {
     /// if not set, the YAML key for file will be used
     pub name: Option<String>,
 
+    /// DEPRECATED: `dest` is insecure as generated file may be written in insecure directory and/or persist on disk. 
+    /// Use `symlink` instead to create a symbolic link pointing to generated file in secure Novops secure directory.
+    /// 
     /// Destination where file will be generated. Default to secure Novops working directory.
     /// 
     /// Setting this value may prevent file from being auto-deleted as it won't be managed in a safe location and may remain indefinitely.
     pub dest: Option<String>,
+
+    /// Creates a symbolic link pointing to generated file. If a file already exists
+    /// 
+    /// Concrete file is still generated in secure Novops working directory, created symlink
+    /// will point to concrete file. 
+    /// 
+    /// For example, `symlink: "./mytoken"` will create a symlink at "./mytoken" which can be used to read 
+    /// file directly.
+    /// 
+    /// If a file already exists at symlink's destination and is NOT a symlink, Novops will fail. 
+    /// 
+    /// See also `variable` to generate an environment variable pointing to file in secure Novops working directory.
+    pub symlink: Option<String>,
     
     /// Environment variable name pointing to generated file. 
     /// 
     /// Example: setting `NPM_TOKEN` will output an environment variable pointing to file path such as 
     /// 
     /// `NPM_TOKEN: /run/user/1000/novops/dev/file_xxx`
+    /// 
+    /// See also `symlink` to create a symlink pointing to file in secure Novops working directory;
     pub variable: Option<String>,
     
     /// File content 
@@ -38,6 +57,7 @@ pub struct FileInput {
 #[derive(Debug, Clone, PartialEq, JsonSchema)]
 pub struct FileOutput {
     pub dest: PathBuf,
+    pub symlink: Option<PathBuf>,
     pub variable: VariableOutput,
     pub content: Vec<u8> // TODO buffer? content may be long
 }
@@ -50,8 +70,8 @@ impl ResolveTo<FileOutput> for FileInput {
         
         // enforce either name or variable as name is used to auto-generate variable 
         // otherwise we can't affect a deterministic variable name from config
-        if self.dest.is_none() && self.variable.is_none(){
-            panic!("You must specify at least `dest` or `variable` for file {:?}.", self)
+        if self.symlink.is_none() &&  self.variable.is_none() && self.dest.is_none(){
+            return Err(anyhow::anyhow!("You must specify at least one of `symlink`, `variable` or `dest` for File input {:?}.", self));
         }
         
         let content = match self.content.resolve(ctx).await {
@@ -68,9 +88,14 @@ impl ResolveTo<FileOutput> for FileInput {
         // if dest provided, use it
         // otherwise use working directory and file name
         let dest = match &self.dest {
-            Some(s) => PathBuf::from(&s),
+            Some(s) => {
+                warn!("File input `dest` is deprecated (potentially insecure). Use `symlink` instead. See https://novops.dev/config/files-variables.html");
+                PathBuf::from(&s)
+            }
             None => ctx.workdir.join(format!("file_{:}", &fname))
         };
+
+        let symlink = self.symlink.clone().map(|sl| PathBuf::from(&sl));
 
         // variable pointing to file path
         // if variable name is provided, use it
@@ -92,6 +117,7 @@ impl ResolveTo<FileOutput> for FileInput {
                     name: variable_name,
                     value: file_path_str
                 },
+                symlink,
                 content
             }
         )
