@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.14.0](https://github.com/PierreBeucher/novops/compare/v0.13.0...v0.14.0) (2024-05-03)
+
+
+### Features
+
+* file input symlink option (dest option deprecation) ([91ff2fd](https://github.com/PierreBeucher/novops/commit/91ff2fd918f91002aeef14fecec0763d63accdf9))
+
 ## [0.13.0](https://github.com/PierreBeucher/novops/compare/v0.12.1...v0.13.0) (2024-04-20)
 
 
