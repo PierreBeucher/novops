@@ -1,18 +1,19 @@
 mod test_lib;
 
+use novops::modules::files::FileOutput;
 use novops::modules::variables::VariableOutput;
-use novops::{make_context, NovopsLoadArgs, 
-    load_environment_write_vars, prepare_exec_command, should_error_tty, 
-    list_environments, list_outputs_for_environment, check_working_dir_permissions,
-    get_config_file_path};
+use novops::{check_working_dir_permissions, export_file_outputs, get_config_file_path, 
+    list_environments, list_outputs_for_environment, load_environment_write_vars, 
+    make_context, prepare_exec_command, should_error_tty, NovopsLoadArgs};
 use novops::core::{NovopsContext, NovopsConfig, NovopsConfigFile, NovopsConfigDefault, NovopsEnvironmentInput};
 use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::path::PathBuf;
-use std::fs::{self, Permissions};
-use std::os::unix::fs::PermissionsExt;
+use std::fs::{self, symlink_metadata, read, Permissions};
+use std::os::unix::fs::{symlink, PermissionsExt};
 use log::info;
 use test_lib::{clean_and_setup_test_dir, TEST_DIR, load_env_dryrun_for, test_setup};
+use tempfile::tempdir;
 
 const CONFIG_EMPTY: &str = "tests/.novops.empty.yml";
 const CONFIG_STANDALONE: &str = "tests/.novops.plain-strings.yml";
@@ -94,25 +95,25 @@ async fn test_simple_run() -> Result<(), anyhow::Error>{
     ).await?;   
 
     let expected_var_file = PathBuf::from(&workdir).join("vars");
-    let expected_var_content = fs::read_to_string(expected_var_file)?;
+    let actual_var_content = fs::read_to_string(expected_var_file)?;
     
     let expected_file_dog_path = PathBuf::from(&workdir).join("file_1811bdd29f2cfe95e6e23402e2390fa1012708fc52ef8b8a29ee540b1c481534");
-    let expected_file_dog_content = fs::read_to_string(&expected_file_dog_path)?;
+    let actual_file_dog_content = fs::read_to_string(&expected_file_dog_path)?;
     let file_dog_metadata = fs::metadata(&expected_file_dog_path)?;
     let file_dog_mode = file_dog_metadata.permissions().mode();
 
     let expected_file_cat_path = PathBuf::from("/tmp/novops_cat");
-    let expected_file_cat_content = fs::read_to_string(expected_file_cat_path)?;
+    let actual_file_cat_content = fs::read_to_string(expected_file_cat_path)?;
 
     // Expect to match content of CONFIG_STANDALONE
     // use r#"_"# for raw string literal
     // check if our file content contains expected export
     // naïve but sufficient for our needs
-    assert!(&expected_var_content.contains(r#"export SPECIAL_CHARACTERS='special_char_'"'"'!?`$abc_#~%*µ€{}[]-°+@à^ç=\'"#));
-    assert!(&expected_var_content.contains( "export MY_APP_HOST='localhost'"));
-    assert!(&expected_var_content.contains( &format!("export DOG_PATH='{:}'",
+    assert!(&actual_var_content.contains(r#"export SPECIAL_CHARACTERS='special_char_'"'"'!?`$abc_#~%*µ€{}[]-°+@à^ç=\'"#));
+    assert!(&actual_var_content.contains( "export MY_APP_HOST='localhost'"));
+    assert!(&actual_var_content.contains( &format!("export DOG_PATH='{:}'",
         &expected_file_dog_path.clone().into_os_string().into_string().unwrap())));
-    assert!(&expected_var_content.contains( "export NOVOPS_CAT_VAR='/tmp/novops_cat'"));
+    assert!(&actual_var_content.contains( "export NOVOPS_CAT_VAR='/tmp/novops_cat'"));
 
     // expect file permission to be 0600 (user readonly)
     // use a bitwise AND on ocal value to check for user-only permission 0600
@@ -120,8 +121,8 @@ async fn test_simple_run() -> Result<(), anyhow::Error>{
         &expected_file_dog_path, 0o600, &file_dog_mode);
     
     
-    assert_eq!(expected_file_dog_content, "woof");
-    assert_eq!(expected_file_cat_content, "meow");
+    assert_eq!(actual_file_dog_content, "woof");
+    assert_eq!(actual_file_cat_content, "meow");
     
     Ok(())  
     
@@ -383,6 +384,87 @@ async fn test_get_config_file_path() -> Result<(), anyhow::Error> {
     // custom config should be loaded with precedence
     let result_custom_path = get_config_file_path(&dir, &Some(String::from(test_config)));
     assert_eq!(result_custom_path?, PathBuf::from(test_config));
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_export_file_outputs() -> Result<(), anyhow::Error> {
+
+    let dir = tempdir()?;
+
+    let simple_path = dir.path().join("test.txt");
+    let simple_content = b"Hello, world!";
+
+    let new_symlink_path = dir.path().join("link.txt");
+    let new_symlink_dest_path = dir.path().join("new_symlinkdest.txt");
+    let new_symlink_content = b"new symlink";
+
+    let existing_symlink_path = dir.path().join("existing_link.txt");
+    let existing_symlink_dest_path = dir.path().join("existing_symlink_dest.txt");
+    let existing_symlink_content = b"existing symlink";
+
+    // Write initial content and symlink 
+    // to simulate an existing file and symlink for the conflict test
+    let existing_file_path = dir.path().join("existing.txt");
+    fs::write(&existing_file_path, b"Existing content")?;
+    symlink(&existing_file_path, &existing_symlink_path)?;
+
+    let dummy_var = VariableOutput {
+        name: String::from("dummy"),
+        value: String::from("dummy"),
+    };
+
+    let file_outputs_ok = vec![
+        FileOutput { // Simple file creation
+            dest: simple_path.clone(),
+            symlink: None,
+            content: simple_content.to_vec(),
+            variable: dummy_var.clone(),
+        },
+        FileOutput { // File with new symlink
+            dest: new_symlink_dest_path.clone(),
+            symlink: Some(new_symlink_path.clone()),
+            content: new_symlink_content.to_vec(),
+            variable: dummy_var.clone(),
+        },
+        FileOutput { // File with existing symlink (will override)
+            dest: existing_symlink_dest_path.clone(),
+            symlink: Some(existing_symlink_path.clone()),
+            content: existing_symlink_content.to_vec(),
+            variable: dummy_var.clone(),
+        },
+    ];
+
+    export_file_outputs(&file_outputs_ok)?;
+
+    // Check simple file creation
+    assert_eq!(read(&simple_path)?, simple_content, "Expected {:?} to contain {:?}", &simple_path, &simple_content);
+
+    // Should have created new symlink
+    let result_new_symlink = symlink_metadata(&new_symlink_path);
+    assert!(result_new_symlink.is_ok(), "Expected metadata for {:?}, got error {:?}", &new_symlink_path, &result_new_symlink);
+    assert!(symlink_metadata(&new_symlink_path)?.file_type().is_symlink(), "Expected {:?} to be a symlink", &new_symlink_path);
+    assert_eq!(fs::read_link(&new_symlink_path)?, new_symlink_dest_path, "Expected {:?} to point to {:?}", &new_symlink_path, &new_symlink_dest_path);
+
+    // Should have overwritten existing symlink
+    let result_existing_symlink = symlink_metadata(&existing_symlink_path);
+    assert!(result_existing_symlink.is_ok(), "Expected metadata for {:?}, got error {:?}", &existing_symlink_path, &result_existing_symlink);
+    assert!(result_existing_symlink?.file_type().is_symlink());
+    assert_eq!(fs::read_link(&existing_symlink_path)?, existing_symlink_dest_path);
+
+    // Attempting to symlink on existing non-symlink file should fail
+    let file_outputs_err = vec![
+        FileOutput { // Attempt to create a symlink where a file already exists
+            dest: dir.path().join("new_original.txt"),
+            symlink: Some(existing_file_path.clone()),
+            content: b"Should not overwrite!".to_vec(),
+            variable: dummy_var.clone(),
+        },
+    ];
+
+    let result_err = export_file_outputs(&file_outputs_err);
+    assert!(result_err.is_err());
 
     Ok(())
 }

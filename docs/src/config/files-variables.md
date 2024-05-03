@@ -35,14 +35,38 @@ environments:
     # Each files must define either dest, variable or both
     files:
 
-      # File will be created at /tmp/myfile with content "foo"
-      - dest: /tmp/myfile
+      # A symlink will be created at ./symlink-pointing-to-file, pointing to
+      # a file in secure Novops working directory which will have content "foo"
+      - symlink: ./symlink-pointing-to-file
         content: foo
 
       # Fille will be generated in a secure folder
       # APP_TOKEN variable will point to file
       # Such as APP_TOKEN=/run/user/1000/novops/.../file_VAR_NAME
       - variable: APP_TOKEN
+        content:
+          hvault_kv2:
+            path: "myapp/dev/creds"
+            key: "token"
+```
+
+### File `dest` deprecation
+
+`dest` is deprecated as it may result in file being generated in insecure directory and/or persisted on disk (as file is written directly at provided path, outside of [secure Novops working directory](../security.md)). Use `symlink` instead.
+
+```yaml
+    # [...]
+    files:
+
+      # Prefer symlink
+      - symlink: ./my-secret-token
+        content:
+          hvault_kv2:
+            path: "myapp/dev/creds"
+            key: "token"
+      
+      # DON'T DO THIS
+      - dest: ./my-secret-token # not secure
         content:
           hvault_kv2:
             path: "myapp/dev/creds"

@@ -252,7 +252,7 @@
           ]
         },
         "dest": {
-          "description": "Destination where file will be generated. Default to secure Novops working directory.\n\nSetting this value may prevent file from being auto-deleted as it won't be managed in a safe location and may remain indefinitely.",
+          "description": "DEPRECATED: `dest` is insecure as generated file may be written in insecure directory and/or persist on disk. Use `symlink` instead to create a symbolic link pointing to generated file in secure Novops secure directory.\n\nDestination where file will be generated. Default to secure Novops working directory.\n\nSetting this value may prevent file from being auto-deleted as it won't be managed in a safe location and may remain indefinitely.",
           "type": [
             "string",
             "null"
@@ -265,8 +265,15 @@
             "null"
           ]
         },
+        "symlink": {
+          "description": "Creates a symbolic link pointing to generated file. If a file already exists\n\nConcrete file is still generated in secure Novops working directory, created symlink will point to concrete file.\n\nFor example, `symlink: \"./mytoken\"` will create a symlink at \"./mytoken\" which can be used to read file directly.\n\nIf a file already exists at symlink's destination and is NOT a symlink, Novops will fail.\n\nSee also `variable` to generate an environment variable pointing to file in secure Novops working directory.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "variable": {
-          "description": "Environment variable name pointing to generated file.\n\nExample: setting `NPM_TOKEN` will output an environment variable pointing to file path such as\n\n`NPM_TOKEN: /run/user/1000/novops/dev/file_xxx`",
+          "description": "Environment variable name pointing to generated file.\n\nExample: setting `NPM_TOKEN` will output an environment variable pointing to file path such as\n\n`NPM_TOKEN: /run/user/1000/novops/dev/file_xxx`\n\nSee also `symlink` to create a symlink pointing to file in secure Novops working directory;",
           "type": [
             "string",
             "null"
