@@ -60,20 +60,11 @@ impl ResolveTo<Vec<VariableOutput>> for AwsAssumeRoleInput {
         let creds = &assumed_role.credentials.clone()
             .with_context(|| format!("Can't assume role: returned Credentials Option was None for {:?}", &assumed_role))?;
 
-        let access_key = creds.access_key_id.as_ref()
-            .with_context(|| format!("Can't assume role: Returned access key Option was None for {:?}", &assumed_role))?;
-
-        let secret_key = creds.secret_access_key.as_ref()
-            .with_context(|| format!("Can't assume role: returned secret key Option was None for {:?}", &assumed_role))?;
-
-        let session_token = creds.session_token.as_ref()
-            .with_context(|| format!("Can't assume role: returned access key Option was None for {:?}", &assumed_role))?;
-        
         return Ok(
             vec![
-                VariableOutput{name: "AWS_ACCESS_KEY_ID".into(), value: access_key.clone()},
-                VariableOutput{name: "AWS_SECRET_ACCESS_KEY".into(), value: secret_key.clone()},
-                VariableOutput{name: "AWS_SESSION_TOKEN".into(), value: session_token.clone()} 
+                VariableOutput{name: "AWS_ACCESS_KEY_ID".into(), value: creds.access_key_id.clone()},
+                VariableOutput{name: "AWS_SECRET_ACCESS_KEY".into(), value: creds.secret_access_key.clone()},
+                VariableOutput{name: "AWS_SESSION_TOKEN".into(), value: creds.session_token.clone()} 
             ]
         )
     }

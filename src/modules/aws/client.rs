@@ -1,5 +1,9 @@
 use crate::core::NovopsContext;
 use super::config::AwsClientConfig;
+use aws_config::BehaviorVersion;
+use aws_sdk_secretsmanager::operation::get_secret_value::GetSecretValueOutput;
+use aws_sdk_sts::{operation::assume_role::AssumeRoleOutput, types::builders::CredentialsBuilder};
+use aws_sdk_ssm::{operation::get_parameter::GetParameterOutput, types::builders::ParameterBuilder};
 use aws_sdk_secretsmanager::output::GetSecretValueOutput;
 use aws_sdk_ssm::{output::GetParameterOutput, model::Parameter};
 use aws_sdk_sts::output::AssumeRoleOutput;
@@ -7,8 +11,8 @@ use aws_sdk_sts::model::Credentials;
 use aws_smithy_http::endpoint::Endpoint;
 use http::Uri;
 use anyhow::Context;
+use aws_smithy_types::DateTime;
 use log::debug;
-use std::str::FromStr;
 use async_trait::async_trait;
 
 /**
@@ -81,6 +85,7 @@ impl AwsClient for DefaultAwsClient {
         client.assume_role()
             .role_arn(role_arn) 
             .role_session_name(session_name)
+            .duration_seconds(3600) // TODO as config
             .send().await
             .with_context(|| format!("Couldn't impersonate role {:} (session name: {:?})", role_arn, session_name))
     }
@@ -97,21 +102,24 @@ impl AwsClient for DryRunAwsClient{
     }
 
     async fn get_ssm_parameter(&self, name: &str, _decrypt: Option<bool>) -> Result<GetParameterOutput, anyhow::Error>{
-        let parameter = Parameter::builder()
+        let param = ParameterBuilder::default()
+            .name(String::from(name))
             .value(format!("RESULT:{:}", name))
             .build();
 
         Ok(GetParameterOutput::builder()
-            .parameter(parameter)
+            .parameter(param)
             .build())
     }
 
     async fn assume_role(&self, _role_arn: &str, _session_name: &str) -> Result<AssumeRoleOutput, anyhow::Error>{
-        let creds = Credentials::builder()
+        let exp = DateTime::from_str("2999-01-01T00:00:00Z", aws_smithy_types::date_time::Format::DateTime)?;
+        let creds = CredentialsBuilder::default()
             .access_key_id("AKIADRYRUNDRYUNDRYRUN")
             .secret_access_key("xxx")
             .session_token("xxx")
-            .build();
+            .expiration(exp)
+            .build()?;
 
         let result = AssumeRoleOutput::builder()
             .credentials(creds)
@@ -141,30 +149,19 @@ pub fn build_mutable_client_config_from_context(ctx: &NovopsContext) -> AwsClien
  * Create an SdkConfig using optional overrides 
  */
 pub async fn get_sdk_config(client_conf: &AwsClientConfig) -> Result<aws_config::SdkConfig, anyhow::Error> {
+    
+    let mut shared_config = aws_config::defaults(BehaviorVersion::v2024_03_28());
 
-    let mut aws_config = aws_config::from_env();
- 
-    match &client_conf.endpoint {
-        Some(endpoint) => {
-            let ep_uri = Uri::from_str(endpoint)
-                .with_context(|| format!("Couldn't create endpoint URI from string '{:}'", endpoint))?;
-            aws_config = aws_config.endpoint_resolver(Endpoint::immutable(ep_uri));
-        },
-        None => {},
+    if let Some(endpoint) = &client_conf.endpoint {
+        shared_config = shared_config.endpoint_url(endpoint);
     }
 
-    match &client_conf.profile {
-        Some(profile) => {
-            aws_config = aws_config.credentials_provider(
-                aws_config::profile::ProfileFileCredentialsProvider::builder()
-                    .profile_name(profile)
-                    .build()
-            );
-        },
-        None => {},
+    if let Some(profile) = &client_conf.profile {
+        shared_config = shared_config.profile_name(profile);
     }
 
-    Ok(aws_config.load().await)
+    Ok(shared_config.load().await)
+
     
 }
 

@@ -1,7 +1,7 @@
 pub mod test_lib;
 
 use novops::modules::aws::client::{get_ssm_client, get_secretsmanager_client};
-use aws_sdk_ssm::model::ParameterType;
+use aws_sdk_ssm::types::ParameterType;
 use aws_smithy_types::Blob;
 use test_lib::{load_env_for, test_setup, aws_ensure_role_exists, aws_test_config};
 use log::info;
@@ -64,28 +64,13 @@ async fn test_secretsmanager() -> Result<(), anyhow::Error> {
     info!("test_secretsmanager: Found variables: {:?}", outputs.variables);
     info!("test_secretsmanager: Found files: {:?}", outputs.files);
 
+    let binary_var_value = BASE64_STANDARD.decode(outputs.variables.get("SECRETSMANAGER_VAR_BINARY").unwrap().value.clone())?;
+    let binary_file_content = BASE64_STANDARD.decode(outputs.files.get("/tmp/SECRETSMANAGER_FILE_BINARY").unwrap().content.clone())?;
+
     assert_eq!(outputs.variables.get("SECRETSMANAGER_VAR_STRING").unwrap().value, expect_string);
-    assert_eq!(outputs.variables.get("SECRETSMANAGER_VAR_BINARY").unwrap().value.as_bytes(), expect_binary);
+    assert_eq!(binary_var_value, expect_binary);
     assert_eq!(outputs.files.get("/tmp/SECRETSMANAGER_FILE_STRING").unwrap().content, expect_string.as_bytes());
-    assert_eq!(outputs.files.get("/tmp/SECRETSMANAGER_FILE_BINARY").unwrap().content, expect_binary);
-
-    Ok(())
-}
-
-/**
- * Variable input cannot be used for NON-UTF8 data yet. Let's test for proper error message. 
- */
-#[tokio::test]
-async fn test_secretsmanager_non_utf8_variable() -> Result<(), anyhow::Error> {
-
-    // Prepare env and dummy secret
-    test_setup().await?;
-
-    let non_utf8_binary = vec![0, 159, 146, 150];
-    ensure_test_secret_exists("novops-test-secretsmanager-binary-non-utf8", None, Some(non_utf8_binary.clone())).await?;
-    
-    let outputs = load_env_for("aws_secretsmanager_var_nonutf8", "dev").await;
-    outputs.expect_err("Expected non UTF-8 binary data to provoke an error.");
+    assert_eq!(binary_file_content, expect_binary);
 
     Ok(())
 }

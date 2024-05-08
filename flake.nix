@@ -60,6 +60,8 @@
           gh
           nodejs-slim # for npx release-please
           cachix
+          python311
+          python311Packages.pip
 
           # Module testing
           podman
