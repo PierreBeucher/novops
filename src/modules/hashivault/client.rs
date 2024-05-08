@@ -59,7 +59,7 @@ impl HashivaultClient for DefaultHashivaultClient {
 
         return secret_data.get(key)
             .ok_or_else(|| anyhow::anyhow!("Mount '{:}' secret '{:}' found but key '{:}' did not exist", &_mount, &path, &key))
-            .map(|s| s.clone());
+            .cloned()
     }
 
     async fn kv1_read(&self, mount: &Option<String>, path: &str, key: &str) -> Result<String, anyhow::Error> {
@@ -72,7 +72,7 @@ impl HashivaultClient for DefaultHashivaultClient {
 
         return secret_data.get(key)
             .ok_or_else(|| anyhow::anyhow!("Mount '{:}' secret '{:}', found but key '{:}' did not exist", &_mount, &path, &key))
-            .map(|s| s.clone());
+            .cloned()
     }
 
     async fn aws_creds (&self, mount: &Option<String>, role: &str, 
