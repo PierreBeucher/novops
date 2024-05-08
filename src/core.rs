@@ -139,6 +139,7 @@ pub enum StringResolvableInput {
     GCloudSecretManagerSecretInput(gcloud::secretmanager::GCloudSecretManagerSecretInput),
     AzureKeyvaultSecretInput(azure::vault::AzureKeyvaultSecretInput),
     SopsValueInput(sops::SopsValueInput),
+    AwsS3ObjectInput(aws::s3::AwsS3ObjectInput)
 }
 
 
@@ -163,6 +164,7 @@ impl ResolveTo<String> for StringResolvableInput {
             StringResolvableInput::GCloudSecretManagerSecretInput(s) => s.resolve(ctx).await,
             StringResolvableInput::AzureKeyvaultSecretInput(z) => z.resolve(ctx).await,
             StringResolvableInput::SopsValueInput(s) => s.resolve(ctx).await,
+            StringResolvableInput::AwsS3ObjectInput(s) => s.resolve(ctx).await,
         }
     }
 }

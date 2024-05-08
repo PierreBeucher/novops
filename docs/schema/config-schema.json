@@ -85,6 +85,36 @@
         }
       }
     },
+    "AwsS3Object": {
+      "description": "Reference an S3 object",
+      "type": "object",
+      "required": [
+        "bucket",
+        "key"
+      ],
+      "properties": {
+        "bucket": {
+          "description": "S3 bucket name",
+          "type": "string"
+        },
+        "key": {
+          "description": "S3 object key",
+          "type": "string"
+        }
+      }
+    },
+    "AwsS3ObjectInput": {
+      "description": "Reference an S3 object",
+      "type": "object",
+      "required": [
+        "aws_s3_object"
+      ],
+      "properties": {
+        "aws_s3_object": {
+          "$ref": "#/definitions/AwsS3Object"
+        }
+      }
+    },
     "AwsSSMParamStoreInput": {
       "description": "Reference an SSM Parameter config or secret",
       "type": "object",
@@ -686,6 +716,9 @@
         },
         {
           "$ref": "#/definitions/SopsValueInput"
+        },
+        {
+          "$ref": "#/definitions/AwsS3ObjectInput"
         }
       ]
     },

@@ -4,12 +4,7 @@ use aws_config::BehaviorVersion;
 use aws_sdk_secretsmanager::operation::get_secret_value::GetSecretValueOutput;
 use aws_sdk_sts::{operation::assume_role::AssumeRoleOutput, types::builders::CredentialsBuilder};
 use aws_sdk_ssm::{operation::get_parameter::GetParameterOutput, types::builders::ParameterBuilder};
-use aws_sdk_secretsmanager::output::GetSecretValueOutput;
-use aws_sdk_ssm::{output::GetParameterOutput, model::Parameter};
-use aws_sdk_sts::output::AssumeRoleOutput;
-use aws_sdk_sts::model::Credentials;
-use aws_smithy_http::endpoint::Endpoint;
-use http::Uri;
+use aws_sdk_s3::{operation::get_object::GetObjectOutput, primitives::ByteStream};
 use anyhow::Context;
 use aws_smithy_types::DateTime;
 use log::debug;
@@ -25,6 +20,8 @@ pub trait AwsClient {
     async fn get_ssm_parameter(&self, name: &str, decrypt: Option<bool>) -> Result<GetParameterOutput, anyhow::Error>;
 
     async fn assume_role(&self, role_arn: &str, session_name: &str) -> Result<AssumeRoleOutput, anyhow::Error>;
+
+    async fn get_s3_object(&self, bucket: &str, key: &str) -> Result<GetObjectOutput, anyhow::Error>;
 }
 
 pub async fn get_client(ctx: &NovopsContext) -> Box<dyn AwsClient + Send + Sync> {
@@ -89,6 +86,16 @@ impl AwsClient for DefaultAwsClient {
             .send().await
             .with_context(|| format!("Couldn't impersonate role {:} (session name: {:?})", role_arn, session_name))
     }
+
+    async fn get_s3_object(&self, bucket: &str, key: &str) -> Result<GetObjectOutput, anyhow::Error> {
+        let client = get_s3_client(&self.config).await?;
+        client.get_object()
+            .bucket(bucket)
+            .key(key)
+            .send().await
+            .with_context(|| format!("Couldn't get S3 object '{}/{}'", bucket, key))
+    }
+
 }
 
 #[async_trait]
@@ -126,6 +133,12 @@ impl AwsClient for DryRunAwsClient{
             .build();
 
         Ok(result)
+    }
+
+    async fn get_s3_object(&self, _: &str, _: &str) -> Result<GetObjectOutput, anyhow::Error> {
+        Ok(GetObjectOutput::builder()
+            .body(ByteStream::from_static(b"dummy"))
+            .build())
     }
 }
 
@@ -191,4 +204,14 @@ pub async fn get_secretsmanager_client(novops_aws: &AwsClientConfig) -> Result<a
 
     debug!("Creating AWS Secrets Manager client with config {:?}", conf);
     Ok(aws_sdk_secretsmanager::Client::new(&conf))
+}
+
+pub async fn get_s3_client(novops_aws: &AwsClientConfig) -> Result<aws_sdk_s3::Client, anyhow::Error> {
+    let conf = get_sdk_config(novops_aws).await?;
+
+    debug!("Creating AWS S3 client with config {:?}", conf);
+
+    let s3_conf = aws_sdk_s3::config::Builder::from(&conf).force_path_style(true).build();
+    
+    Ok(aws_sdk_s3::Client::from_conf(s3_conf))
 }

@@ -1,10 +1,15 @@
 pub mod test_lib;
 
-use novops::modules::aws::client::{get_ssm_client, get_secretsmanager_client};
+use std::io::Write;
+
+use aws_sdk_s3::{primitives::ByteStream, types::{BucketLocationConstraint, CreateBucketConfiguration}};
+use novops::modules::aws::client::{get_s3_client, get_secretsmanager_client, get_ssm_client};
 use aws_sdk_ssm::types::ParameterType;
 use aws_smithy_types::Blob;
+use tempfile::NamedTempFile;
 use test_lib::{load_env_for, test_setup, aws_ensure_role_exists, aws_test_config};
 use log::info;
+use base64::prelude::*;
 
 #[tokio::test]
 async fn test_assume_role() -> Result<(), anyhow::Error> {
@@ -112,6 +117,66 @@ async fn ensure_test_secret_exists(sname: &str, string_value: Option<String>, bi
         .send().await?;
 
     info!("Create AWS secret {} response: {:?}", sname, r);
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_s3_object() -> Result<(), anyhow::Error> {
+
+    // Prepare env and dummy secret
+    test_setup().await?;
+
+    ensure_test_s3_object_exists("novops-test-bucket", "path/to/var", "variable-content".as_bytes()).await?;
+    ensure_test_s3_object_exists("novops-test-bucket", "path/to/file", "file-content".as_bytes()).await?;
+
+    let outputs = load_env_for("aws_s3_object", "dev").await?;
+    assert_eq!(outputs.variables.get("S3_OBJECT_AS_VAR").unwrap().value, "variable-content");
+    assert_eq!(outputs.files.get("/tmp/S3_OBJECT_AS_FILE").unwrap().content, "file-content".as_bytes());
+
+    Ok(())
+}
+
+async fn ensure_test_s3_object_exists(bucket_name: &str, object_key: &str, content: &[u8]) -> Result<(), anyhow::Error> {
+
+    let client = get_s3_client(&aws_test_config()).await?;
+    
+    let bucket_exists = match client.head_bucket().bucket(bucket_name).send().await {
+        Ok(_) => true,
+        Err(_) => false,
+    };
+
+    if !bucket_exists {
+        info!("creating bucket {:}", bucket_name);
+
+        let constraint = BucketLocationConstraint::from("eu-west-3");
+
+        let cfg = CreateBucketConfiguration::builder()
+            .location_constraint(constraint)
+            .build();
+
+        client.create_bucket()
+            .bucket(bucket_name)
+            .create_bucket_configuration(cfg)
+            .send().await?;
+
+    } else {
+        info!("Bucket {:} already exists", bucket_name);
+    }
+
+    let mut temp_file = NamedTempFile::new()?;
+    temp_file.write_all(content)?;
+
+    let body = ByteStream::from_path(temp_file.path()).await?;
+
+    info!("Putting object {:} in {:}", object_key, bucket_name);
+
+    client.put_object()
+        .bucket(bucket_name)
+        .key(object_key)
+        .body(body)
+        .send()
+        .await?;
 
     Ok(())
 }

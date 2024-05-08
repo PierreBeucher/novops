@@ -3,6 +3,7 @@
 build/
 /release/
 .github/token
+.venv
 
 # Tests output
 tests/output/
@@ -18,3 +19,4 @@ result
 
 # mkbook
 docs/book
+.aider*
