@@ -1,6 +1,6 @@
 use crate::core::NovopsContext;
 use super::config::AwsClientConfig;
-use aws_config::BehaviorVersion;
+use aws_config::{BehaviorVersion, Region};
 use aws_sdk_secretsmanager::operation::get_secret_value::GetSecretValueOutput;
 use aws_sdk_sts::{operation::assume_role::AssumeRoleOutput, types::builders::CredentialsBuilder};
 use aws_sdk_ssm::{operation::get_parameter::GetParameterOutput, types::builders::ParameterBuilder};
@@ -21,7 +21,7 @@ pub trait AwsClient {
 
     async fn assume_role(&self, role_arn: &str, session_name: &str) -> Result<AssumeRoleOutput, anyhow::Error>;
 
-    async fn get_s3_object(&self, bucket: &str, key: &str) -> Result<GetObjectOutput, anyhow::Error>;
+    async fn get_s3_object(&self, bucket: &str, key: &str, region: &Option<String>) -> Result<GetObjectOutput, anyhow::Error>;
 }
 
 pub async fn get_client(ctx: &NovopsContext) -> Box<dyn AwsClient + Send + Sync> {
@@ -87,8 +87,8 @@ impl AwsClient for DefaultAwsClient {
             .with_context(|| format!("Couldn't impersonate role {:} (session name: {:?})", role_arn, session_name))
     }
 
-    async fn get_s3_object(&self, bucket: &str, key: &str) -> Result<GetObjectOutput, anyhow::Error> {
-        let client = get_s3_client(&self.config).await?;
+    async fn get_s3_object(&self, bucket: &str, key: &str, region: &Option<String>) -> Result<GetObjectOutput, anyhow::Error> {
+        let client = get_s3_client(&self.config, region).await?;
         client.get_object()
             .bucket(bucket)
             .key(key)
@@ -135,7 +135,7 @@ impl AwsClient for DryRunAwsClient{
         Ok(result)
     }
 
-    async fn get_s3_object(&self, _: &str, _: &str) -> Result<GetObjectOutput, anyhow::Error> {
+    async fn get_s3_object(&self, _: &str, _: &str, _: &Option<String>) -> Result<GetObjectOutput, anyhow::Error> {
         Ok(GetObjectOutput::builder()
             .body(ByteStream::from_static(b"dummy"))
             .build())
@@ -173,9 +173,12 @@ pub async fn get_sdk_config(client_conf: &AwsClientConfig) -> Result<aws_config:
         shared_config = shared_config.profile_name(profile);
     }
 
+    if let Some(region) = &client_conf.region {
+        shared_config = shared_config.region(Region::new(region.clone()));
+    }
+
     Ok(shared_config.load().await)
 
-    
 }
 
 pub async fn get_iam_client(novops_aws: &AwsClientConfig) -> Result<aws_sdk_iam::Client, anyhow::Error>{
@@ -206,12 +209,17 @@ pub async fn get_secretsmanager_client(novops_aws: &AwsClientConfig) -> Result<a
     Ok(aws_sdk_secretsmanager::Client::new(&conf))
 }
 
-pub async fn get_s3_client(novops_aws: &AwsClientConfig) -> Result<aws_sdk_s3::Client, anyhow::Error> {
+pub async fn get_s3_client(novops_aws: &AwsClientConfig, region: &Option<String>) -> Result<aws_sdk_s3::Client, anyhow::Error> {
     let conf = get_sdk_config(novops_aws).await?;
 
     debug!("Creating AWS S3 client with config {:?}", conf);
 
-    let s3_conf = aws_sdk_s3::config::Builder::from(&conf).force_path_style(true).build();
+    let mut s3_conf = aws_sdk_s3::config::Builder::from(&conf)
+        .force_path_style(true);
+
+    if let Some(r) = region.clone() {
+        s3_conf = s3_conf.region(Region::new(r));
+    };
     
-    Ok(aws_sdk_s3::Client::from_conf(s3_conf))
+    Ok(aws_sdk_s3::Client::from_conf(s3_conf.build()))
 }

@@ -16,16 +16,16 @@ pub struct AwsInput {
 #[derive(Default)]
 pub struct AwsClientConfig {
     pub profile: Option<String>,
-    pub endpoint: Option<String>
+    pub endpoint: Option<String>,
+    pub region: Option<String>,
 }
-
-
 
 impl From<&AwsConfig> for AwsClientConfig {
     fn from(cf: &AwsConfig) -> AwsClientConfig{
         AwsClientConfig {
             profile: cf.profile.clone(),
-            endpoint: cf.endpoint.clone()
+            endpoint: cf.endpoint.clone(),
+            region: cf.region.clone(),
         }
     }
 }
@@ -56,6 +56,9 @@ pub struct AwsConfig {
     /// 
     /// It's advised not to use this directly as profile name configuration is higly dependent
     /// on local configuration. Prefer using AWS_PROFILE environment variable where needed. 
-    pub profile: Option<String>
+    pub profile: Option<String>,
+
+    /// AWS region to use. Default to currently configured region. 
+    pub region: Option<String>
 }
 

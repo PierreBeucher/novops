@@ -22,6 +22,7 @@ You can also use `config` root element override certains configs (such as AWS en
 config:
   aws:
     endpoint: "http://localhost:4566/" # Use LocalStack endpoint
+    region: eu-central-1 # Set AWS region name
 ```
 
 ## STS Assume Role
@@ -104,4 +105,13 @@ environments:
           aws_s3_object:
             bucket: some-bucket
             key: path/to/object.json
+```
+
+It's also possible to specify the region in which Bucket is located if different than configured region:
+
+```yml
+aws_s3_object:
+  bucket: some-bucket
+  key: path/to/object
+  region: eu-central-1
 ```

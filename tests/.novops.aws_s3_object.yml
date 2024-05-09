@@ -6,6 +6,7 @@ environments:
           aws_s3_object:
             bucket: novops-test-bucket
             key: path/to/var
+            region: eu-central-1
       
     files: 
       - dest: /tmp/S3_OBJECT_AS_FILE
@@ -13,9 +14,11 @@ environments:
           aws_s3_object:
             bucket: novops-test-bucket
             key: path/to/file
+            region: eu-central-1
 
 config:
   default:
     environment: dev
   aws:
     endpoint: "http://localhost:4566/" # LocalStack 
+    region: eu-central-1

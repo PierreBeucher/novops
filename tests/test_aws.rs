@@ -139,7 +139,7 @@ async fn test_s3_object() -> Result<(), anyhow::Error> {
 
 async fn ensure_test_s3_object_exists(bucket_name: &str, object_key: &str, content: &[u8]) -> Result<(), anyhow::Error> {
 
-    let client = get_s3_client(&aws_test_config()).await?;
+    let client = get_s3_client(&aws_test_config(), &None).await?;
     
     let bucket_exists = match client.head_bucket().bucket(bucket_name).send().await {
         Ok(_) => true,

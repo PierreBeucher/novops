@@ -71,6 +71,13 @@
             "string",
             "null"
           ]
+        },
+        "region": {
+          "description": "AWS region to use. Default to currently configured region.",
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     },
@@ -100,6 +107,13 @@
         "key": {
           "description": "S3 object key",
           "type": "string"
+        },
+        "region": {
+          "description": "Optional bucket region name",
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     },

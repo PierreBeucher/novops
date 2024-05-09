@@ -19,13 +19,21 @@ pub struct AwsS3Object {
 
     /// S3 object key
     pub key: String,
+
+    /// Optional bucket region name
+    pub region: Option<String>
 }
 
 #[async_trait]
 impl ResolveTo<String> for AwsS3ObjectInput {
     async fn resolve(&self, ctx: &NovopsContext) -> Result<String, anyhow::Error> {
         let client = get_client(ctx).await;
-        let result = client.get_s3_object(&self.aws_s3_object.bucket, &self.aws_s3_object.key).await?;
+
+        let result = client.get_s3_object(
+            &self.aws_s3_object.bucket, 
+            &self.aws_s3_object.key, 
+            &self.aws_s3_object.region
+        ).await?;
         
         debug!("Got file {:} from S3 bucket {:}", &self.aws_s3_object.key, &self.aws_s3_object.bucket);
         
