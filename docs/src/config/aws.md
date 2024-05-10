@@ -1,9 +1,10 @@
 # AWS
 
-- [Authentication & Configuration](#authentication--configuration)
+- [Authentication \& Configuration](#authentication--configuration)
 - [STS Assume Role](#sts-assume-role)
 - [Systems Manager (SSM) Parameter Store](#systems-manager-ssm-parameter-store)
 - [Secrets Manager](#secrets-manager)
+- [S3 file](#s3-file)
 
 ## Authentication & Configuration
 
@@ -21,6 +22,7 @@ You can also use `config` root element override certains configs (such as AWS en
 config:
   aws:
     endpoint: "http://localhost:4566/" # Use LocalStack endpoint
+    region: eu-central-1 # Set AWS region name
 ```
 
 ## STS Assume Role
@@ -81,4 +83,35 @@ environments:
       content:
         aws_secret:
           id: my-binary-secret
+```
+
+## S3 file 
+
+Load [S3 objects](https://aws.amazon.com/s3/) as files or environment variables:
+
+```yaml
+environments:
+  dev:
+    variables:
+      - name: S3_OBJECT_AS_VAR
+        value:
+          aws_s3_object:
+            bucket: some-bucket
+            key: path/to/object
+      
+    files: 
+      - symlink: my-s3-object.json
+        content:
+          aws_s3_object:
+            bucket: some-bucket
+            key: path/to/object.json
+```
+
+It's also possible to specify the region in which Bucket is located if different than configured region:
+
+```yml
+aws_s3_object:
+  bucket: some-bucket
+  key: path/to/object
+  region: eu-central-1
 ```

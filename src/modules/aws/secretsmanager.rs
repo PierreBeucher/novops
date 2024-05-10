@@ -1,5 +1,5 @@
 use anyhow::Context;
-use aws_sdk_secretsmanager::output::GetSecretValueOutput;
+use aws_sdk_secretsmanager::operation::get_secret_value::GetSecretValueOutput;
 use serde::Deserialize;
 use async_trait::async_trait;
 use schemars::JsonSchema;

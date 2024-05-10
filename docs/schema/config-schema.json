@@ -71,6 +71,13 @@
             "string",
             "null"
           ]
+        },
+        "region": {
+          "description": "AWS region to use. Default to currently configured region.",
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     },
@@ -82,6 +89,43 @@
       "properties": {
         "assume_role": {
           "$ref": "#/definitions/AwsAssumeRoleInput"
+        }
+      }
+    },
+    "AwsS3Object": {
+      "description": "Reference an S3 object",
+      "type": "object",
+      "required": [
+        "bucket",
+        "key"
+      ],
+      "properties": {
+        "bucket": {
+          "description": "S3 bucket name",
+          "type": "string"
+        },
+        "key": {
+          "description": "S3 object key",
+          "type": "string"
+        },
+        "region": {
+          "description": "Optional bucket region name",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "AwsS3ObjectInput": {
+      "description": "Reference an S3 object",
+      "type": "object",
+      "required": [
+        "aws_s3_object"
+      ],
+      "properties": {
+        "aws_s3_object": {
+          "$ref": "#/definitions/AwsS3Object"
         }
       }
     },
@@ -686,6 +730,9 @@
         },
         {
           "$ref": "#/definitions/SopsValueInput"
+        },
+        {
+          "$ref": "#/definitions/AwsS3ObjectInput"
         }
       ]
     },
