@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
 #
 # Test Novops installation script with various shells and OSes
@@ -21,4 +21,3 @@ function test_novops_install() {
 test_novops_install docker.io/library/alpine:3.19.1 "apk update && apk add curl unzip && ./install.sh && novops --version"
 test_novops_install docker.io/library/debian:12.5-slim "apt update && apt install curl unzip -y && ./install.sh && novops --version"
 test_novops_install docker.io/library/ubuntu:22.04 "apt update && apt install curl unzip -y && ./install.sh && novops --version"
-

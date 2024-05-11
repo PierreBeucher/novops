@@ -63,6 +63,19 @@
           python311
           python311Packages.pip
 
+          # MacOS container requirements - https://github.com/sickcodes/Docker-OSX
+          qemu
+          libvirt
+          dnsmasq
+          virt-manager
+          bridge-utils
+          flex
+          bison
+          iptables
+          edk2
+          sshfs
+          sshpass
+
           # Module testing
           podman
           podman-compose
@@ -70,6 +83,7 @@
           bitwarden-cli
           sops
           age
+          
         ];
 
         devShellBuildInputs = with pkgs; [] ++ lib.optionals isDarwin [

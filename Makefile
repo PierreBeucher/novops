@@ -38,7 +38,8 @@ test-doc: doc
 
 .PHONY: test-install
 test-install:
-	tests/install/test-install.sh
+	tests/install/test-install-linux.sh
+	tests/install/test-install-macos.sh
 
 # Build doc with mdBook and json-schema-for-humans
 # See:
