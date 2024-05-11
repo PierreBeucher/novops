@@ -153,7 +153,7 @@ CHECKSUM_URL="https://github.com/PierreBeucher/novops/releases/latest/download/$
 
 echo "Downloading Novops release..."
 
-mkdir -p $TMP_INSTALL_DIR
+mkdir -p "$TMP_INSTALL_DIR"
 curl -s -L "${ZIP_URL}" -o "${ZIP_PATH}"
 curl -s -L "${CHECKSUM_URL}" -o "${CHECKSUM_PATH}"
 
@@ -172,11 +172,11 @@ fi
 # Only need sudo to copy to install dir
 if [ "$(id -u)" -eq 0 ]; then
     echo "Copying to ${INSTALL_DIR}..."
-    mkdir -p $INSTALL_DIR
+    mkdir -p "$INSTALL_DIR"
     mv "${NOVOPS_BIN_TMP_PATH}" "${INSTALL_DIR}"
 else
     echo "Copying to ${INSTALL_DIR}... (you may be prompted for sudo password)"
-    sudo mkdir -p $INSTALL_DIR
+    sudo mkdir -p "$INSTALL_DIR"
     sudo mv "${NOVOPS_BIN_TMP_PATH}" "${INSTALL_DIR}"
 fi
 

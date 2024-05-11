@@ -62,6 +62,7 @@
           cachix
           python311
           python311Packages.pip
+          shellcheck
 
           # Module testing
           podman
