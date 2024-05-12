@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.15.0](https://github.com/PierreBeucher/novops/compare/v0.14.0...v0.15.0) (2024-05-12)
+
+
+### Features
+
+* add AWS region option ([074fcc0](https://github.com/PierreBeucher/novops/commit/074fcc01f5cb18ecee49a0232852c7aff0ce97ee))
+* AWS S3 object module ([be2f8b4](https://github.com/PierreBeucher/novops/commit/be2f8b4b9379669a8825840282ce99789ec49a71))
+* updated Rust and Cargo deps versions ([e968d5a](https://github.com/PierreBeucher/novops/commit/e968d5a4bc3c23c57cb8db5c725a249c4db1d572))
+* vault config timeout option ([5a34ac2](https://github.com/PierreBeucher/novops/commit/5a34ac2a9bcfb2fa7d0794d374313015fdac5777))
+
+
+### Bug Fixes
+
+* MacOS install script OS name ([f2ab5b3](https://github.com/PierreBeucher/novops/commit/f2ab5b33ff8a122e0f6db09f3f799eec5aa322e0))
+
 ## [0.14.0](https://github.com/PierreBeucher/novops/compare/v0.13.0...v0.14.0) (2024-05-03)
 
 
