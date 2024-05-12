@@ -28,3 +28,4 @@ config:
     # Alternatively, use VAULT_ADDR and VAULT_TOKEN env var
     address: http://localhost:8200
     token: novops
+    timeout: 30

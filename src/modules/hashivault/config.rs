@@ -13,8 +13,7 @@ pub struct HashiVaultInput {
 }
 
 
-#[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]  
-#[derive(Default)]
+#[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema, Default)]
 pub struct HashivaultConfig {
   /// Address in form http(s)://HOST:PORT
   /// 
@@ -33,7 +32,10 @@ pub struct HashivaultConfig {
   pub token_path: Option<PathBuf>,
 
   /// Whether to enable TLS verify (true by default)
-  pub verify: Option<bool>
+  pub verify: Option<bool>,
+
+  /// Vault client timeout in seconds. Default to 60s.
+  pub timeout: Option<u64>
 }
 
 

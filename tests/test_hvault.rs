@@ -230,7 +230,8 @@ fn create_dummy_context_with_hvault(addr: Option<String>, token: Option<String>,
         address: addr,
         token,
         token_path,
-        verify: Some(false)
+        verify: Some(false),
+        timeout: None
     }), ..Default::default() };
 
     ctx.config_file_data.config = Some(novops_config);

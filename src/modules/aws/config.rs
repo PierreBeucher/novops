@@ -44,8 +44,7 @@ impl AwsClientConfig {
 
 
 /// Global AWS config
-#[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
-#[derive(Default)]
+#[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema, Default)]
 pub struct AwsConfig {
     
     /// Override endpoint for all AWS services

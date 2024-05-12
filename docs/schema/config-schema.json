@@ -498,6 +498,15 @@
             "null"
           ]
         },
+        "timeout": {
+          "description": "Vault client timeout in seconds. Default to 60s.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 0.0
+        },
         "token": {
           "description": "Vault token as plain string\n\nUse for testing only. DO NOT COMMIT NOVOPS CONFIG WITH THIS SET.",
           "type": [
