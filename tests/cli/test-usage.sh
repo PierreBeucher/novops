@@ -13,17 +13,17 @@ rm -rf $novops_test_dir
 mkdir -p $novops_test_dir
 
 # load 
-$novops_test_cmd load -c tests/.novops.plain-strings.yml -s $novops_test_dir/test.envrc -e dev 
+$novops_test_cmd load -c tests/.novops.plain-strings.yml -s $novops_test_dir/test.envrc -e cli-test 
 cat $novops_test_dir/test.envrc | grep "^export MY_APP_HOST='localhost'$"
-$novops_test_cmd load -c tests/.novops.plain-strings.yml -s $novops_test_dir/test.dotenv -e dev -f dotenv
+$novops_test_cmd load -c tests/.novops.plain-strings.yml -s $novops_test_dir/test.dotenv -e cli-test -f dotenv
 cat $novops_test_dir/test.dotenv | grep "^MY_APP_HOST='localhost'$"
 
 # run
-$novops_test_cmd run -c tests/.novops.plain-strings.yml -e dev -- sh -c "env | grep DOG_PATH"
+$novops_test_cmd run -c tests/.novops.plain-strings.yml -e cli-test -- sh -c "env | grep DOG_PATH"
 
 # env vars 
 export NOVOPS_CONFIG=tests/.novops.plain-strings.yml
-export NOVOPS_ENVIRONMENT=dev
+export NOVOPS_ENVIRONMENT=cli-test
 $novops_test_cmd run -- sh -c "env | grep DOG_PATH"
 
 # list

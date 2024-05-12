@@ -7,7 +7,7 @@ use std::fs;
 use pretty_assertions::assert_eq;
 
 #[tokio::test]
-async fn test_load_simple_config() -> Result<(), anyhow::Error>{
+async fn test_generated_schema() -> Result<(), anyhow::Error>{
     test_setup().await?;
 
     let schema_path = "docs/schema/config-schema.json";

@@ -1,8 +1,26 @@
 # Simple standalone config without requiring external access
 # i.e. only plain variable and file content
-# Useful to test basic loading and flags such as 
+# Useful to test basic loading and flags such as
+#
+# This file is used by various tests, potentially in parallel
+# Make sure each parallel test gets its own environment
+# to avoid sync issue like a file being overwritten
+# which would cause confusing test flakiness 
+# eg. some files may appear empty as they are being rewritten
 environments:
-  dev:
+  cli-test:
+    # Variable can use plain string and any modules
+    # 
+    variables:
+      # Variable
+      - name: MY_APP_HOST
+        value: "localhost"
+    
+    files: 
+      - variable: DOG_PATH
+        content: "woof"
+
+  simple-test:
     # Variable can use plain string and any modules
     # 
     variables:
@@ -21,6 +39,21 @@ environments:
       - content: meow
         dest: /tmp/novops_cat
         variable: NOVOPS_CAT_VAR
+  
+  symlink-test:
+    variables:
+      - name: MY_APP_HOST
+        value: "localhost"
+  
+  symlink-test-2:
+    variables:
+      - name: MY_APP_HOST
+        value: "localhost"
+
+  symlink-override-test:
+    variables:
+      - name: MY_APP_HOST
+        value: "localhost"
 
   staging:
     variables:
@@ -31,7 +64,3 @@ environments:
       - name: birdy
         variable: BIRD_VAR
         content: "flapflap"
-
-config:
-  default:
-    environment: dev
