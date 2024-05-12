@@ -107,6 +107,19 @@ fi
 
 # Detect OS and Architecture
 OS=$(uname | tr '[:upper:]' '[:lower:]')
+case $OS in
+    darwin)
+        OS_RELEASE="macos"
+        ;;
+    linux)
+        OS_RELEASE="linux"
+        ;;
+    *)
+        echo "Unsupported OS: $OS"
+        exit 1
+        ;;
+esac
+
 ARCH=$(uname -m)
 case $ARCH in
     x86_64)
@@ -125,7 +138,7 @@ case $ARCH in
 esac
 
 # Define installation directory and zip file
-RELEASE_FILE_PREFIX="novops_${OS}_${ARCH}"
+RELEASE_FILE_PREFIX="novops_${OS_RELEASE}_${ARCH}"
 
 ZIP_NAME="${RELEASE_FILE_PREFIX}.zip"
 ZIP_PATH="${TMP_INSTALL_DIR}/${ZIP_NAME}"
@@ -140,7 +153,7 @@ CHECKSUM_URL="https://github.com/PierreBeucher/novops/releases/latest/download/$
 
 echo "Downloading Novops release..."
 
-mkdir -p $TMP_INSTALL_DIR
+mkdir -p "$TMP_INSTALL_DIR"
 curl -s -L "${ZIP_URL}" -o "${ZIP_PATH}"
 curl -s -L "${CHECKSUM_URL}" -o "${CHECKSUM_PATH}"
 
@@ -156,12 +169,14 @@ else
     exit 1
 fi
 
-echo "Copying to ${INSTALL_DIR}..."
-
 # Only need sudo to copy to install dir
 if [ "$(id -u)" -eq 0 ]; then
+    echo "Copying to ${INSTALL_DIR}..."
+    mkdir -p "$INSTALL_DIR"
     mv "${NOVOPS_BIN_TMP_PATH}" "${INSTALL_DIR}"
 else
+    echo "Copying to ${INSTALL_DIR}... (you may be prompted for sudo password)"
+    sudo mkdir -p "$INSTALL_DIR"
     sudo mv "${NOVOPS_BIN_TMP_PATH}" "${INSTALL_DIR}"
 fi
 

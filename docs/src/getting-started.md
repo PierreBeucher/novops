@@ -19,9 +19,7 @@
 ## Install
 
 ```sh
-curl -L "https://github.com/PierreBeucher/novops/releases/latest/download/novops-X64-Linux.zip" -o novops.zip
-unzip novops.zip
-sudo mv novops /usr/local/bin/novops
+sh -c "$(curl --location https://raw.githubusercontent.com/PierreBeucher/novops/main/install.sh)"
 ```
 
 See [installation](install.md) for more installation methods.
