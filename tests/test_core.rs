@@ -84,7 +84,7 @@ async fn test_simple_run() -> Result<(), anyhow::Error>{
 
     load_environment_write_vars(&NovopsLoadArgs { 
             config: Some(String::from(CONFIG_STANDALONE)),
-            env: Some(String::from("dev")), 
+            env: Some(String::from("simple-test")), 
             working_directory: Some(workdir.clone().into_os_string().into_string().unwrap()),
             skip_working_directory_check: Some(false),
             dry_run: None
@@ -105,7 +105,7 @@ async fn test_simple_run() -> Result<(), anyhow::Error>{
     let expected_file_cat_path = PathBuf::from("/tmp/novops_cat");
     let actual_file_cat_content = fs::read_to_string(expected_file_cat_path)?;
 
-    // Expect to match content of CONFIG_STANDALONE
+    // Expect to match content as per config
     // use r#"_"# for raw string literal
     // check if our file content contains expected export
     // naïve but sufficient for our needs
@@ -137,7 +137,7 @@ async fn test_symlink_flag() -> Result<(), anyhow::Error> {
     let expect_symlink_at = PathBuf::from(TEST_DIR).join("test-symlink");
     load_environment_write_vars(&NovopsLoadArgs { 
             config: Some(String::from(CONFIG_STANDALONE)),
-            env: Some(String::from("dev")),
+            env: Some(String::from("symlink-test")),
             working_directory: Some(workdir.clone().into_os_string().into_string().unwrap()),
             skip_working_directory_check: Some(false),
             dry_run: None
@@ -159,7 +159,7 @@ async fn test_symlink_flag() -> Result<(), anyhow::Error> {
     let workdir_override = clean_and_setup_test_dir("test_symlink_flag_override")?;
     load_environment_write_vars(&NovopsLoadArgs { 
             config: Some(String::from(CONFIG_STANDALONE)),
-            env: Some(String::from("staging")),
+            env: Some(String::from("symlink-test-2")),
             working_directory: Some(workdir_override.clone().into_os_string().into_string().unwrap()), 
             skip_working_directory_check: Some(false),
             dry_run: None
@@ -191,7 +191,7 @@ async fn test_symlink_no_file_override() -> Result<(), anyhow::Error> {
     // expect error as we cannot erase existing file
     let result = load_environment_write_vars(&NovopsLoadArgs { 
             config: Some(String::from(CONFIG_STANDALONE)),
-            env: Some(String::from("dev")), 
+            env: Some(String::from("symlink-override-test")), 
             working_directory: Some(workdir.clone().into_os_string().into_string().unwrap()),
             skip_working_directory_check: Some(false),
             dry_run: None

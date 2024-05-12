@@ -4,10 +4,13 @@ use anyhow::Context;
 use vaultrs::client::{VaultClient, VaultClientSettingsBuilder };
 use url::Url;
 use async_trait::async_trait;
-use std::{ collections::HashMap, env, fs, path::{Path, PathBuf} };
+use std::{ collections::HashMap, env, fs, path::{Path, PathBuf}, time::Duration };
 use vaultrs::{kv2, kv1, aws, api::aws::requests::GenerateCredentialsRequest};
 use log::debug;
 use home;
+
+/// Default client timeout (seconds)
+const CLIENT_TIMEOUT_DEFAULT : u64 = 60;
 
 #[async_trait]
 pub trait HashivaultClient {
@@ -178,11 +181,16 @@ pub fn build_client(ctx: &NovopsContext) -> Result<VaultClient, anyhow::Error> {
     let vault_token = load_vault_token(ctx, home_var, token_var).with_context(|| "Couldn't load Vault token")?;
     let vault_url = load_vault_address(ctx, addr_var).with_context(|| "Couldn't load Vault address")?;
 
+    let timeout = hv_config.timeout.unwrap_or(CLIENT_TIMEOUT_DEFAULT);
+   
     let settings = VaultClientSettingsBuilder::default()
         .address(vault_url)
         .token(vault_token)
+        .timeout(Some(Duration::new(timeout, 0)))
         .verify(hv_config.verify.unwrap_or(default_settings.verify))
         .build()?;
+
+    debug!("Using Vault client timeout: {:?}", settings.timeout);
     
     let client = VaultClient::new(settings)?;
     
@@ -238,7 +246,7 @@ pub fn load_vault_token(ctx: &NovopsContext, home_var: Option<PathBuf>, token_va
         }
     }
 
-    debug!("No vault token found, returning empty string...");
+    debug!("No vault token found, returning default token...");
 
     Ok(VaultClientSettingsBuilder::default().build()?.token)
 
@@ -273,7 +281,7 @@ pub fn load_vault_address(ctx: &NovopsContext, addr_var: Option<String>) -> Resu
         return Ok(addr);
     }
 
-    debug!("No vault address found, returning empty string...");
+    debug!("No vault address found, returning default address...");
 
     Ok(VaultClientSettingsBuilder::default().build()?.address)
 
@@ -291,4 +299,23 @@ fn read_vault_token_file(token_path: &PathBuf) -> Result<String, anyhow::Error>{
 
     // trim result as empty spaces or linefeed causes vaultrs to panic
     return Ok(String::from(token.trim()))
+}
+
+
+#[cfg(test)]
+mod tests {
+    use crate::init_logger;
+
+    use super::*;
+
+    #[test]
+    fn test_build_client() {
+        init_logger();
+
+        let ctx = NovopsContext::default();
+        let client = build_client(&ctx).unwrap();
+        
+        assert_eq!(client.settings.timeout, Some(Duration::new(60, 0)));
+    }
+
 }

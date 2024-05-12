@@ -5,6 +5,7 @@ use anyhow;
 use std::path::PathBuf;
 use schemars::JsonSchema;
 
+use crate::modules::aws::config::AwsConfig;
 use crate::modules::hashivault::{
     self,
     config::HashivaultConfig, 
@@ -25,7 +26,7 @@ type NovopsEnvironments = HashMap<String, NovopsEnvironmentInput>;
 ///
 /// Main Novops config file
 /// 
-#[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
+#[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema, Default)]
 pub struct NovopsConfigFile {
     /// Application name. Informational only. 
     /// 
@@ -45,8 +46,7 @@ pub struct NovopsConfigFile {
 ///
 /// Global Novops configuration defining behavior for modules
 /// 
-#[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
-#[derive(Default)]
+#[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema, Default)]
 pub struct NovopsConfig {
     /// Novops default configurations
     pub default: Option<NovopsConfigDefault>,
@@ -55,24 +55,18 @@ pub struct NovopsConfig {
     pub hashivault: Option<HashivaultConfig>,
 
     /// AWS module configs
-    pub aws: Option<aws::config::AwsConfig>
+    pub aws: Option<AwsConfig>
 }
 
-
-
-#[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]    
-#[derive(Default)]
+#[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema, Default)]
 pub struct NovopsConfigDefault {
     /// Default environment name, selected by default if no user input is provided
     pub environment: Option<String>,
 }
 
-
-
-
 /// Modules to be loaded for an environment. Each module defines one or more Input
 /// which will be resolved into Outputs (files & variables)
-#[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
+#[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema, Default)]
 pub struct NovopsEnvironmentInput {
     
     /// Variables resolving to environment variables from provided source
@@ -94,9 +88,8 @@ pub struct NovopsEnvironmentInput {
     pub sops_dotenv: Option<Vec<sops::SopsDotenvInput>>,
 }
 
-
 /// Context in which an environment is loaded. Passed to Inputs with ResolveTo() to generate related Output 
-#[derive(Debug, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Deserialize, Clone, PartialEq, Default)]
 pub struct NovopsContext {
 
     /// environment name
@@ -117,7 +110,6 @@ pub struct NovopsContext {
     // enable dry run mode
     pub dry_run: bool
 }
-
 
 /// Trait all Input are implement to generate their final Output value
 #[async_trait]
