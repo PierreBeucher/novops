@@ -1,11 +1,90 @@
 # Hashicorp Vault
 
 - [Authentication & Configuration](#authentication--configuration)
+  - [AppRole](#approle)
+  - [JWT](#JWT)
+  - [Kubernetes](#Kubernetes)
+  - [Using Vault CLI](#using-vault-cli)
 - [AWS Secret Engine](#aws-secret-engine)
 - [Key Value v2](#key-value-v2)
 - [Key Value v1](#key-value-v1)
 
 ## Authentication & Configuration
+
+The Vault authentication methods `AppRole`, `Kubernetes`, `JWT` are supported.
+They are configured in the `.novops.yml` configuration file.
+
+You can generate the Vault token externally by using the **Vault CLI** directly as in section [using Vault CLI](#using-vault-cli)
+
+Example of `JWT` authentication:
+
+```yaml
+config:
+  hashivault:
+    address: http://localhost:8200
+    auth:
+      type: JWT
+      role: novops-project
+      mount_path: gitlab
+```
+
+The following configuration parameters are **required** when configuring Vault authentication:
+
+| Parameter  | Value                          | Description                                              |
+|------------|--------------------------------|----------------------------------------------------------|
+| type       | AppRole<br/>Kubernetes<br/>JWT | Authentication type to use                               |
+| role       |                                | The Vault role to inform on Vault login                  |
+
+
+### AppRole
+
+```yaml
+config:
+  hashivault:
+    address: http://localhost:8200
+    auth:
+      type: AppRole
+      role: novops-project
+      # The role id can also be informed by the environment variable VAULT_AUTH_ROLE_ID
+      role_id: <uuid>
+      # The secret id path to read the secret from. 
+      # The secret id can also be informed by the environment variable VAULT_AUTH_SECRET_ID
+      secret_id_path: /path/to/secret
+```
+
+The environment variable `VAULT_AUTH_SECRET_ID` can also be used to inform the secret id.
+> The AppRole can be created without a secret bound to it, in this case the secret id is not required to be informed.
+
+
+### JWT
+
+```yaml
+config:
+  hashivault:
+    address: http://localhost:8200
+    auth:
+      type: JWT
+      role: novops-project
+      mount_path: gitlab
+      # The path to read the jwt token from.
+      # The token can be informed by the environment variable VAULT_AUTH_JWT_TOKEN
+      token_path: /path/to/token
+```
+
+### Kubernetes
+
+```yaml
+config:
+  hashivault:
+    address: http://localhost:8200
+    auth:
+      type: Kubernetes
+      role: novops-project
+      mount_path: kubernetes
+```
+
+
+### Using Vault CLI
 
 Authenticating with `vault` CLI is enough. You can also use environment variables
 

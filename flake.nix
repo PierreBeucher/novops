@@ -67,6 +67,7 @@
           # Module testing
           podman
           podman-compose
+          kind
           google-cloud-sdk
           bitwarden-cli
           sops

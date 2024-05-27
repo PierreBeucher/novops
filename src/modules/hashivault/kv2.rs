@@ -30,7 +30,7 @@ pub struct HashiVaultKeyValueV2 {
 impl ResolveTo<String> for HashiVaultKeyValueV2Input {
   async fn resolve(&self, ctx: &NovopsContext) -> Result<String, anyhow::Error> {
     
-    let client = get_client(ctx)?;
+    let client = get_client(ctx).await?;
     let result = client.kv2_read(
         &self.hvault_kv2.mount, 
         &self.hvault_kv2.path, 

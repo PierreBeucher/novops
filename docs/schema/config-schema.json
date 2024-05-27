@@ -398,6 +398,88 @@
         }
       }
     },
+    "HashiVaultAuth": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "mount_path",
+            "role",
+            "type"
+          ],
+          "properties": {
+            "mount_path": {
+              "type": "string"
+            },
+            "role": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "Kubernetes"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "mount_path",
+            "role_id",
+            "type"
+          ],
+          "properties": {
+            "mount_path": {
+              "type": "string"
+            },
+            "role_id": {
+              "type": "string"
+            },
+            "secret_id_path": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "AppRole"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "mount_path",
+            "role",
+            "type"
+          ],
+          "properties": {
+            "mount_path": {
+              "type": "string"
+            },
+            "role": {
+              "type": "string"
+            },
+            "token_path": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "JWT"
+              ]
+            }
+          }
+        }
+      ]
+    },
     "HashiVaultInput": {
       "type": "object",
       "required": [
@@ -506,6 +588,17 @@
           ],
           "format": "uint64",
           "minimum": 0.0
+        },
+        "auth": {
+          "description": "Vault authentication to use when a token is not provided",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/HashiVaultAuth"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "token": {
           "description": "Vault token as plain string\n\nUse for testing only. DO NOT COMMIT NOVOPS CONFIG WITH THIS SET.",
