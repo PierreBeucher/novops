@@ -403,16 +403,20 @@
         {
           "type": "object",
           "required": [
-            "mount_path",
-            "role",
             "type"
           ],
           "properties": {
             "mount_path": {
-              "type": "string"
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "role": {
-              "type": "string"
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "type": {
               "type": "string",
@@ -425,16 +429,20 @@
         {
           "type": "object",
           "required": [
-            "mount_path",
-            "role_id",
             "type"
           ],
           "properties": {
             "mount_path": {
-              "type": "string"
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "role_id": {
-              "type": "string"
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "secret_id_path": {
               "type": [
@@ -453,16 +461,20 @@
         {
           "type": "object",
           "required": [
-            "mount_path",
-            "role",
             "type"
           ],
           "properties": {
             "mount_path": {
-              "type": "string"
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "role": {
-              "type": "string"
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "token_path": {
               "type": [
@@ -580,15 +592,6 @@
             "null"
           ]
         },
-        "timeout": {
-          "description": "Vault client timeout in seconds. Default to 60s.",
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint64",
-          "minimum": 0.0
-        },
         "auth": {
           "description": "Vault authentication to use when a token is not provided",
           "anyOf": [
@@ -599,6 +602,15 @@
               "type": "null"
             }
           ]
+        },
+        "timeout": {
+          "description": "Vault client timeout in seconds. Default to 60s.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 0.0
         },
         "token": {
           "description": "Vault token as plain string\n\nUse for testing only. DO NOT COMMIT NOVOPS CONFIG WITH THIS SET.",
