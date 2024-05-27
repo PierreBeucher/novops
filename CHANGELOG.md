@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.16.0](https://github.com/PierreBeucher/novops/compare/v0.15.0...v0.16.0) (2024-05-27)
+
+
+### Features
+
+* **hashi_vault:** authentication using Kubernetes, AppRole, JWT ([3361f88](https://github.com/PierreBeucher/novops/commit/3361f88a96775291866fb706416cd159d08c2302))
+
 ## [0.15.0](https://github.com/PierreBeucher/novops/compare/v0.14.0...v0.15.0) (2024-05-12)
 
 
