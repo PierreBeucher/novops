@@ -16,6 +16,10 @@ build-nix:
 .PHONY: test
 test: test-prepare test-doc test-clippy test-cargo test-cli test-install test-teardown
 
+.PHONY: test-setup-pulumi
+test-setup-pulumi:
+	pulumi -C tests/setup/pulumi/aws/ -s test up -yrf
+
 .PHONY: test-prepare
 test-prepare:
 	tests/scripts/test-docker-prepare.sh
