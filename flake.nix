@@ -14,7 +14,6 @@
       url = "github:oxalica/rust-overlay";
       inputs = {
         nixpkgs.follows = "nixpkgs";
-        flake-utils.follows = "flake-utils";
       };
     };
   };
@@ -23,7 +22,7 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
-        craneLib = crane.lib.${system};
+        craneLib = (crane.mkLib nixpkgs.legacyPackages.${system});
 
         commonArgs = {
           src = craneLib.cleanCargoSource (craneLib.path ./.);
@@ -39,6 +38,22 @@
             pkgs.pkg-config
           ];
         };
+
+        # awscli fails because of Python issue
+        # See https://github.com/NixOS/nixpkgs/issues/267864#issuecomment-1865001204
+        awscli2-patched = pkgs.awscli2.overrideAttrs (oldAttrs: {
+          nativeBuildInputs = oldAttrs.nativeBuildInputs ++ [ pkgs.makeWrapper ];
+
+          doCheck = false;
+
+          # Run any postInstall steps from the original definition, and then wrap the
+          # aws program with a wrapper that sets the PYTHONPATH env var to the empty
+          # string
+          postInstall = ''
+            ${oldAttrs.postInstall}
+            wrapProgram $out/bin/aws --set PYTHONPATH=
+          '';
+        });
 
         novopsPackage = craneLib.buildPackage (commonArgs // {
           cargoArtifacts = craneLib.buildDepsOnly commonArgs;
@@ -72,6 +87,10 @@
           bitwarden-cli
           sops
           age
+          awscli2-patched
+
+          pulumi
+          pulumiPackages.pulumi-language-nodejs
         ];
 
         devShellBuildInputs = with pkgs; [] ++ lib.optionals isDarwin [
@@ -92,6 +111,11 @@
             buildInputs = devShellBuildInputs;
 
             RUST_SRC_PATH = "${pkgs.rust.packages.stable.rustPlatform.rustLibSrc}";
+
+            # Force use of localstack to avoid side effect during tests
+            AWS_CONFIG_FILE = "${./tests/aws/config}";
+            AWS_SHARED_CREDENTIALS_FILE = "${./tests/aws/credentials}";
+            AWS_ENDPOINT_URL = "http://localhost:4566";
           };
 
           # Dev shell for cross-compilation with cross
