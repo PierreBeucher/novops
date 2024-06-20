@@ -4,6 +4,7 @@ build/
 /release/
 .github/token
 .venv
+tmp/
 
 # Tests output
 tests/output/
