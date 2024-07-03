@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+set -e
+
+current_dir=$(dirname "$0")
+
+# Pulumi
+
+# These stacks can be deleted safely as they only rely on ephemeral containers 
+pulumi -C "$current_dir/pulumi/aws" -s test stack rm -yf --preserve-config || true
+pulumi -C "$current_dir/pulumi/vault" -s test stack rm -yf --preserve-config || true
+
+# Containers
+# TODO Compose 
+
+# Kubernetes cluster
+kind delete cluster -n novops-auth-test

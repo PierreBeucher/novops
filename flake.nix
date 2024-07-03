@@ -78,6 +78,7 @@
           python311
           python311Packages.pip
           shellcheck
+          yq
 
           # Module testing
           podman

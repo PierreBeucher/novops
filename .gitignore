@@ -11,6 +11,9 @@ tests/output/
 tests/localconfig
 .envrc
 tmp*
+tests/setup/k8s/*
+!tests/setup/k8s/.gitkeep
+
 
 # vscode 
 .vscode/settings.json

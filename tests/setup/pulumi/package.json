@@ -7,6 +7,9 @@
     "dependencies": {
         "@pulumi/aws": "^6.0.0",
         "@pulumi/awsx": "^2.0.2",
-        "@pulumi/pulumi": "^3.113.0"
+        "@pulumi/kubernetes": "^4.14.0",
+        "@pulumi/pulumi": "^3.113.0",
+        "@pulumi/vault": "^6.2.0",
+        "jsonwebtoken": "^9.0.2"
     }
 }

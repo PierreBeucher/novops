@@ -1,9 +1,9 @@
-version: "3.8"
-
 services:
   vault:
     image: vault:1.12.2
     container_name: vault
+    networks:
+    - novops-test
     cap_add:
     - IPC_LOCK
     ports:
@@ -22,6 +22,8 @@ services:
   localstack:
     container_name: localstack
     image: localstack/localstack:3.4.0
+    networks:
+    - novops-test
     ports:
       - "127.0.0.1:4566:4566"            # LocalStack Gateway
       - "127.0.0.1:4510-4559:4510-4559"  # external services port range
@@ -34,3 +36,7 @@ services:
 
 volumes:
   novops-localstack:
+
+networks:
+  novops-test:
+    name: novops-test
