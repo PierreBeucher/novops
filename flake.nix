@@ -80,6 +80,7 @@
           shellcheck
           yq
           azure-cli
+          google-cloud-sdk
 
           # Module testing
           podman

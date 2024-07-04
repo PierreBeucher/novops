@@ -8,6 +8,7 @@
         "@pulumi/aws": "^6.0.0",
         "@pulumi/awsx": "^2.0.2",
         "@pulumi/azure-native": "^2.48.0",
+        "@pulumi/gcp": "^7.29.0",
         "@pulumi/kubernetes": "^4.14.0",
         "@pulumi/pulumi": "^3.113.0",
         "@pulumi/vault": "^6.2.0",

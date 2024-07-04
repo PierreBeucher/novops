@@ -27,3 +27,6 @@ pulumi -C "$current_dir/pulumi/vault" -s test up -yfr
 
 pulumi -C "$current_dir/pulumi/azure" -s test stack select -c
 pulumi -C "$current_dir/pulumi/azure" -s test up -yfr
+
+pulumi -C "$current_dir/pulumi/gcp" -s test stack select -c
+pulumi -C "$current_dir/pulumi/gcp" -s test up -yfr

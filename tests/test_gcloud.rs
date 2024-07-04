@@ -1,6 +1,6 @@
 mod test_lib;
 
-use test_lib::{test_setup, load_env_dryrun_for};
+use test_lib::{test_setup, load_env_for};
 use log::info;
 
 
@@ -9,8 +9,8 @@ async fn test_gcloud_secretmanager() -> Result<(), anyhow::Error> {
 
     test_setup().await?;
 
-    let expect = "RESULT:projects/398497848942/secrets/test-novops/versions/latest";
-    let outputs = load_env_dryrun_for("gcloud_secretmanager", "dev").await?;
+    let expect = "very!S3cret";
+    let outputs = load_env_for("gcloud_secretmanager", "dev").await?;
 
     info!("test_gcloud_secretmanager: Found variables: {:?}", outputs.variables);
     info!("test_gcloud_secretmanager: Found files: {:?}", outputs.files);

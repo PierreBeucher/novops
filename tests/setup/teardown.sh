@@ -12,6 +12,7 @@ pulumi -C "$current_dir/pulumi/vault" -s test stack rm -yf --preserve-config || 
 
 # Real resources on cloud, must be deleted
 pulumi -C "$current_dir/pulumi/azure" -s test down -yfr
+pulumi -C "$current_dir/pulumi/gcloud" -s test down -yfr
 
 # Kubernetes cluster
 kind delete cluster -n novops-auth-test
