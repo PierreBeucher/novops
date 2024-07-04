@@ -79,6 +79,7 @@
           python311Packages.pip
           shellcheck
           yq
+          azure-cli
 
           # Module testing
           podman

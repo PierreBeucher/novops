@@ -1,0 +1,6 @@
+name: novops-test-infra-azure
+runtime: nodejs
+description: Setup Azure infra for Novops tests
+config:
+  azure-native:subscriptionId: 2d58c223-b709-4e70-ae8e-43ac15fec51a
+  azure-native:location: francecentral
