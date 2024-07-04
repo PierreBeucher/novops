@@ -1,1 +1,2 @@
 This folder contains automatically generated CA and Kubeconfig for Kubernetes kind cluster.
+See task test-integ-setup-k8s

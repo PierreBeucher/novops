@@ -80,14 +80,14 @@ pub async fn test_setup() -> Result<(), anyhow::Error> {
     };
 
     // use known AWS config
-    let aws_config = std::env::current_dir()?.join("tests/aws/config");
-    let aws_creds = std::env::current_dir()?.join("tests/aws/credentials");
+    let aws_config = std::env::current_dir()?.join("tests/setup/aws/config");
+    let aws_creds = std::env::current_dir()?.join("tests/setup/aws/credentials");
 
     std::env::set_var("AWS_CONFIG_FILE", aws_config.to_str().unwrap());
     std::env::set_var("AWS_SHARED_CREDENTIALS_FILE", aws_creds.to_str().unwrap());
 
     // known age keys
-    std::env::set_var("SOPS_AGE_KEY_FILE", "tests/sops/age1");
+    std::env::set_var("SOPS_AGE_KEY_FILE", "tests/setup/sops/age1");
 
     Ok(())
 }

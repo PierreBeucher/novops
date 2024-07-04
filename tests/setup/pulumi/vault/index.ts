@@ -98,7 +98,7 @@ const jwtAuth = new vault.jwt.AuthBackend("jwtAuth", {
     jwtValidationPubkeys: [publicKey],    
 })
 
-const example = new vault.jwt.AuthBackendRole("example", {
+new vault.jwt.AuthBackendRole("jwtAuthConfig", {
     backend: jwtPath,
     roleName: "test-role",
     boundSubject: "novops_test_subject",
@@ -122,6 +122,8 @@ const kubAuthConfig = new vault.kubernetes.AuthBackendConfig("kubernetesAuthConf
     kubernetesHost: "https://novops-auth-test-control-plane:6443",
     kubernetesCaCert: kubCaCert,
     disableIssValidation: true,
+}, {
+    deletedWith: kubAuth
 })
 
 const kubRole = new vault.kubernetes.AuthBackendRole("kubernetesRole", {
