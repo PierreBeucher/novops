@@ -58,6 +58,7 @@ jobs:
   test-all:
     runs-on: ubuntu-latest
     steps:
+      # Cache
       - uses: actions/checkout@v3
 
       - uses: cachix/install-nix-action@v20
@@ -85,5 +86,23 @@ jobs:
             ~/.local/share/containers/storage/
           key: ${{ runner.os }}-${{ runner.arch }}-podman
 
+      # Cloud login
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: '${{ secrets.GOOGLE_CREDENTIALS }}'
+
+      - uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Azure CLI script
+        uses: azure/cli@v2
+        with:
+          azcliversion: latest
+          inlineScript: |
+            az account show
+
       # Run various tests
       - run: nix develop -c task test-all
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}

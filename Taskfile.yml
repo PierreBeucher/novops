@@ -62,6 +62,7 @@ tasks:
 
   test-cargo-setup:
     cmds:
+      - npm i --prefix tests/setup/pulumi
       - task: test-cargo-setup-containers
       - task: test-cargo-setup-k8s
       - task: test-cargo-setup-vault
