@@ -25,7 +25,7 @@ cargo build -j 6
 Novops is built for multiple platforms using `cross`:
 
 ```sh
-make cross
+make build-cross
 ```
 
 For Darwin (macOS), you must build Darwin Cross image yourself (Apple does not allow distribution of macOS SDK required for cross-compilation, but you can download it yourself and package Cross image):
@@ -68,11 +68,11 @@ Integration tests are run when possible with real services, falling back to emul
 - Azure: `--dry-run` mode 
 
 ```sh
-# Run Compose stack and run tests
-make test
+# Setup containers and infrastructure and run all tests
+# See Taskfile.yml for details and fine-grained tasks
+task test-all
 
-# Alternatively, run Docker stack and specific tests
-make test-docker
+# Run Cargo with debug
 RUST_LOG=novops=debug cargo test --test test_aws -- --nocapture
 ```
 
@@ -86,10 +86,10 @@ Doc is published from `main` branch by CI
 
 ```sh
 # Build doc
-make doc
+task doc
 
 # Serve at locahost:3000
-make doc-serve
+tasl doc-serve
 ```
 
 ## Release

@@ -1,0 +1,177 @@
+version: '3'
+
+tasks:
+
+  #
+  # Build and docs
+  #
+
+  build-cross:
+    cmds:
+      - task: build-cross-linux
+      - task: build-cross-macos
+
+  build-cross-linux:
+    cmds:
+      - cross build --target x86_64-unknown-linux-musl --target-dir target/cross/x86_64-unknown-linux-musl
+      - cross build --target aarch64-unknown-linux-musl --target-dir target/cross/aarch64-unknown-linux-musl
+
+  build-cross-macos:
+    cmds:
+      - cross build --target x86_64-apple-darwin --target-dir target/cross/x86_64-apple-darwin
+      - cross build --target aarch64-apple-darwin --target-dir target/cross/aarch64-apple-darwin
+
+  build-nix:
+    desc: "Build using Nix"
+    cmds:
+      - nix build -o build/nix
+
+  doc:
+    desc: Build documentation
+    cmds:
+      - mdbook build ./docs/
+      - cargo run -- schema > docs/schema/config-schema.json
+      - generate-schema-doc --config footer_show_time=false --config link_to_reused_ref=false --config expand_buttons=true docs/schema/config-schema.json docs/book/config/schema.html
+
+  doc-serve:
+    desc: Serve documentation
+    cmds:
+      - (cd docs/ && mdbook serve -o)
+
+  #
+  # Tests
+  #
+
+  test-all:
+    cmds:
+      - task: test-cargo
+      - task: test-non-cargo
+
+  test-non-cargo:
+    cmds:
+      - task: test-doc
+      - task: test-clippy
+      - task: test-cli
+      - task: test-install
+
+  test-cargo:
+    cmds:
+      - task: test-cargo-setup
+      - task: test-cargo-run
+      - task: test-cargo-teardown
+
+  test-cargo-setup:
+    cmds:
+      - task: test-cargo-setup-containers
+      - task: test-cargo-setup-k8s
+      - task: test-cargo-setup-vault
+      - task: test-cargo-setup-azure
+      - task: test-cargo-setup-gcp
+      - task: test-cargo-setup-aws
+
+  test-cargo-teardown:
+    - kind delete cluster -n novops-auth-test 
+    - docker compose -f "tests/setup/docker-compose.yml" down -v
+    
+    # These stacks can be deleted safely as resources are within ephemeral containers
+    - pulumi -C "tests/setup/pulumi/vault" -s test stack rm -yf || true
+    - pulumi -C "tests/setup/pulumi/aws" -s test stack rm -yf || true
+
+    # These stacks MUSt be deleted properly as they manage real Cloud resources
+    - pulumi -C "tests/setup/pulumi/azure" -s test down -yrf
+    - pulumi -C "tests/setup/pulumi/gcp" -s test down -yrf
+
+  test-cargo-setup-containers:
+    cmd: docker compose -f "tests/setup/docker-compose.yml" up -d
+
+  test-cargo-setup-k8s:
+    cmds:
+    - |-
+      if ! kind get clusters | grep -q 'novops-auth-test'; then
+        kind create cluster -n novops-auth-test
+        docker network connect novops-test novops-auth-test-control-plane
+      else
+        echo "Kind cluster already exists, skipping."
+      fi
+    - kind get kubeconfig --name novops-auth-test > "tests/setup/k8s/kubeconfig"
+    - kind get kubeconfig --name novops-auth-test | yq '.clusters[0].cluster["certificate-authority-data"]' -r | base64 -d > "tests/setup/k8s/ca.pem"
+
+  # `select -c` creates stack if it does not exists
+  test-cargo-setup-vault:
+    cmds:
+      - pulumi -C "tests/setup/pulumi/vault" -s test stack select -c
+      - pulumi -C "tests/setup/pulumi/vault" -s test up -yfr
+
+  test-cargo-setup-azure:
+    cmds:
+      - pulumi -C "tests/setup/pulumi/azure" -s test stack select -c
+      - pulumi -C "tests/setup/pulumi/azure" -s test up -yfr
+
+  test-cargo-setup-gcp:
+    cmds:
+      - pulumi -C "tests/setup/pulumi/gcp" -s test stack select -c
+      - pulumi -C "tests/setup/pulumi/gcp" -s test up -yfr
+
+  test-cargo-setup-aws:
+    cmds:
+      - pulumi -C "tests/setup/pulumi/aws" -s test stack select -c
+      - pulumi -C "tests/setup/pulumi/aws" -s test up -yfr
+
+  test-setup-pulumi:
+    cmds:
+      - pulumi -C tests/setup/pulumi/aws/ -s test up -yrf
+
+  test-cargo-run:
+    cmd: cargo test
+
+  test-cli:
+    cmds:
+      - tests/cli/test-usage.sh
+
+  test-clippy:
+    cmds:
+      - cargo clippy -- -D warnings
+
+  test-doc:
+    cmds:
+      - task: doc
+      - git diff --exit-code docs/schema/config-schema.json
+
+  test-install:
+    cmds:
+      - tests/install/test-install.sh
+
+  #
+  # Release
+  #
+
+  # docker-publish:
+  #   desc: Publish Docker image
+  #   env:
+  #     DOCKER_REPOSITORY: docker://docker.io/crafteo/novops
+  #     GITHUB_REF_NAME: local
+  #   cmds:
+  #     - podman load -i build/image.tar
+  #     - podman push novops:local ${DOCKER_REPOSITORY}:${GITHUB_REF_NAME}
+  #     - podman push novops:local ${DOCKER_REPOSITORY}:latest
+
+  # release-tag:
+  #   desc: Create a release tag
+  #   cmds:
+  #     - npx release-please github-release --repo-url https://github.com/PierreBeucher/novops --token=${GITHUB_TOKEN}
+
+  # release-pr:
+  #   desc: Create a release PR
+  #   cmds:
+  #     - npx release-please release-pr --repo-url https://github.com/PierreBeucher/novops --token=${GITHUB_TOKEN}
+
+  # release-artifacts:
+  #   desc: Publish artifacts on GitHub release
+  #   env:
+  #     RUNNER_ARCH: X64
+  #     RUNNER_OS: Linux
+  #     GITHUB_REF_NAME: local
+  #   cmds:
+  #     - cp build/novops.zip build/novops-${RUNNER_ARCH}-${RUNNER_OS}.zip
+  #     - cp build/novops.zip.sha256sum build/novops-${RUNNER_ARCH}-${RUNNER_OS}.zip.sha256sum
+  #     - gh release upload ${GITHUB_REF_NAME} build/novops-${RUNNER_ARCH}-${RUNNER_OS}.zip build/novops-${RUNNER_ARCH}-${RUNNER_OS}.zip.sha256sum

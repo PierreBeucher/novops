@@ -32,7 +32,11 @@ jobs:
             target/
           key: ${{ runner.os }}-${{ runner.arch }}-build-cross
       
-      - run: nix develop .#cross -c make build-cross
+      - run: nix develop .#cross -c task build-cross-linux
+
+      # Can't include darwin targets as not possible to use it on CI directly for now
+      # since it requires custom Docker images which can't be published as per Apple licenses
+      # - run: nix develop .#cross -c task build-cross-macos
 
   # Build and push to cachix
   build-flake:
@@ -51,7 +55,7 @@ jobs:
       
       - run: nix build --json | jq -r '.[].outputs | to_entries[].value' | cachix push novops
 
-  test-cargo:
+  test-all:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -82,4 +86,4 @@ jobs:
           key: ${{ runner.os }}-${{ runner.arch }}-podman
 
       # Run various tests
-      - run: nix develop -c make test
+      - run: nix develop -c task test-all

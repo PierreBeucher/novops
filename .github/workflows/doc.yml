@@ -36,7 +36,7 @@ jobs:
       - name: Setup Pages # Useful? Not sure
         uses: actions/configure-pages@v3
 
-      - run: nix develop -c make doc
+      - run: nix develop -c task doc
       
       - name: Upload mdBook artifact
         uses: actions/upload-pages-artifact@v1

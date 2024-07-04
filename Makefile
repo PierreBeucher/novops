@@ -1,69 +1,69 @@
-# Build all cross targets
-# Use different target dir to avoid glibc version error
-# See https://github.com/cross-rs/cross/issues/724
-.PHONY: build-cross
-build-cross:
-	# Can't include darwin targets as not possible to use it on CI directly
-	# cross build --target x86_64-apple-darwin --target-dir target/cross/x86_64-apple-darwin
-	# cross build --target aarch64-apple-darwin --target-dir target/cross/aarch64-apple-darwin
-	cross build --target x86_64-unknown-linux-musl --target-dir target/cross/x86_64-unknown-linux-musl
-	cross build --target aarch64-unknown-linux-musl --target-dir target/cross/aarch64-unknown-linux-musl
+# # Build all cross targets
+# # Use different target dir to avoid glibc version error
+# # See https://github.com/cross-rs/cross/issues/724
+# .PHONY: build-cross
+# build-cross:
+# 	# Can't include darwin targets as not possible to use it on CI directly
+# 	# cross build --target x86_64-apple-darwin --target-dir target/cross/x86_64-apple-darwin
+# 	# cross build --target aarch64-apple-darwin --target-dir target/cross/aarch64-apple-darwin
+# 	cross build --target x86_64-unknown-linux-musl --target-dir target/cross/x86_64-unknown-linux-musl
+# 	cross build --target aarch64-unknown-linux-musl --target-dir target/cross/aarch64-unknown-linux-musl
 
-.PHONY: build-nix
-build-nix:
-	nix build -o build/nix
+# .PHONY: build-nix
+# build-nix:
+# 	nix build -o build/nix
 
-.PHONY: test
-test: test-prepare test-doc test-clippy test-cargo test-cli test-install test-teardown
+# .PHONY: test
+# test: test-prepare test-doc test-clippy test-cargo test-cli test-install test-teardown
 
-.PHONY: test-setup-pulumi
-test-setup-pulumi:
-	pulumi -C tests/setup/pulumi/aws/ -s test up -yrf
+# .PHONY: test-setup-pulumi
+# test-setup-pulumi:
+# 	pulumi -C tests/setup/pulumi/aws/ -s test up -yrf
 
-.PHONY: test-prepare
-test-prepare:
-	tests/scripts/test-docker-prepare.sh
+# .PHONY: test-prepare
+# test-prepare:
+# 	tests/scripts/test-docker-prepare.sh
 
-.PHONY: test-teardown
-test-teardown:
-	tests/scripts/test-docker-teardown.sh
+# .PHONY: test-teardown
+# test-teardown:
+# 	tests/scripts/test-docker-teardown.sh
 
-.PHONY: test-cargo
-test-cargo:
-	cargo test
+# .PHONY: test-cargo
+# test-cargo:
+# 	cargo test
 
-test-cli:
-	tests/cli/test-usage.sh
+# test-cli:
+# 	tests/cli/test-usage.sh
 
-.PHONY: test-clippy
-test-clippy:
-	cargo clippy -- -D warnings
+# .PHONY: test-clippy
+# test-clippy:
+# 	cargo clippy -- -D warnings
 
-# Fails if doc is not up to date with current code
-.PHONY: test-doc
-test-doc: doc
-	git diff --exit-code docs/schema/config-schema.json
+# # Fails if doc is not up to date with current code
+# .PHONY: test-doc
+# test-doc: doc
+# 	git diff --exit-code docs/schema/config-schema.json
 
-.PHONY: test-install
-test-install:
-	tests/install/test-install.sh
+# .PHONY: test-install
+# test-install:
+# 	tests/install/test-install.sh
 
-# Build doc with mdBook and json-schema-for-humans
-# See:
-# - https://github.com/actions/starter-workflows/blob/main/pages/mdbook.yml
-# - https://coveooss.github.io/json-schema-for-humans/#/
-.PHONY: doc
-doc:
-	mdbook build ./docs/
-	cargo run -- schema > docs/schema/config-schema.json
-	generate-schema-doc --config footer_show_time=false --config link_to_reused_ref=false --config expand_buttons=true docs/schema/config-schema.json  docs/book/config/schema.html
+# # Build doc with mdBook and json-schema-for-humans
+# # See:
+# # - https://github.com/actions/starter-workflows/blob/main/pages/mdbook.yml
+# # - https://coveooss.github.io/json-schema-for-humans/#/
+# .PHONY: doc
+# doc:
+# 	mdbook build ./docs/
+# 	cargo run -- schema > docs/schema/config-schema.json
+# 	generate-schema-doc --config footer_show_time=false --config link_to_reused_ref=false --config expand_buttons=true docs/schema/config-schema.json  docs/book/config/schema.html
 
-doc-serve:
-	(cd docs/ && mdbook serve -o)
+# doc-serve:
+# 	(cd docs/ && mdbook serve -o)
 
-# Clean caches and temporary directories
-clean:
-	echo "todo"
+# # Clean caches and temporary directories
+# clean:
+# 	echo "todo"
 
 
 #

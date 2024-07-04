@@ -81,6 +81,7 @@
           yq
           azure-cli
           google-cloud-sdk
+          go-task
 
           # Module testing
           podman
