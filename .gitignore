@@ -13,7 +13,8 @@ tests/localconfig
 tmp*
 tests/setup/k8s/*
 !tests/setup/k8s/.gitkeep
-
+tests/setup/pulumi/.local-backend/*
+!tests/setup/pulumi/.local-backend/.gitkeep
 
 # vscode 
 .vscode/settings.json

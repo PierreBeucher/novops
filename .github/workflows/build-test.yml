@@ -102,7 +102,7 @@ jobs:
           inlineScript: |
             az account show
 
-      # Run various tests
+      # Run tests
       - run: nix develop -c task test-all
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}

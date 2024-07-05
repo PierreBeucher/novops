@@ -56,36 +56,24 @@ tasks:
 
   test-cargo:
     cmds:
-      - task: test-cargo-setup
+      - task: test-setup
       - task: test-cargo-run
-      - task: test-cargo-teardown
+      - task: test-teardown
 
-  test-cargo-setup:
+  test-setup:
     cmds:
       - npm i --prefix tests/setup/pulumi
-      - task: test-cargo-setup-containers
-      - task: test-cargo-setup-k8s
-      - task: test-cargo-setup-vault
-      - task: test-cargo-setup-azure
-      - task: test-cargo-setup-gcp
-      - task: test-cargo-setup-aws
+      - task: test-setup-containers
+      - task: test-setup-k8s
+      - task: test-setup-vault
+      - task: test-setup-azure
+      - task: test-setup-gcp
+      - task: test-setup-aws
 
-  test-cargo-teardown:
-    - kind delete cluster -n novops-auth-test 
-    - docker compose -f "tests/setup/docker-compose.yml" down -v
-    
-    # These stacks can be deleted safely as resources are within ephemeral containers
-    - pulumi -C "tests/setup/pulumi/vault" -s test stack rm -yf || true
-    - pulumi -C "tests/setup/pulumi/aws" -s test stack rm -yf || true
-
-    # These stacks MUSt be deleted properly as they manage real Cloud resources
-    - pulumi -C "tests/setup/pulumi/azure" -s test down -yrf
-    - pulumi -C "tests/setup/pulumi/gcp" -s test down -yrf
-
-  test-cargo-setup-containers:
+  test-setup-containers:
     cmd: docker compose -f "tests/setup/docker-compose.yml" up -d
 
-  test-cargo-setup-k8s:
+  test-setup-k8s:
     cmds:
     - |-
       if ! kind get clusters | grep -q 'novops-auth-test'; then
@@ -97,31 +85,78 @@ tasks:
     - kind get kubeconfig --name novops-auth-test > "tests/setup/k8s/kubeconfig"
     - kind get kubeconfig --name novops-auth-test | yq '.clusters[0].cluster["certificate-authority-data"]' -r | base64 -d > "tests/setup/k8s/ca.pem"
 
+  #
+  # Pulumi setup tasks
+  #
+  # Vault and AWS use local containers: use local filesystem backend 
+  # Azure and GCP use real Cloud: use locally configured backend
   # `select -c` creates stack if it does not exists
-  test-cargo-setup-vault:
+  #
+  test-setup-vault:
+    env:
+      PULUMI_BACKEND_URL: file://{{ .PWD }}/tests/setup/pulumi/.local-backend
+      PULUMI_CONFIG_PASSPHRASE: ""
     cmds:
       - pulumi -C "tests/setup/pulumi/vault" -s test stack select -c
       - pulumi -C "tests/setup/pulumi/vault" -s test up -yfr
 
-  test-cargo-setup-azure:
-    cmds:
-      - pulumi -C "tests/setup/pulumi/azure" -s test stack select -c
-      - pulumi -C "tests/setup/pulumi/azure" -s test up -yfr
-
-  test-cargo-setup-gcp:
-    cmds:
-      - pulumi -C "tests/setup/pulumi/gcp" -s test stack select -c
-      - pulumi -C "tests/setup/pulumi/gcp" -s test up -yfr
-
-  test-cargo-setup-aws:
+  test-setup-aws:
+    env:
+      PULUMI_BACKEND_URL: file://{{ .PWD }}/tests/setup/pulumi/.local-backend
+      PULUMI_CONFIG_PASSPHRASE: ""
     cmds:
       - pulumi -C "tests/setup/pulumi/aws" -s test stack select -c
       - pulumi -C "tests/setup/pulumi/aws" -s test up -yfr
 
-  test-setup-pulumi:
+  test-setup-azure:
     cmds:
-      - pulumi -C tests/setup/pulumi/aws/ -s test up -yrf
+      - pulumi -C "tests/setup/pulumi/azure" -s test stack select -c
+      - pulumi -C "tests/setup/pulumi/azure" -s test up -yfr
 
+  test-setup-gcp:
+    cmds:
+      - pulumi -C "tests/setup/pulumi/gcp" -s test stack select -c
+      - pulumi -C "tests/setup/pulumi/gcp" -s test up -yfr
+
+  # Cleanup all containers and Pulumi stacks
+  test-teardown:
+    - kind delete cluster -n novops-auth-test 
+    - docker compose -f "tests/setup/docker-compose.yml" down -v
+    - task: test-teardown-vault
+    - task: test-teardown-aws
+    - task: test-teardown-azure
+    - task: test-teardown-gcp
+
+  # Can be deleted directly: local-only in ephemeral containers
+  test-teardown-vault:
+    env:
+      PULUMI_BACKEND_URL: file://{{ .PWD }}/tests/setup/pulumi/.local-backend
+      PULUMI_CONFIG_PASSPHRASE: ""
+    cmds:
+      - pulumi -C "tests/setup/pulumi/vault" -s test stack rm -yf || true
+
+  # Can be deleted directly: local-only in ephemeral containers
+  test-teardown-aws:
+    env:
+      PULUMI_BACKEND_URL: file://{{ .PWD }}/tests/setup/pulumi/.local-backend
+      PULUMI_CONFIG_PASSPHRASE: ""
+    cmds:
+      - pulumi -C "tests/setup/pulumi/aws" -s test stack rm -yf || true
+
+  # MUST be deleted properly: manages real Cloud resources  
+  test-teardown-azure:
+    cmds:
+    - pulumi -C "tests/setup/pulumi/azure" -s test down -yrf
+
+  # MUST be deleted properly: manages real Cloud resources  
+  test-teardown-gcp:
+    cmds:
+    - pulumi -C "tests/setup/pulumi/gcp" -s test down -yrf
+
+  #
+  # Tests run
+  #
+  
   test-cargo-run:
     cmd: cargo test
 
