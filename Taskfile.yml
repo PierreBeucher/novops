@@ -154,22 +154,27 @@ tasks:
   # Tests run
   #
   
+  # Integration tests for AWS, Azure, GCP, Vault, SOPS and Files/environments variables. 
   test-integ-run:
     cmd: cargo test
 
+  # Check various CLI flags
   test-cli:
     cmds:
       - tests/cli/test-usage.sh
 
+  # Run Cargo clippy
   test-clippy:
     cmds:
       - cargo clippy -- -D warnings
 
+  # Generate doc and ensure it's been commited properly
   test-doc:
     cmds:
       - task: doc
       - git diff --exit-code docs/schema/config-schema.json
 
+  # Test the installation script
   test-install:
     cmds:
       - tests/install/test-install.sh

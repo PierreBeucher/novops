@@ -10,6 +10,8 @@ All commands are CI-agnostic: they work the same locally and on CI by leveraging
 
 - [Build](#build)
 - [Test](#test)
+  - [Running non-integration tests](#running-non-integration-tests)
+  - [Runnning integration tests](#runnning-integration-tests)
 - [Doc](#doc)
 - [Release](#release)
 
@@ -61,22 +63,49 @@ For Darwin (macOS), you must build Darwin Cross image yourself (Apple does not a
 
 ## Test
 
-Integration tests are run when possible with real services, falling back to emulator or dry-run when not practical:
+Tests are run on CI using procedure described below. It's possible to run them locally as well under a `nix develop` shell.
+
+### Running non-integration tests
+
+
+These tests dot not require anything special and can be run as-is:
+
+```sh
+task test-doc
+task test-clippy
+task test-cli
+task test-install
+```
+
+### Runnning integration tests
+
+Requirements:
+- Running a `nix develop` shell
+- Azure account
+- GCP account
+
+Integration tests run with real services, preferrably in containers or using dedicated Cloud account:
 - AWS: [LocalStack](https://localstack.cloud) server
-- Hashivault: [Vault Docker image](https://hub.docker.com/_/vault)
-- Google Cloud: `--dry-run` mode 
-- Azure: `--dry-run` mode 
+- Hashicorp Vault: [Vault Docker image](https://hub.docker.com/_/vault)
+- Google Cloud: GCP account
+- Azure: Azure account
+
+Setup is done via Pulumi (see `tests/setup/pulumi` and Task `test-setup`). 
+
+**Remember to `task teardown` after running integration tests.** Cost should be negligible if you teardown infrastructure right after running tests. Cost should still be negligible even if you forget to teardown as only free or cheap resources are deployed, but better to do it anyway. 
 
 ```sh
 # Setup containers and infrastructure and run all tests
+# Only needed once to setup infra
 # See Taskfile.yml for details and fine-grained tasks
-task test-all
+task test-setup
 
-# Run Cargo with debug
-RUST_LOG=novops=debug cargo test --test test_aws -- --nocapture
+# Run tests
+task test-integ
+
+# Cleanup resources to avoid unnecessary cost
+task test-teardown
 ```
-
-Tests are run on CI for any non-`master` branch using the same procedure.
 
 ## Doc
 
