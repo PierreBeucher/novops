@@ -44,25 +44,22 @@ tasks:
 
   test-all:
     cmds:
-      - task: test-cargo
-      - task: test-non-cargo
-
-  test-non-cargo:
-    cmds:
+      - task: test-integ
       - task: test-doc
       - task: test-clippy
       - task: test-cli
       - task: test-install
 
-  test-cargo:
+  # Integration test requires setup with containers and infrastructure
+  test-integ:
     cmds:
       - task: test-setup
-      - task: test-cargo-run
+      - task: test-integ-run
       - task: test-teardown
 
   test-setup:
     cmds:
-      - npm i --prefix tests/setup/pulumi
+      - pnpm i --prefix tests/setup/pulumi
       - task: test-setup-containers
       - task: test-setup-k8s
       - task: test-setup-vault
@@ -157,7 +154,7 @@ tasks:
   # Tests run
   #
   
-  test-cargo-run:
+  test-integ-run:
     cmd: cargo test
 
   test-cli:

@@ -74,6 +74,7 @@
           zip
           gh
           nodejs-slim # for npx release-please
+          nodePackages.pnpm
           cachix
           python311
           python311Packages.pip

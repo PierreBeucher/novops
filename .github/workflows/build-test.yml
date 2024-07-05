@@ -13,24 +13,17 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: cachix/install-nix-action@v20
+      - uses: nixbuild/nix-quick-install-action@v27
+
+      - uses: nix-community/cache-nix-action@v5
         with:
-          nix_path: nixpkgs=channel:nixos-unstable
-      
+          primary-key: nix-${{ runner.os }}-${{ hashFiles('**/*.nix') }}
+          restore-prefixes-first-match: nix-${{ runner.os }}-
+
       - uses: cachix/cachix-action@v12
         with:
           name: novops
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
-
-      - uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-${{ runner.arch }}-build-cross
       
       - run: nix develop .#cross -c task build-cross-linux
 
@@ -44,33 +37,40 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: cachix/install-nix-action@v20
+      - uses: nixbuild/nix-quick-install-action@v27
+
+      - uses: nix-community/cache-nix-action@v5
         with:
-          nix_path: nixpkgs=channel:nixos-unstable
-      
+          primary-key: nix-${{ runner.os }}-${{ hashFiles('**/*.nix') }}
+          restore-prefixes-first-match: nix-${{ runner.os }}-
+
       - uses: cachix/cachix-action@v12
         with:
           name: novops
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
       
       - run: nix build --json | jq -r '.[].outputs | to_entries[].value' | cachix push novops
-
-  test-all:
+  
+  test-integ:
     runs-on: ubuntu-latest
     steps:
-      # Cache
       - uses: actions/checkout@v3
 
-      - uses: cachix/install-nix-action@v20
+      - uses: nixbuild/nix-quick-install-action@v27
+
+      - name: Restore and cache Nix store
+        uses: nix-community/cache-nix-action@v5
         with:
-          nix_path: nixpkgs=channel:nixos-unstable
-      
+          primary-key: nix-${{ runner.os }}-${{ hashFiles('**/*.nix') }}
+          restore-prefixes-first-match: nix-${{ runner.os }}-
+
       - uses: cachix/cachix-action@v12
         with:
           name: novops
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
 
       - uses: actions/cache@v3
+        name: setup Cargo cache
         with:
           path: |
             ~/.cargo/bin/
@@ -79,30 +79,77 @@ jobs:
             ~/.cargo/git/db/
             target/            
           key: ${{ runner.os }}-${{ runner.arch }}-cargo
-      
-      - uses: actions/cache@v3
+
+      - uses: actions/cache@v4
+        name: Setup pnpm cache
         with:
-          path: |
-            ~/.local/share/containers/storage/
-          key: ${{ runner.os }}-${{ runner.arch }}-podman
+          path: ${{ env.PNPM_HOME }}/store
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
 
       # Cloud login
       - uses: google-github-actions/auth@v2
         with:
           credentials_json: '${{ secrets.GOOGLE_CREDENTIALS }}'
-
+      
       - uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: Azure CLI script
-        uses: azure/cli@v2
-        with:
-          azcliversion: latest
-          inlineScript: |
-            az account show
-
+          
       # Run tests
-      - run: nix develop -c task test-all
+      - run: nix develop -c task test-setup
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+
+          # Pulumi Azure Native provider auth
+          # Still required by Pulumi despite already previou az log-in
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      
+      - run: nix develop -c task test-integ-run
+
+      - run: nix develop -c task test-teardown
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+  
+  test-misc:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: nixbuild/nix-quick-install-action@v27
+
+      - name: Restore and cache Nix store
+        uses: nix-community/cache-nix-action@v5
+        with:
+          primary-key: nix-${{ runner.os }}-${{ hashFiles('**/*.nix') }}
+          restore-prefixes-first-match: nix-${{ runner.os }}-
+
+      - uses: cachix/cachix-action@v12
+        with:
+          name: novops
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+
+      - uses: actions/cache@v3
+        name: setup Cargo cache
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/            
+          key: ${{ runner.os }}-${{ runner.arch }}-cargo
+
+      - run: nix develop -c task test-clippy
+      - run: nix develop -c task test-doc
+      - run: nix develop -c task test-cli
+      - run: nix develop -c task test-install
+      
