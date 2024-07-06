@@ -10,7 +10,7 @@ environments:
       - name: SOPS_VALUE
         value:
           sops:
-            file: tests/sops/test-nested.encrypted.yml
+            file: tests/setup/sops/test-nested.encrypted.yml
             extract: '["nested"]["data"]["nestedKey"]'
 
       # YOU PROBABLY DON'T WANT THAT
@@ -19,7 +19,7 @@ environments:
       # - name: SOPS_ENTIRE_FILE
       #   value:
       #     sops:
-      #       file: tests/sops/test-nested.encrypted.yml
+      #       file: tests/setup/sops/test-nested.encrypted.yml
 
     files:
 
@@ -28,16 +28,16 @@ environments:
         dest: /tmp/SOPS_FILE
         content:
           sops:
-            file: tests/sops/test-nested.encrypted.yml
+            file: tests/setup/sops/test-nested.encrypted.yml
 
   integ:
 
     sops_dotenv:
       # Use plain file content as dotenv values
-      - file: tests/sops/test-dotenv.encrypted.yml
+      - file: tests/setup/sops/test-dotenv.encrypted.yml
 
       # Use a nested key as dotenv values 
-      - file: tests/sops/test-nested.encrypted.yml
+      - file: tests/setup/sops/test-nested.encrypted.yml
         extract: '["nested"]["data"]'
     
 config:

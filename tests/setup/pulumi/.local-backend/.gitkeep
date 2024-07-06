@@ -1,0 +1,2 @@
+Local Pulumi backend for test setup are saved locally here
+See test-setup-* in Taskfile.yml

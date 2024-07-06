@@ -11,7 +11,6 @@ use crate::core::{ResolveTo, NovopsContext, BytesResolvableInput};
 use crate::modules::variables::VariableOutput;
 
 
-/// 
 #[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema)]
 pub struct FileInput {
     /// File name to use when auto-generating file and variable name.

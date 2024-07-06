@@ -1,0 +1,215 @@
+version: '3'
+
+tasks:
+
+  #
+  # Build and docs
+  #
+
+  build-cross:
+    cmds:
+      - task: build-cross-linux
+      - task: build-cross-macos
+
+  build-cross-linux:
+    cmds:
+      - cross build --target x86_64-unknown-linux-musl --target-dir target/cross/x86_64-unknown-linux-musl
+      - cross build --target aarch64-unknown-linux-musl --target-dir target/cross/aarch64-unknown-linux-musl
+
+  build-cross-macos:
+    cmds:
+      - cross build --target x86_64-apple-darwin --target-dir target/cross/x86_64-apple-darwin
+      - cross build --target aarch64-apple-darwin --target-dir target/cross/aarch64-apple-darwin
+
+  build-nix:
+    desc: "Build using Nix"
+    cmds:
+      - nix build -o build/nix
+
+  doc:
+    desc: Build documentation
+    cmds:
+      - mdbook build ./docs/
+      - cargo run -- schema > docs/schema/config-schema.json
+      - generate-schema-doc --config footer_show_time=false --config link_to_reused_ref=false --config expand_buttons=true docs/schema/config-schema.json docs/book/config/schema.html
+
+  doc-serve:
+    desc: Serve documentation
+    cmds:
+      - (cd docs/ && mdbook serve -o)
+
+  #
+  # Tests
+  #
+
+  test-all:
+    cmds:
+      - task: test-integ
+      - task: test-doc
+      - task: test-clippy
+      - task: test-cli
+      - task: test-install
+
+  # Integration test requires setup with containers and infrastructure
+  test-integ:
+    cmds:
+      - task: test-setup
+      - task: test-integ-run
+      - task: test-teardown
+
+  test-setup:
+    cmds:
+      - pnpm i --prefix tests/setup/pulumi
+      - task: test-setup-containers
+      - task: test-setup-k8s
+      - task: test-setup-vault
+      - task: test-setup-azure
+      - task: test-setup-gcp
+      - task: test-setup-aws
+
+  test-setup-containers:
+    cmd: docker compose -f "tests/setup/docker-compose.yml" up -d
+
+  test-setup-k8s:
+    cmds:
+    - |-
+      if ! kind get clusters | grep -q 'novops-auth-test'; then
+        kind create cluster -n novops-auth-test
+        docker network connect novops-test novops-auth-test-control-plane
+      else
+        echo "Kind cluster already exists, skipping."
+      fi
+    - kind get kubeconfig --name novops-auth-test > "tests/setup/k8s/kubeconfig"
+    - kind get kubeconfig --name novops-auth-test | yq '.clusters[0].cluster["certificate-authority-data"]' -r | base64 -d > "tests/setup/k8s/ca.pem"
+
+  #
+  # Pulumi setup tasks
+  #
+  # Vault and AWS use local containers: use local filesystem backend 
+  # Azure and GCP use real Cloud: use locally configured backend
+  # `select -c` creates stack if it does not exists
+  #
+  test-setup-vault:
+    env:
+      PULUMI_BACKEND_URL: file://{{ .PWD }}/tests/setup/pulumi/.local-backend
+      PULUMI_CONFIG_PASSPHRASE: ""
+    cmds:
+      - pulumi -C "tests/setup/pulumi/vault" -s test stack select -c
+      - pulumi -C "tests/setup/pulumi/vault" -s test up -yfr
+
+  test-setup-aws:
+    env:
+      PULUMI_BACKEND_URL: file://{{ .PWD }}/tests/setup/pulumi/.local-backend
+      PULUMI_CONFIG_PASSPHRASE: ""
+    cmds:
+      - pulumi -C "tests/setup/pulumi/aws" -s test stack select -c
+      - pulumi -C "tests/setup/pulumi/aws" -s test up -yfr
+
+  test-setup-azure:
+    cmds:
+      - pulumi -C "tests/setup/pulumi/azure" -s test stack select -c
+      - pulumi -C "tests/setup/pulumi/azure" -s test up -yfr
+
+  test-setup-gcp:
+    cmds:
+      - pulumi -C "tests/setup/pulumi/gcp" -s test stack select -c
+      - pulumi -C "tests/setup/pulumi/gcp" -s test up -yfr
+
+  # Cleanup all containers and Pulumi stacks
+  test-teardown:
+    - kind delete cluster -n novops-auth-test 
+    - docker compose -f "tests/setup/docker-compose.yml" down -v
+    - task: test-teardown-vault
+    - task: test-teardown-aws
+    - task: test-teardown-azure
+    - task: test-teardown-gcp
+
+  # Can be deleted directly: local-only in ephemeral containers
+  test-teardown-vault:
+    env:
+      PULUMI_BACKEND_URL: file://{{ .PWD }}/tests/setup/pulumi/.local-backend
+      PULUMI_CONFIG_PASSPHRASE: ""
+    cmds:
+      - pulumi -C "tests/setup/pulumi/vault" -s test stack rm -yf || true
+
+  # Can be deleted directly: local-only in ephemeral containers
+  test-teardown-aws:
+    env:
+      PULUMI_BACKEND_URL: file://{{ .PWD }}/tests/setup/pulumi/.local-backend
+      PULUMI_CONFIG_PASSPHRASE: ""
+    cmds:
+      - pulumi -C "tests/setup/pulumi/aws" -s test stack rm -yf || true
+
+  # MUST be deleted properly: manages real Cloud resources  
+  test-teardown-azure:
+    cmds:
+    - pulumi -C "tests/setup/pulumi/azure" -s test down -yrf
+
+  # MUST be deleted properly: manages real Cloud resources  
+  test-teardown-gcp:
+    cmds:
+    - pulumi -C "tests/setup/pulumi/gcp" -s test down -yrf
+
+  #
+  # Tests run
+  #
+  
+  # Integration tests for AWS, Azure, GCP, Vault, SOPS and Files/environments variables. 
+  test-integ-run:
+    cmd: cargo test
+
+  # Check various CLI flags
+  test-cli:
+    cmds:
+      - tests/cli/test-usage.sh
+
+  # Run Cargo clippy
+  test-clippy:
+    cmds:
+      - cargo clippy -- -D warnings
+
+  # Generate doc and ensure it's been commited properly
+  test-doc:
+    cmds:
+      - task: doc
+      - git diff --exit-code docs/schema/config-schema.json
+
+  # Test the installation script
+  test-install:
+    cmds:
+      - tests/install/test-install.sh
+
+  #
+  # Release
+  #
+
+  # docker-publish:
+  #   desc: Publish Docker image
+  #   env:
+  #     DOCKER_REPOSITORY: docker://docker.io/crafteo/novops
+  #     GITHUB_REF_NAME: local
+  #   cmds:
+  #     - podman load -i build/image.tar
+  #     - podman push novops:local ${DOCKER_REPOSITORY}:${GITHUB_REF_NAME}
+  #     - podman push novops:local ${DOCKER_REPOSITORY}:latest
+
+  # release-tag:
+  #   desc: Create a release tag
+  #   cmds:
+  #     - npx release-please github-release --repo-url https://github.com/PierreBeucher/novops --token=${GITHUB_TOKEN}
+
+  # release-pr:
+  #   desc: Create a release PR
+  #   cmds:
+  #     - npx release-please release-pr --repo-url https://github.com/PierreBeucher/novops --token=${GITHUB_TOKEN}
+
+  # release-artifacts:
+  #   desc: Publish artifacts on GitHub release
+  #   env:
+  #     RUNNER_ARCH: X64
+  #     RUNNER_OS: Linux
+  #     GITHUB_REF_NAME: local
+  #   cmds:
+  #     - cp build/novops.zip build/novops-${RUNNER_ARCH}-${RUNNER_OS}.zip
+  #     - cp build/novops.zip.sha256sum build/novops-${RUNNER_ARCH}-${RUNNER_OS}.zip.sha256sum
+  #     - gh release upload ${GITHUB_REF_NAME} build/novops-${RUNNER_ARCH}-${RUNNER_OS}.zip build/novops-${RUNNER_ARCH}-${RUNNER_OS}.zip.sha256sum

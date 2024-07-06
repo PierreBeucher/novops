@@ -10,6 +10,8 @@ All commands are CI-agnostic: they work the same locally and on CI by leveraging
 
 - [Build](#build)
 - [Test](#test)
+  - [Running non-integration tests](#running-non-integration-tests)
+  - [Runnning integration tests](#runnning-integration-tests)
 - [Doc](#doc)
 - [Release](#release)
 
@@ -25,7 +27,7 @@ cargo build -j 6
 Novops is built for multiple platforms using `cross`:
 
 ```sh
-make cross
+make build-cross
 ```
 
 For Darwin (macOS), you must build Darwin Cross image yourself (Apple does not allow distribution of macOS SDK required for cross-compilation, but you can download it yourself and package Cross image):
@@ -61,22 +63,49 @@ For Darwin (macOS), you must build Darwin Cross image yourself (Apple does not a
 
 ## Test
 
-Integration tests are run when possible with real services, falling back to emulator or dry-run when not practical:
-- AWS: [LocalStack](https://localstack.cloud) server
-- Hashivault: [Vault Docker image](https://hub.docker.com/_/vault)
-- Google Cloud: `--dry-run` mode 
-- Azure: `--dry-run` mode 
+Tests are run on CI using procedure described below. It's possible to run them locally as well under a `nix develop` shell.
+
+### Running non-integration tests
+
+
+These tests dot not require anything special and can be run as-is:
 
 ```sh
-# Run Compose stack and run tests
-make test
-
-# Alternatively, run Docker stack and specific tests
-make test-docker
-RUST_LOG=novops=debug cargo test --test test_aws -- --nocapture
+task test-doc
+task test-clippy
+task test-cli
+task test-install
 ```
 
-Tests are run on CI for any non-`master` branch using the same procedure.
+### Runnning integration tests
+
+Requirements:
+- Running a `nix develop` shell
+- Azure account
+- GCP account
+
+Integration tests run with real services, preferrably in containers or using dedicated Cloud account:
+- AWS: [LocalStack](https://localstack.cloud) server
+- Hashicorp Vault: [Vault Docker image](https://hub.docker.com/_/vault)
+- Google Cloud: GCP account
+- Azure: Azure account
+
+Setup is done via Pulumi (see `tests/setup/pulumi` and Task `test-setup`). 
+
+**Remember to `task teardown` after running integration tests.** Cost should be negligible if you teardown infrastructure right after running tests. Cost should still be negligible even if you forget to teardown as only free or cheap resources are deployed, but better to do it anyway. 
+
+```sh
+# Setup containers and infrastructure and run all tests
+# Only needed once to setup infra
+# See Taskfile.yml for details and fine-grained tasks
+task test-setup
+
+# Run tests
+task test-integ
+
+# Cleanup resources to avoid unnecessary cost
+task test-teardown
+```
 
 ## Doc
 
@@ -86,10 +115,10 @@ Doc is published from `main` branch by CI
 
 ```sh
 # Build doc
-make doc
+task doc
 
 # Serve at locahost:3000
-make doc-serve
+tasl doc-serve
 ```
 
 ## Release
