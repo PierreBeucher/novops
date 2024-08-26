@@ -125,6 +125,7 @@ fn build_cli() -> Command {
         )
         .subcommand(
             Command::new("list")
+                .about("List existing environments and environment's outputs")
                 .subcommand(
                     Command::new("environments")
                     .about("List available environments.")                    
