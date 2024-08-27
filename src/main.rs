@@ -269,6 +269,13 @@ async fn cmd_list_outputs(cmd_args: &ArgMatches) -> Result<(), anyhow::Error> {
 }
 
 async fn cmd_run(cmd_args: &ArgMatches) -> Result<(), anyhow::Error> {
+
+    // Detect the presence of the "--" separator in the arguments
+    let args: Vec<String> = std::env::args().collect();
+    if !args.contains(&"--".to_string()) {
+        log::warn!("Argument separator `--` not set. Please use `novops run [OPTIONS] -- COMMAND` rather than `novops run [OPTIONS] COMMAND` to avoid COMMAND being treated as an OPTION. Future release may enforce '--' usage.");
+    }
+    
     let novops_load_args = build_novops_args(cmd_args)?;
 
     let command_args: Vec<&String> = cmd_args.get_many::<String>("command")
