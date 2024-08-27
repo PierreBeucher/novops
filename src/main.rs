@@ -107,7 +107,7 @@ fn build_cli() -> Command {
             .about("Run a command with loaded environment variables and files.")
             .long_about("Run a command with loaded environment variables and files. \n\
                 Example: \n\
-                novops run sh\n\
+                novops run -- sh\n\
                 novops run -- terraform apply\n\
                 "
             )
