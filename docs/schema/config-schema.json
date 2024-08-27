@@ -41,6 +41,14 @@
         "role_arn"
       ],
       "properties": {
+        "duration_seconds": {
+          "description": "Duration of the role session (seconds). Can range from 900 seconds up to the maximum session duration set for the role. Default to 1h (3600).",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "int32"
+        },
         "role_arn": {
           "description": "Full IAM Role ARN",
           "type": "string"

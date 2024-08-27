@@ -1,13 +1,13 @@
 pub mod test_lib;
 
-use test_lib::{load_env_for, test_setup, aws_ensure_role_exists};
+use chrono::Utc;
+use test_lib::{load_env_for, test_setup};
 use log::info;
 
 #[tokio::test]
 async fn test_assume_role() -> Result<(), anyhow::Error> {
 
     test_setup().await?;
-    aws_ensure_role_exists("NovopsTestAwsAssumeRole").await?;        
 
     let outputs = load_env_for("aws_assumerole", "dev").await?;
 
@@ -16,6 +16,44 @@ async fn test_assume_role() -> Result<(), anyhow::Error> {
     assert!(!outputs.variables.get("AWS_ACCESS_KEY_ID").unwrap().value.is_empty());
     assert!(!outputs.variables.get("AWS_SECRET_ACCESS_KEY").unwrap().value.is_empty());
     assert!(!outputs.variables.get("AWS_SESSION_TOKEN").unwrap().value.is_empty());
+    assert!(!outputs.variables.get("AWS_SESSION_EXPIRATION").unwrap().value.is_empty());
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_assume_role_duration() -> Result<(), anyhow::Error> {
+
+    test_setup().await?;
+
+    let now = Utc::now().timestamp();
+    let outputs = load_env_for("aws_assumerole", "integ").await?;
+
+    info!("test_assume_role_duration: Found variables: {:?}", outputs.variables);
+
+    // Check creds duration
+    let access_key = outputs.variables.get("AWS_ACCESS_KEY_ID").unwrap().clone().value;
+    let secret_key = outputs.variables.get("AWS_SECRET_ACCESS_KEY").unwrap().clone().value;
+    let session_token = outputs.variables.get("AWS_SESSION_TOKEN").unwrap().clone().value;
+    let session_token_exp = outputs.variables.get("AWS_SESSION_EXPIRATION").unwrap().clone().value;
+
+    assert!(!access_key.is_empty());
+    assert!(!secret_key.is_empty());
+    assert!(!session_token.is_empty());
+    assert!(!session_token_exp.is_empty());
+
+    // Parse the session expiration timestamp
+    // Expect actual expiration timestamp to be 15 min from now
+    // allow a few seconds diff as it may not be perfect depending on real generation time
+    let session_token_exp_number:i64 = session_token_exp.parse().unwrap();
+    let expected_min_expiration = now + 900 - 2;
+    let expected_max_expiration = now + 900 + 5;
+    
+    assert!(session_token_exp_number > expected_min_expiration && session_token_exp_number < expected_max_expiration, 
+        "Session token expiration should be in around 15 minutes from now, got significan diff. 
+        Expected expiration to ~900s from now ({:}) be between {:} and {:}, got {:}", now, expected_min_expiration, expected_max_expiration, session_token_exp_number);
+
+
 
     Ok(())
 }
