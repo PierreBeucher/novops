@@ -16,6 +16,12 @@ environments:
         role_arn: arn:aws:iam::111122223333:role/NovopsTestAssumeRole
         # source_profile: default # optionally define source profile
 
+  integ:
+    aws:
+      assume_role: 
+        role_arn: arn:aws:iam::111122223333:role/NovopsTestAssumeRole
+        duration_seconds: 900
+
 config:
   default:
     environment: dev

@@ -19,7 +19,7 @@ pub trait AwsClient {
 
     async fn get_ssm_parameter(&self, name: &str, decrypt: Option<bool>) -> Result<GetParameterOutput, anyhow::Error>;
 
-    async fn assume_role(&self, role_arn: &str, session_name: &str) -> Result<AssumeRoleOutput, anyhow::Error>;
+    async fn assume_role(&self, role_arn: &str, session_name: &str, duration_seconds: i32) -> Result<AssumeRoleOutput, anyhow::Error>;
 
     async fn get_s3_object(&self, bucket: &str, key: &str, region: &Option<String>) -> Result<GetObjectOutput, anyhow::Error>;
 }
@@ -77,12 +77,12 @@ impl AwsClient for DefaultAwsClient {
             .with_context(|| format!("Couldn't request SSM parameter {:} (decrypt: {:?})", name, decrypt))
     }
 
-    async fn assume_role(&self, role_arn: &str, session_name: &str) -> Result<AssumeRoleOutput, anyhow::Error>{
+    async fn assume_role(&self, role_arn: &str, session_name: &str, duration_seconds: i32) -> Result<AssumeRoleOutput, anyhow::Error>{
         let client = get_sts_client(&self.config).await?;
         client.assume_role()
             .role_arn(role_arn) 
             .role_session_name(session_name)
-            .duration_seconds(3600) // TODO as config
+            .duration_seconds(duration_seconds)
             .send().await
             .with_context(|| format!("Couldn't impersonate role {:} (session name: {:?})", role_arn, session_name))
     }
@@ -119,7 +119,7 @@ impl AwsClient for DryRunAwsClient{
             .build())
     }
 
-    async fn assume_role(&self, _role_arn: &str, _session_name: &str) -> Result<AssumeRoleOutput, anyhow::Error>{
+    async fn assume_role(&self, _: &str, _: &str, _: i32) -> Result<AssumeRoleOutput, anyhow::Error>{
         let exp = DateTime::from_str("2999-01-01T00:00:00Z", aws_smithy_types::date_time::Format::DateTime)?;
         let creds = CredentialsBuilder::default()
             .access_key_id("AKIADRYRUNDRYUNDRYRUN")

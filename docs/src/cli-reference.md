@@ -73,20 +73,24 @@ Supported environment variable formats with `-f, --format <FORMAT>`:
 ## `novops run`
 
 ```sh
-novops run [OPTIONS] <COMMAND>...
+novops run [OPTIONS] -- <COMMAND>...
 ```
 
 Run a command with loaded environment variables and files. Example: 
 
 ```
-novops run sh
+novops run -- sh
 novops run -- terraform apply
 ```
 
-`-c, --config <FILE>` - Configuration to use. Default: `.novops.yml`
-`-e, --env <ENVNAME>` - Environment to load. Prompt if not specified.
-`-w, --working-dir <DIR>` - Working directory under which files and secrets will be saved. Default to `XDG_RUNTIME_DIR` if available, or a secured temporary files otherwise. See [Security Model](./security.md) for details. 
-`--dry-run` - Perform a dry-run: no external service will be called and dummy secrets are generated. `COMMAND` willl be called with dummy secrets.
+**Always use `--` before your command to avoid `OPTIONS` being mixed-up with `COMMAND`**. For example, `novops run -e prod-rw sh -c "echo hello"` would cause Novops to interpret `-c` as `OPTIONS` rather than `COMMAND`. Note that future version of Novops may enforce `--` usage, so commands like `novops run echo foo` may not be valid anymore. 
+
+Options:
+
+- `-c, --config <FILE>` - Configuration to use. Default: `.novops.yml`
+- `-e, --env <ENVNAME>` - Environment to load. Prompt if not specified.
+- `-w, --working-dir <DIR>` - Working directory under which files and secrets will be saved. Default to `XDG_RUNTIME_DIR` if available, or a secured temporary files otherwise. See [Security Model](./security.md) for details. 
+- `--dry-run` - Perform a dry-run: no external service will be called and dummy secrets are generated. `COMMAND` willl be called with dummy secrets.
 
 ## `novops completion`
 
@@ -143,7 +147,7 @@ novops load -c /path/to/novops/config.yml
 Use `novops run`
 
 ```sh
-novops run sh
+novops run -- sh
 ```
 
 Use `FLAG -- COMMAND...` to provide flags:

@@ -19,7 +19,12 @@ pub struct AwsAssumeRoleInput {
     pub role_arn: String,
 
     /// Source profile. Must exist in config. 
-    pub source_profile: Option<String>
+    pub source_profile: Option<String>,
+
+    /// Duration of the role session (seconds). 
+    /// Can range from 900 seconds up to the maximum session duration set for the role.
+    /// Default to 1h (3600).
+    pub duration_seconds: Option<i32>
 }
 
 #[async_trait]
@@ -52,10 +57,11 @@ impl ResolveTo<Vec<VariableOutput>> for AwsAssumeRoleInput {
            warn!("WARNING: Role session name {:} truncated to {:} as length > 64 characters. \
            Consider using shorter application or environment name to avoid losing information with truncation.", 
            &original_role_session_name, &role_session_name);
-
         }
 
-        let assumed_role = client.assume_role(&self.role_arn, &role_session_name).await?;
+        let duration_seconds = self.duration_seconds.unwrap_or(3600);
+
+        let assumed_role = client.assume_role(&self.role_arn, &role_session_name, duration_seconds).await?;
     
         let creds = &assumed_role.credentials.clone()
             .with_context(|| format!("Can't assume role: returned Credentials Option was None for {:?}", &assumed_role))?;
@@ -64,7 +70,8 @@ impl ResolveTo<Vec<VariableOutput>> for AwsAssumeRoleInput {
             vec![
                 VariableOutput{name: "AWS_ACCESS_KEY_ID".into(), value: creds.access_key_id.clone()},
                 VariableOutput{name: "AWS_SECRET_ACCESS_KEY".into(), value: creds.secret_access_key.clone()},
-                VariableOutput{name: "AWS_SESSION_TOKEN".into(), value: creds.session_token.clone()} 
+                VariableOutput{name: "AWS_SESSION_TOKEN".into(), value: creds.session_token.clone()} ,
+                VariableOutput{name: "AWS_SESSION_EXPIRATION".into(), value: creds.expiration.clone().secs().to_string() } 
             ]
         )
     }

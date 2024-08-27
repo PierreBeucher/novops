@@ -29,7 +29,7 @@ config:
 
 Generate temporary [IAM Role credentials with STS AssumeRole](https://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRole.html):
 
-Note that `aws` is an `environment` sub-key, not a `files` or `variables` sub-key as it will output multiple variables `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_SESSION_TOKEN`
+Note that `aws` is an `environment` sub-key, not a `files` or `variables` sub-key as it will output multiple variables `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` and `AWS_SESSION_EXPIRATION`
 
 ```yaml
 environments:
@@ -38,10 +38,14 @@ environments:
     # AWS_ACCESS_KEY_ID
     # AWS_SECRET_ACCESS_KEY
     # AWS_SESSION_TOKEN
+    # AWS_SESSION_EXPIRATION (non built-in AWS variable, Linux timestamp in second specifying token expiration date)
     aws:
       assume_role:
         role_arn: arn:aws:iam::12345678910:role/my_dev_role
         source_profile: novops
+
+        # Optionally define credential duration in seconds. Default to 3600s (1h)
+        # duration_seconds: 900
 ```
 
 ## Systems Manager (SSM) Parameter Store

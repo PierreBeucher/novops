@@ -35,6 +35,7 @@ const secretManagerSecretBinaryVersion = new aws.secretsmanager.SecretVersion(`n
 
 // IAM
 const novopsTestRole = new aws.iam.Role("novopsTestAwsAssumeRole", {
+    name: "novopsTestAwsAssumeRole",
     assumeRolePolicy: JSON.stringify({
         Version: "2012-10-17",
         Statement: [{
