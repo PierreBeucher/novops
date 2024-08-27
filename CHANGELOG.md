@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.16.0](https://github.com/PierreBeucher/novops/compare/v0.15.0...v0.16.0) (2024-08-27)
+
+
+### Features
+
+* assume role token duration parameter ([96a9bbf](https://github.com/PierreBeucher/novops/commit/96a9bbf00c68a3c6cea55e0d17582a0d92888143))
+* **hashi_vault:** authentication using Kubernetes, AppRole, JWT ([3361f88](https://github.com/PierreBeucher/novops/commit/3361f88a96775291866fb706416cd159d08c2302))
+* novops run argument separator '--' warning ([72f0991](https://github.com/PierreBeucher/novops/commit/72f09915f95105b454cb93a7517fe3e89912dee2))
+
 ## [0.15.0](https://github.com/PierreBeucher/novops/compare/v0.14.0...v0.15.0) (2024-05-12)
 
 
