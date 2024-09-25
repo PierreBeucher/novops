@@ -11,7 +11,7 @@ To use BitWarden module:
 environments:
   dev:
     files: 
-      - name: ssh-key
+      - variable: ssh-key
         content:
           bitwarden:
             # Name of the entry to load
