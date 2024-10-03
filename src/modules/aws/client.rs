@@ -1,10 +1,12 @@
+use std::time::Duration;
+
 use crate::core::NovopsContext;
 use super::config::AwsClientConfig;
 use aws_config::{BehaviorVersion, Region};
 use aws_sdk_secretsmanager::operation::get_secret_value::GetSecretValueOutput;
 use aws_sdk_sts::{operation::assume_role::AssumeRoleOutput, types::builders::CredentialsBuilder};
 use aws_sdk_ssm::{operation::get_parameter::GetParameterOutput, types::builders::ParameterBuilder};
-use aws_sdk_s3::{operation::get_object::GetObjectOutput, primitives::ByteStream};
+use aws_sdk_s3::{config::IdentityCache, operation::get_object::GetObjectOutput, primitives::ByteStream};
 use anyhow::Context;
 use aws_smithy_types::DateTime;
 use log::debug;
@@ -162,7 +164,15 @@ pub fn build_mutable_client_config_from_context(ctx: &NovopsContext) -> AwsClien
  * Create an SdkConfig using optional overrides 
  */
 pub async fn get_sdk_config(client_conf: &AwsClientConfig) -> Result<aws_config::SdkConfig, anyhow::Error> {
-    
+    let config_loader = build_config_loader(client_conf)?;
+    Ok(config_loader.load().await)
+}
+
+/**
+ * Private function only used by get_sdk_config
+ * This function wraps a logic for unit testing
+ */
+fn build_config_loader(client_conf: &AwsClientConfig) -> Result<aws_config::ConfigLoader, anyhow::Error> {
     let mut shared_config = aws_config::defaults(BehaviorVersion::v2024_03_28());
 
     if let Some(endpoint) = &client_conf.endpoint {
@@ -177,8 +187,17 @@ pub async fn get_sdk_config(client_conf: &AwsClientConfig) -> Result<aws_config:
         shared_config = shared_config.region(Region::new(region.clone()));
     }
 
-    Ok(shared_config.load().await)
+    if let Some(identity_cache) = &client_conf.identity_cache {
+        let mut id_cache_builder = IdentityCache::lazy();
+        
+        if let Some(timeout) = &identity_cache.load_timeout {
+            id_cache_builder = id_cache_builder.load_timeout(Duration::from_secs(timeout.clone()));
+        }
 
+        shared_config = shared_config.identity_cache(id_cache_builder.build());
+    }
+
+    Ok(shared_config)
 }
 
 pub async fn get_iam_client(novops_aws: &AwsClientConfig) -> Result<aws_sdk_iam::Client, anyhow::Error>{
@@ -191,7 +210,7 @@ pub async fn get_iam_client(novops_aws: &AwsClientConfig) -> Result<aws_sdk_iam:
 pub async fn get_sts_client(novops_aws: &AwsClientConfig) -> Result<aws_sdk_sts::Client, anyhow::Error>{
     let conf = get_sdk_config(novops_aws).await?;
 
-    debug!("Creating AWS STS client with config {:?}", conf);
+    debug!("Creating AWS STS client with config {:?}", &conf);
     Ok(aws_sdk_sts::Client::new(&conf))
 }
 

@@ -10,7 +10,7 @@ pub struct AwsInput {
 
 
 /**
- * Generic AWS Client config xrapped around builder pattern
+ * Generic AWS Client config wrapped around builder pattern
  * for easy loading from Novops config and per-module override
  */
 #[derive(Default)]
@@ -18,6 +18,7 @@ pub struct AwsClientConfig {
     pub profile: Option<String>,
     pub endpoint: Option<String>,
     pub region: Option<String>,
+    pub identity_cache: Option<IdentityCache>,
 }
 
 impl From<&AwsConfig> for AwsClientConfig {
@@ -26,6 +27,7 @@ impl From<&AwsConfig> for AwsClientConfig {
             profile: cf.profile.clone(),
             endpoint: cf.endpoint.clone(),
             region: cf.region.clone(),
+            identity_cache: cf.identity_cache.clone()
         }
     }
 }
@@ -58,6 +60,17 @@ pub struct AwsConfig {
     pub profile: Option<String>,
 
     /// AWS region to use. Default to currently configured region. 
-    pub region: Option<String>
+    pub region: Option<String>,
+
+    /// AWS SDK identity cache configuration
+    pub identity_cache: Option<IdentityCache>
+}
+
+/// AWS SDK identity cache configuration
+#[derive(Debug, Deserialize, Clone, PartialEq, JsonSchema, Default)]
+pub struct IdentityCache {
+    /// Timeout to load identity (in seconds, default: 5s).
+    /// Useful when asking for MFA authentication which may take more than 5 seconds for user to input.
+    pub load_timeout: Option<u64>
 }
 

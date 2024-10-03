@@ -9,7 +9,7 @@ use std::env::VarError;
 use vaultrs::{kv2, kv1, aws, auth, api::aws::requests::GenerateCredentialsRequest};
 use log::debug;
 use home;
-use crate::modules::hashivault::config::{HashiVaultAuth};
+use crate::modules::hashivault::config::HashiVaultAuth;
 
 
 const KUBERNETES_SA_JWT_PATH: &str = "/var/run/secrets/kubernetes.io/serviceaccount/token";

@@ -5,6 +5,8 @@
 - [Systems Manager (SSM) Parameter Store](#systems-manager-ssm-parameter-store)
 - [Secrets Manager](#secrets-manager)
 - [S3 file](#s3-file)
+- [Advanced examples](#advanced-examples)
+  - [Using `credential_process` with TOTP or other user prompt](#using-credential_process-with-totp-or-other-user-prompt)
 
 ## Authentication & Configuration
 
@@ -20,9 +22,26 @@ You can also use `config` root element override certains configs (such as AWS en
 
 ```yaml
 config:
+  
+  # Example global AWS config
+  # Every field is optional
   aws:
-    endpoint: "http://localhost:4566/" # Use LocalStack endpoint
-    region: eu-central-1 # Set AWS region name
+
+    # Use a custom endpoint
+    endpoint: "http://localhost:4566/" 
+
+    # Set AWS region name
+    region: eu-central-1 
+
+    # Set identity cache load timeout.
+    #
+    # By default identity load timeout is 5 seconds
+    # but some custom config may require more than 5 seconds to load identity, 
+    # eg. when prompting user for TOTP.
+    #
+    # See Advanced examples below for usage
+    identity_cache:
+      load_timeout: 120 # timeout in seconds
 ```
 
 ## STS Assume Role
@@ -118,4 +137,26 @@ aws_s3_object:
   bucket: some-bucket
   key: path/to/object
   region: eu-central-1
+```
+## Advanced examples
+
+### Using `credential_process` with TOTP or other user prompt
+
+In some scenario you might want to use `credential_process` in your config, such as [`aws-vault`], which may ask for TOTP or other user prompts.
+
+For example, using `~/.aws/config` such as:
+
+```toml
+[profile crafteo]
+credential_process = aws-vault export --format=json crafteo
+mfa_serial = arn:aws:iam::0123456789:mfa/my-mfa
+```
+
+Credential processor prompts user for TOTP but by default AWS SDK timeout after a few seconds - not enough time to enter data. You can configure identity cache load timeout to give enough time to user. In `.novops.yml`, set config such as:
+
+```yaml
+config:
+  aws:
+    identity_cache:
+      load_timeout: 120 # Give user 2 min to enter TOTP
 ```
