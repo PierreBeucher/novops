@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.17.0](https://github.com/PierreBeucher/novops/compare/v0.16.0...v0.17.0) (2024-10-06)
+
+
+### Features
+
+* AWS config for identity cache load timeout ([35bbfa2](https://github.com/PierreBeucher/novops/commit/35bbfa238e61d503f5889b6e7c2780289b634c83))
+
 ## [0.16.0](https://github.com/PierreBeucher/novops/compare/v0.15.0...v0.16.0) (2024-08-27)
 
 
