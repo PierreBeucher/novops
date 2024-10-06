@@ -1,0 +1,18 @@
+# Test config using config.aws.identity_cache.load_timeout
+# used by unit test to check identity cache config is used as expected
+environments:
+  timeout:
+    aws:
+      assume_role: 
+        role_arn: arn:aws:iam::111122223333:role/NovopsTestAssumeRole
+        source_profile: novops-aws-test-identity-cache-load-timeout
+
+
+config:
+  aws:
+    endpoint: "http://localhost:4566/" # LocalStack
+    # Set timeout to 10
+    # Source profile novops-aws-test-identity-cache-load-timeout will wait for 7 seconds
+    # to check timeout is used as expected
+    identity_cache:
+      load_timeout: 10

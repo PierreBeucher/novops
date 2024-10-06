@@ -85,12 +85,18 @@ Requirements:
 - GCP account
 
 Integration tests run with real services, preferrably in containers or using dedicated Cloud account:
-- AWS: [LocalStack](https://localstack.cloud) server
-- Hashicorp Vault: [Vault Docker image](https://hub.docker.com/_/vault)
+- AWS: [LocalStack](https://localstack.cloud) container (AWS emulated in a container)
+- Hashicorp Vault: [Vault container](https://hub.docker.com/_/vault)
 - Google Cloud: GCP account
 - Azure: Azure account
 
-Setup is done via Pulumi (see `tests/setup/pulumi` and Task `test-setup`). 
+Integration test setup is fully automated but **may create real Cloud resources**. Run:
+
+```sh
+task test-setup
+```
+
+See `tests/setup/pulumi`. 
 
 **Remember to `task teardown` after running integration tests.** Cost should be negligible if you teardown infrastructure right after running tests. Cost should still be negligible even if you forget to teardown as only free or cheap resources are deployed, but better to do it anyway. 
 

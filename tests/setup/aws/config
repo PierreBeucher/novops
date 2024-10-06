@@ -5,3 +5,10 @@ output = json
 [profile novops-aws-test]
 region = eu-west-3
 output = json
+
+# Profile used to test identity cache load timeout config
+# Cause a few seconds delay to check timeout config works
+[profile novops-aws-test-identity-cache-load-timeout]
+region = eu-west-3
+output = json
+credential_process = sh -c "sleep 7 && aws sts get-session-token --output json | jq '{Version: 1, AccessKeyId: .Credentials.AccessKeyId, SecretAccessKey: .Credentials.SecretAccessKey, SessionToken: .Credentials.SessionToken, Expiration: .Credentials.Expiration}' -r"

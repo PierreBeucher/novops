@@ -59,6 +59,43 @@ async fn test_assume_role_duration() -> Result<(), anyhow::Error> {
 }
 
 #[tokio::test]
+async fn test_assume_role_identity_cache_load_timeout() -> Result<(), anyhow::Error> {
+
+    test_setup().await?;
+
+    // Takes a few seconds to run but should not timeout
+    // No error is sufficient to validate test
+    let outputs = load_env_for("aws_assumerole_id_cache_load_timeout", "timeout").await?;
+
+    let access_key = outputs.variables.get("AWS_ACCESS_KEY_ID").unwrap().clone().value;
+
+    assert!(!access_key.is_empty());
+
+    Ok(())
+}
+
+
+#[tokio::test]
+async fn test_assume_role_identity_cache_load_timeout_error() -> Result<(), anyhow::Error> {
+
+    test_setup().await?;
+
+    // Loading AWS credentials should cause a timeout
+    let outputs = load_env_for("aws_assumerole_id_cache_load_timeout_short", "timeout").await;
+
+    assert!(outputs.is_err(), "Expected timeout to occur as per identity cache load timeout config.");
+
+    let error = outputs.err().unwrap();
+    let error_str = format!("{:?}", error); // a bit hard way to print all error messages in a single string
+
+    info!("test_assume_role_identity_cache_load_timeout_error: Got expected error: {}", &error_str);
+
+    assert!(error_str.contains("identity resolver timed out after"), "Error message did not contain the expected 'identity resolver timed out after' string.");
+
+    Ok(())
+}
+
+#[tokio::test]
 async fn test_ssm_param() -> Result<(), anyhow::Error> {
 
     test_setup().await?;

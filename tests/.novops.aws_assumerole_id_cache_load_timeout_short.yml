@@ -1,0 +1,12 @@
+environments:
+  timeout:
+    aws:
+      assume_role: 
+        role_arn: arn:aws:iam::111122223333:role/NovopsTestAssumeRole
+        source_profile: novops-aws-test-identity-cache-load-timeout
+
+config:
+  aws:
+    endpoint: "http://localhost:4566/" # LocalStack
+    identity_cache:
+      load_timeout: 1 # Very short, should cause timeout with novops-aws-test-identity-cache-load-timeout profile

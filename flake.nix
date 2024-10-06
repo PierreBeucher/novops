@@ -93,6 +93,7 @@
           sops
           age
           awscli2-patched
+          aws-vault
 
           pulumi
           pulumiPackages.pulumi-language-nodejs

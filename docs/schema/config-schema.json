@@ -73,6 +73,17 @@
             "null"
           ]
         },
+        "identity_cache": {
+          "description": "AWS SDK identity cache configuration",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/IdentityCache"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "profile": {
           "description": "AWS Profile name. Must exist locally in AWS config.\n\nIt's advised not to use this directly as profile name configuration is higly dependent on local configuration. Prefer using AWS_PROFILE environment variable where needed.",
           "type": [
@@ -640,6 +651,21 @@
             "boolean",
             "null"
           ]
+        }
+      }
+    },
+    "IdentityCache": {
+      "description": "AWS SDK identity cache configuration",
+      "type": "object",
+      "properties": {
+        "load_timeout": {
+          "description": "Timeout to load identity (in seconds, default: 5s). Useful when asking for MFA authentication which may take more than 5 seconds for user to input.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 0.0
         }
       }
     },
