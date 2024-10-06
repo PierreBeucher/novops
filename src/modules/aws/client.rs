@@ -190,8 +190,8 @@ fn build_config_loader(client_conf: &AwsClientConfig) -> Result<aws_config::Conf
     if let Some(identity_cache) = &client_conf.identity_cache {
         let mut id_cache_builder = IdentityCache::lazy();
         
-        if let Some(timeout) = &identity_cache.load_timeout {
-            id_cache_builder = id_cache_builder.load_timeout(Duration::from_secs(timeout.clone()));
+        if let Some(timeout) = identity_cache.load_timeout {
+            id_cache_builder = id_cache_builder.load_timeout(Duration::from_secs(timeout));
         }
 
         shared_config = shared_config.identity_cache(id_cache_builder.build());
