@@ -58,7 +58,10 @@ pub struct HashivaultConfig {
   pub timeout: Option<u64>,
 
   /// Vault authentication to use when a token is not provided
-  pub auth: Option<HashiVaultAuth>
+  pub auth: Option<HashiVaultAuth>,
+
+  /// Vault namespace to use
+  pub namespace: Option<String>
 }
 
 

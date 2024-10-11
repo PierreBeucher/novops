@@ -1,11 +1,12 @@
 # Hashicorp Vault
 
-- [Authentication & Configuration](#authentication--configuration)
+- [Authentication \& Configuration](#authentication--configuration)
   - [AppRole](#approle)
-  - [JWT](#JWT)
-  - [Kubernetes](#Kubernetes)
+  - [JWT](#jwt)
+  - [Kubernetes](#kubernetes)
   - [Using Vault CLI](#using-vault-cli)
 - [AWS Secret Engine](#aws-secret-engine)
+  - [Namespaces](#namespaces)
 - [Key Value v2](#key-value-v2)
 - [Key Value v1](#key-value-v1)
 
@@ -133,6 +134,19 @@ environments:
         role_session_name: dev-session
         ttl: 2h
 ```
+
+### Namespaces
+
+To use Vault namespace you can set `namespace` config such as:
+
+```yaml
+config:
+  hashivault:
+    address: http://localhost:8200
+    namespace: my-namespace/child-ns
+```
+
+Alternatively specify namespace directly in secret path as described in [Vault doc](https://developer.hashicorp.com/vault/docs/enterprise/namespaces#vault-api-and-namespaces). 
 
 ## Key Value v2
 

@@ -622,6 +622,13 @@
             }
           ]
         },
+        "namespace": {
+          "description": "Vault namespace to use",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "timeout": {
           "description": "Vault client timeout in seconds. Default to 60s.",
           "type": [

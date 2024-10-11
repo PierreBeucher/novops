@@ -18,6 +18,11 @@ use k8s_openapi::api::core::v1::Secret;
 use kube;
 use novops::core::NovopsContext;
 
+fn extract_vault_config(ctx: &NovopsContext) -> HashivaultConfig  {
+    ctx.config_file_data.config.clone().unwrap_or_default()
+        .hashivault.unwrap_or_default()
+}
+
 #[tokio::test]
 async fn test_hashivault_kv2() -> Result<(), anyhow::Error> {
     test_setup().await?;
@@ -107,8 +112,9 @@ async fn test_hashivault_client_token_load() -> Result<(), anyhow::Error> {
 
     // Empty config should yield empty token
     let ctx_empty = create_dummy_context_with_hvault(None, None, None);
+    let hv_config = extract_vault_config(&ctx_empty);
 
-    let result_empty = load_vault_token(&ctx_empty, None, None)?;
+    let result_empty = load_vault_token(&hv_config, None, None)?;
     assert!(result_empty.is_empty());
 
     // Token in home should be used
@@ -123,7 +129,8 @@ async fn test_hashivault_client_token_load() -> Result<(), anyhow::Error> {
     fs::write(home_token_path, home_token).with_context(|| "Couldn't write test token in /tmp")?;
 
     let ctx_empty = create_dummy_context_with_hvault(None, None, None);
-    let result_home_token = load_vault_token(&ctx_empty, home_var.clone(), None)?;
+    let hv_config = extract_vault_config(&ctx_empty);
+    let result_home_token = load_vault_token(&hv_config, home_var.clone(), None)?;
 
     assert_eq!(result_home_token, expected_home_token);
 
@@ -131,7 +138,8 @@ async fn test_hashivault_client_token_load() -> Result<(), anyhow::Error> {
     let token_plain = "token_plain";
     let ctx_token_path = create_dummy_context_with_hvault(
         None, Some(String::from(token_plain)), None);
-    let result_token_plain = load_vault_token(&ctx_token_path, home_var.clone(), None)?;
+    let hv_config_token_path = extract_vault_config(&ctx_token_path);
+    let result_token_plain = load_vault_token(&hv_config_token_path, home_var.clone(), None)?;
     assert_eq!(result_token_plain, token_plain);
 
     // Providing token path should read token path before plain token
@@ -142,14 +150,16 @@ async fn test_hashivault_client_token_load() -> Result<(), anyhow::Error> {
 
     let ctx_token_path = create_dummy_context_with_hvault(
         None, Some(String::from(token_plain)), Some(PathBuf::from(tmp_token_path)));
-    let result_token_path = load_vault_token(&ctx_token_path, home_var.clone(), None)?;
+    let hv_config_token_path = extract_vault_config(&ctx_token_path);
+    let result_token_path = load_vault_token(&hv_config_token_path, home_var.clone(), None)?;
     assert_eq!(result_token_path, token_file_content);
 
     // Providing token en var should use it before anything else
     let env_var_token = String::from("envvartoken");
     let ctx_token_path = create_dummy_context_with_hvault(
         None, Some(String::from(token_plain)), Some(PathBuf::from(tmp_token_path)));
-    let result_token_env_var = load_vault_token(&ctx_token_path, home_var.clone(), Some(env_var_token.clone()))?;
+    let hv_config_token_path = extract_vault_config(&ctx_token_path);
+    let result_token_env_var = load_vault_token(&hv_config_token_path, home_var.clone(), Some(env_var_token.clone()))?;
     assert_eq!(result_token_env_var, env_var_token);
 
     Ok(())
@@ -164,23 +174,21 @@ async fn test_hashivault_client_address_load() -> Result<(), anyhow::Error> {
 
     // Empty config should yield empty address
     let ctx_empty = create_dummy_context_with_hvault(None, None, None);
-    let result_empty = load_vault_address(&ctx_empty, None)?;
+    let hv_config_empty = extract_vault_config(&ctx_empty);
+    let result_empty = load_vault_address(&hv_config_empty, None)?;
     assert_eq!(result_empty, url::Url::parse("http://127.0.0.1:8200")?);
 
     // Vault address config should yield configured address
     let addr_config = "https://dummy-vault-config";
     let ctx_addr = create_dummy_context_with_hvault(
         Some(String::from(addr_config)), None, None);
-
-    let result_config = load_vault_address(&ctx_addr, None)?;
+    let hv_config_addr = extract_vault_config(&ctx_addr);
+    let result_config = load_vault_address(&hv_config_addr, None)?;
     assert_eq!(result_config, url::Url::parse(addr_config)?);
 
     // Vault address env var should be used first
     let addr_var = String::from("https://env-var-address");
-    let ctx_addr = create_dummy_context_with_hvault(
-        Some(String::from(addr_config)), None, None);
-
-    let result_env_var = load_vault_address(&ctx_addr, Some(addr_var.clone()))?;
+    let result_env_var = load_vault_address(&hv_config_addr, Some(addr_var.clone()))?;
     assert_eq!(result_env_var, url::Url::parse(&addr_var)?);
 
     Ok(())
@@ -201,7 +209,8 @@ async fn test_hashivault_auth_approle() -> Result<(), Error> {
     };
 
     let vault_context = create_dummy_auth_context(None, auth, None, None);
-    let actual_client = build_client(&vault_context).await.expect("Should login with no errors");
+    let hv_config = extract_vault_config(&vault_context);
+    let actual_client = build_client(&hv_config).await.expect("Should login with no errors");
 
     assert!(!actual_client.settings.token.is_empty());
 
@@ -224,7 +233,8 @@ async fn test_hashivault_auth_approle_secret() -> Result<(), anyhow::Error> {
     };
 
     let vault_context = create_dummy_auth_context(None, auth, None, None);
-    let actual_client = build_client(&vault_context).await.expect("Should login with no errors");
+    let hv_config = extract_vault_config(&vault_context);
+    let actual_client = build_client(&hv_config).await.expect("Should login with no errors");
 
     assert!(!actual_client.settings.token.is_empty());
 
@@ -248,7 +258,8 @@ async fn test_hashivault_auth_approle_secret_path() -> Result<(), anyhow::Error>
     };
 
     let vault_context = create_dummy_auth_context(None, auth, None, None);
-    let actual_client = build_client(&vault_context).await.expect("Should login with no errors");
+    let hv_config = extract_vault_config(&vault_context);
+    let actual_client = build_client(&hv_config).await.expect("Should login with no errors");
 
     assert!(!actual_client.settings.token.is_empty());
 
@@ -276,7 +287,8 @@ async fn test_hashivault_auth_jwt() -> Result<(), Error> {
     };
 
     let vault_context = create_dummy_auth_context(None, auth, None, None);
-    let actual_client = build_client(&vault_context).await.expect("Should login with no errors");
+    let hv_config = extract_vault_config(&vault_context);
+    let actual_client = build_client(&hv_config).await.expect("Should login with no errors");
 
     assert!(!actual_client.settings.token.is_empty());
 
@@ -305,7 +317,8 @@ async fn test_hashivault_auth_jwt_file() -> Result<(), Error> {
     };
 
     let vault_context = create_dummy_auth_context(None, auth, None, None);
-    let actual_client = build_client(&vault_context).await.expect("Should login with no errors");
+    let hv_config = extract_vault_config(&vault_context);
+    let actual_client = build_client(&hv_config).await.expect("Should login with no errors");
 
     assert!(!actual_client.settings.token.is_empty());
 
@@ -350,7 +363,8 @@ async fn test_hashivault_auth_kubernetes() -> Result<(), Error> {
     };
 
     let vault_context = create_dummy_auth_context(None, auth, None, None);
-    let actual_client = build_client(&vault_context).await.expect("Should login with no errors");
+    let hv_config = extract_vault_config(&vault_context);
+    let actual_client = build_client(&hv_config).await.expect("Should login with no errors");
 
     assert!(!actual_client.settings.token.is_empty());
 
@@ -379,7 +393,8 @@ fn create_dummy_context_with_hvault(addr: Option<String>, token: Option<String>,
         token_path,
         verify: Some(false),
         timeout: None,
-        auth: None
+        auth: None,
+        namespace: None
     }), ..Default::default() };
 
     ctx.config_file_data.config = Some(novops_config);
