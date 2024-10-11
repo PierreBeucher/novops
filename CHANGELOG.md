@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.17.0](https://github.com/PierreBeucher/novops/compare/v0.16.0...v0.17.0) (2024-10-11)
+
+
+### Features
+
+* add Vault namespace support ([2122756](https://github.com/PierreBeucher/novops/commit/2122756e36bed67c6fd34162de484f3df2946078))
+* add Vault namespace support ([506648a](https://github.com/PierreBeucher/novops/commit/506648a3a01d5b41be64a0c90898c37301ea7d59))
+* AWS config for identity cache load timeout ([35bbfa2](https://github.com/PierreBeucher/novops/commit/35bbfa238e61d503f5889b6e7c2780289b634c83))
+
 ## [0.16.0](https://github.com/PierreBeucher/novops/compare/v0.15.0...v0.16.0) (2024-08-27)
 
 
