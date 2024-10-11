@@ -11,6 +11,8 @@ use log::debug;
 use home;
 use crate::modules::hashivault::config::HashiVaultAuth;
 
+use super::config::HashivaultConfig;
+
 
 const KUBERNETES_SA_JWT_PATH: &str = "/var/run/secrets/kubernetes.io/serviceaccount/token";
 const KUBERNETES_SA_JWT_PATH_ENV: &str = "KUBERNETES_SA_JWT_PATH";
@@ -169,7 +171,11 @@ pub async fn get_client(ctx: &NovopsContext) -> Result<Box<dyn HashivaultClient 
     if ctx.dry_run {
         Ok(Box::new(DryRunHashivaultClient{}))
     } else {
-        let client = build_client(ctx).await
+        let hv_config = ctx.config_file_data
+            .config.clone().unwrap_or_default()
+            .hashivault.unwrap_or_default();
+        
+        let client = build_client(&hv_config).await
             .with_context(|| "Couldn't build Hashivault client")?;
         Ok(Box::new(DefaultHashivaultClient{
             client
@@ -178,18 +184,14 @@ pub async fn get_client(ctx: &NovopsContext) -> Result<Box<dyn HashivaultClient 
     
 }
 
-pub async fn build_client(ctx: &NovopsContext) -> Result<VaultClient, anyhow::Error> {
+pub async fn build_client(hv_config: &HashivaultConfig) -> Result<VaultClient, anyhow::Error> {
     let default_settings = VaultClientSettingsBuilder::default().build()?;
 
-    let hv_config = ctx.config_file_data.config.clone()
-        .unwrap_or_default()
-        .hashivault.unwrap_or_default();
-    
     let token_var = env::var("VAULT_TOKEN").ok();
     let addr_var = env::var("VAULT_ADDR").ok();
     let home_var = home::home_dir();
 
-    let vault_url = load_vault_address(ctx, addr_var).with_context(|| "Couldn't load Vault address")?;
+    let vault_url = load_vault_address(hv_config, addr_var).with_context(|| "Couldn't load Vault address")?;
 
     let timeout = hv_config.timeout.unwrap_or(CLIENT_TIMEOUT_DEFAULT);
 
@@ -197,18 +199,19 @@ pub async fn build_client(ctx: &NovopsContext) -> Result<VaultClient, anyhow::Er
         .address(vault_url)
         .timeout(Some(Duration::new(timeout, 0)))
         .verify(hv_config.verify.unwrap_or(default_settings.verify))
+        .namespace(hv_config.namespace.clone())
         .build()?;
 
     debug!("Using Vault client timeout: {:?}", settings.timeout);
 
     let mut client = VaultClient::new(settings)?;
 
-    if let Some(auth) = hv_config.auth {
+    if let Some(auth) = hv_config.auth.clone() {
         debug!("Found Vault authentication configuration {:?}", auth);
 
         vault_login(&mut client, auth).await?;
     } else {
-        let token = load_vault_token(ctx, home_var, token_var).with_context(|| "Couldn't load Vault token")?;
+        let token = load_vault_token(hv_config, home_var, token_var).with_context(|| "Couldn't load Vault token")?;
         client.set_token(&token);
     }
     
@@ -303,7 +306,7 @@ fn env_or_default(env: &'static str, value: &'static str) -> Result<String, Erro
 /// - Novops config (plain)
 /// - $HOME/.vault-token
 /// - default settings
-pub fn load_vault_token(ctx: &NovopsContext, home_var: Option<PathBuf>, token_var: Option<String>) -> Result<String, anyhow::Error>  {
+pub fn load_vault_token(hvault_config: &HashivaultConfig, home_var: Option<PathBuf>, token_var: Option<String>) -> Result<String, anyhow::Error>  {
 
     debug!("Looking for a vault token...");
     
@@ -311,9 +314,6 @@ pub fn load_vault_token(ctx: &NovopsContext, home_var: Option<PathBuf>, token_va
         debug!("Found VAULT_TOKEN variable, using it.");
         return Ok(token_var.unwrap())
     }
-
-    let hvault_config = &ctx.clone().config_file_data.config.unwrap_or_default()
-        .hashivault.unwrap_or_default();
 
     let token_path = &hvault_config.token_path;
     if token_path.is_some(){
@@ -356,7 +356,7 @@ pub fn load_vault_token(ctx: &NovopsContext, home_var: Option<PathBuf>, token_va
 /// - VAULT_ADDR env var
 /// - Novops config
 /// - default settings
-pub fn load_vault_address(ctx: &NovopsContext, addr_var: Option<String>) -> Result<Url, anyhow::Error>  {
+pub fn load_vault_address(hvault_config: &HashivaultConfig, addr_var: Option<String>) -> Result<Url, anyhow::Error>  {
 
     debug!("Looking for a vault address...");
 
@@ -365,9 +365,6 @@ pub fn load_vault_address(ctx: &NovopsContext, addr_var: Option<String>) -> Resu
 
         return parse_vault_addr_str(addr_var.unwrap());
     }
-
-    let hvault_config = &ctx.clone().config_file_data.config.unwrap_or_default()
-        .hashivault.unwrap_or_default();
 
     let addr_config = &hvault_config.address;
     if addr_config.is_some(){
@@ -409,13 +406,45 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_build_client() {
+    async fn test_build_client_default() {
         init_logger();
 
-        let ctx = NovopsContext::default();
-        let client = build_client(&ctx).await.unwrap();
+        let hv_config = HashivaultConfig::default();
+        let client_result = build_client(&hv_config).await;
+
+        assert!(client_result.is_ok(), "Expected non-error Vault client, got error: {:?}", &client_result.err());
+
+        let client = client_result.unwrap();
 
         assert_eq!(client.settings.timeout, Some(Duration::new(60, 0)));
     }
 
+    #[tokio::test]
+    async fn test_build_client_with_params() {
+        init_logger();
+
+         let hv_config = HashivaultConfig {
+            address: Some("https://vault.crafteo.io:8200".to_string()),
+            token: Some("test-token".to_string()),
+            token_path: None,
+            verify: Some(false),
+            timeout: Some(999),
+            auth: None,
+            namespace: Some("test-namespace".to_string()),
+        };
+
+        let client_result = build_client(&hv_config).await;
+
+        assert!(client_result.is_ok(), "Expected non-error Vault client, got error: {:?}", &client_result.err());
+
+        let client = client_result.unwrap();
+     
+        let expected_url = url::Url::parse("https://vault.crafteo.io:8200").unwrap();
+        assert_eq!(client.settings.address, expected_url);
+        assert_eq!(client.settings.token, "test-token");
+        assert_eq!(client.settings.timeout, Some(Duration::new(999, 0)));
+        assert_eq!(client.settings.namespace.unwrap(), "test-namespace");
+        assert_eq!(client.settings.verify, false);
+     
+    }
 }
