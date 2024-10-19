@@ -27,7 +27,7 @@ cargo build -j 6
 Novops is built for multiple platforms using `cross`:
 
 ```sh
-make build-cross
+task build-cross
 ```
 
 For Darwin (macOS), you must build Darwin Cross image yourself (Apple does not allow distribution of macOS SDK required for cross-compilation, but you can download it yourself and package Cross image):

@@ -23,6 +23,6 @@ jobs:
           name: novops
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
 
-      - run: nix develop -c make release-pr
+      - run: nix develop -c task release-pr
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}

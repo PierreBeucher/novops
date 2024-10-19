@@ -31,6 +31,9 @@ tasks:
     cmds:
       - mdbook build ./docs/
       - cargo run -- schema > docs/schema/config-schema.json
+      
+      # Replace mdbook schema.html file by auto-generated schema file
+      # Original JSON file is included by default, but this is to ensure ".novops.yml schema" appear in main TOC
       - generate-schema-doc --config footer_show_time=false --config link_to_reused_ref=false --config expand_buttons=true docs/schema/config-schema.json docs/book/config/schema.html
 
   doc-serve:
@@ -183,33 +186,7 @@ tasks:
   # Release
   #
 
-  # docker-publish:
-  #   desc: Publish Docker image
-  #   env:
-  #     DOCKER_REPOSITORY: docker://docker.io/crafteo/novops
-  #     GITHUB_REF_NAME: local
-  #   cmds:
-  #     - podman load -i build/image.tar
-  #     - podman push novops:local ${DOCKER_REPOSITORY}:${GITHUB_REF_NAME}
-  #     - podman push novops:local ${DOCKER_REPOSITORY}:latest
-
-  # release-tag:
-  #   desc: Create a release tag
-  #   cmds:
-  #     - npx release-please github-release --repo-url https://github.com/PierreBeucher/novops --token=${GITHUB_TOKEN}
-
-  # release-pr:
-  #   desc: Create a release PR
-  #   cmds:
-  #     - npx release-please release-pr --repo-url https://github.com/PierreBeucher/novops --token=${GITHUB_TOKEN}
-
-  # release-artifacts:
-  #   desc: Publish artifacts on GitHub release
-  #   env:
-  #     RUNNER_ARCH: X64
-  #     RUNNER_OS: Linux
-  #     GITHUB_REF_NAME: local
-  #   cmds:
-  #     - cp build/novops.zip build/novops-${RUNNER_ARCH}-${RUNNER_OS}.zip
-  #     - cp build/novops.zip.sha256sum build/novops-${RUNNER_ARCH}-${RUNNER_OS}.zip.sha256sum
-  #     - gh release upload ${GITHUB_REF_NAME} build/novops-${RUNNER_ARCH}-${RUNNER_OS}.zip build/novops-${RUNNER_ARCH}-${RUNNER_OS}.zip.sha256sum
+  release-pr:
+    desc: Create a release PR
+    cmds:
+      - npx release-please release-pr --repo-url https://github.com/PierreBeucher/novops --token=${GITHUB_TOKEN}
