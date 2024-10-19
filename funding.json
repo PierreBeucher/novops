@@ -1,0 +1,62 @@
+{
+    "version": "v1.0.0",
+
+    "entity": {
+        "type": "individual",
+        "role": "owner",
+        "name": "Pierre Beucher",
+        "email": "pierre@crafteo.io",
+        "description": "I'm an engineer working in DevOps and software developmeent. I develop various FOSS projects alongside my activities as freelancer consultant and trainers.\n\nI’m passionate about software development and tech in general. With 10 years of experience as DevOps Expert and Software Engineer, I work oward bringing DevOps and software development best practices to projects and clients I work with. I also actively participate in development of various FOSS projects helping me in that goal.",
+        "webpageUrl": {
+            "url": "crafteo.io",
+            "wellKnown": "https://crafteo.io/.well-known/funding-manifest-urls"
+        }
+    },
+
+    "projects": [{
+        "guid": "novops",
+        "name": "Novops",
+        "description": "Cross-platform secret & config manager for development and CI environments.",
+        "webpageUrl": {
+            "url": "https://novops.dev",
+            "wellKnown": "https://novops.dev/.well-known/funding-manifest-urls"
+        },
+        "repositoryUrl": {
+            "url": "https://github.com/PierreBeucher/novops",
+            "wellKnown": "https://github.com/PierreBeucher/novops/blob/main/docs/src/.well-known/funding-manifest-urls"
+        },
+        "licenses": ["spdx:LGPL-3.0-or-later"],
+        "tags": ["programming", "developer-tools", "security-tools", "secret-management", "devops-tools", "ci"]
+    }],
+
+    "funding": {
+        "channels": [{
+            "guid": "github",
+            "type": "other",
+            "address": "https://github.com/sponsors/PierreBeucher",
+            "description": "Support my projects via Github Sponsors program"
+        }],
+
+        "plans": [{
+            "guid": "infrastructure",
+            "status": "active",
+            "name": "Infrastructure: website, testing, etc.",
+            "description": "My FOSS projects require a bit of infrastructure: small websites with domain name and the occasional Cloud resource for testing purposes. \n\nSince all the project I own relate around Cloud usage and security, I sometime need to test against real Cloud resources. Funding will help cover costs related to Cloud testing and pay for the website and domain name.",
+            "amount": 50,
+            "currency": "EUR",
+            "frequency": "monthly",
+            "channels": ["github"]
+        }, {
+            "guid": "one-day-per-week",
+            "status": "active",
+            "name": "Development: 1 day / week",
+            "description": "Being able to spend 1 day per week into project's development: features, bug fixes, maintenance...\n\nWith a full day per week it will be possible to add new feature and overall improve project a gret deal.",
+            "amount": 350,
+            "currency": "EUR",
+            "frequency": "weekly",
+            "channels": ["github"]
+        }]
+
+    }
+}
+
