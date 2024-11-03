@@ -1,11 +1,12 @@
 pub mod core;
 pub mod modules;
+pub mod resolve;
 
-use crate::core::{ResolveTo, NovopsEnvironmentInput, NovopsConfigFile, NovopsContext};
+use crate::core::{NovopsEnvironmentInput, NovopsConfigFile, NovopsContext};
 use crate::modules::files::FileOutput;
 use crate::modules::variables::VariableOutput;
+use crate::resolve::resolve_environment_inputs_parallel;
 use log::{info, debug, error, warn};
-
 use std::os::unix::prelude::{OpenOptionsExt, PermissionsExt};
 use std::os::unix::fs::{MetadataExt, symlink};
 use std::{fs::{self, symlink_metadata, remove_file}, io::prelude::*};
@@ -98,15 +99,35 @@ pub async fn load_context_and_resolve(args: &NovopsLoadArgs) -> Result<NovopsOut
 
     let ctx = make_context(args).await?;
     let novops_env = get_current_environment(&ctx).await?;
-    
-    // Revole inputs and export
-    let (var_out, file_out) = 
-        resolve_environment_inputs(&ctx, novops_env).await?;
+
+    let (raw_var_outputs, raw_file_outputs) = resolve_environment_inputs_parallel(&ctx, novops_env).await?;
+
+    // Transform raw output into their corresponding HashMaps
+    let mut var_outputs: HashMap<String, VariableOutput> = HashMap::new();
+    let mut file_outputs: HashMap<String, FileOutput> = HashMap::new();
+
+    // Expose Novops internal variables
+    // Set first so user can override via config if needed
+    var_outputs.insert(String::from("NOVOPS_ENVIRONMENT"), VariableOutput {
+        name: String::from("NOVOPS_ENVIRONMENT"),
+        value: ctx.env_name.clone()
+    });
+
+    for v in raw_var_outputs.iter() { var_outputs.insert(v.name.clone(), v.clone()); }
+    for f in raw_file_outputs {
+        
+        let fpath_str = f.dest.to_str()
+            .ok_or(anyhow::anyhow!("Couldn't convert PathBuf '{:?}' to String", &f.dest))?;
+
+        // FileInput generates both var and file output
+        var_outputs.insert(fpath_str.to_string(), f.variable.clone());
+        file_outputs.insert(fpath_str.to_string(), f.clone());
+    };
 
     Ok(NovopsOutputs { 
         context: ctx, 
-        variables: var_out, 
-        files: file_out 
+        variables: var_outputs, 
+        files: file_outputs 
     })
 }
 
@@ -250,87 +271,6 @@ pub async fn get_current_environment(ctx: &NovopsContext) -> Result<NovopsEnviro
         .with_context(|| format!("Environment '{}' not found in config.", &ctx.env_name))?;
     
     Ok(novops_env.clone())
-}
-
-/**
- * Resolve all Inputs to their concrete Output values
- * Depending on Input types, external systems will be called-upon (such as BitWarden, Hashicorp Vault...)
- */
-pub async fn resolve_environment_inputs(ctx: &NovopsContext, inputs: NovopsEnvironmentInput) 
-        -> Result<(HashMap<String, VariableOutput>, HashMap<String, FileOutput>), anyhow::Error>
-    {
-
-    let mut variable_outputs: HashMap<String, VariableOutput> = HashMap::new();
-    let mut file_outputs: HashMap<String, FileOutput> = HashMap::new();
-
-    // Expose Novops internal variables
-    // Load first so user can override via config if needed
-    variable_outputs.insert(String::from("NOVOPS_ENVIRONMENT"), VariableOutput {
-        name: String::from("NOVOPS_ENVIRONMENT"),
-        value: ctx.env_name.clone()
-    });
-    
-    for v in &inputs.variables.unwrap_or_default() {
-        let val = v.resolve(ctx).await
-            .with_context(|| format!("Couldn't resolve variable input {:?}", v))?;
-        
-        variable_outputs.insert(v.name.clone(), val);
-    };
-
-    for f in &inputs.files.unwrap_or_default() {
-        let r = f.resolve(ctx).await
-            .with_context(|| format!("Couldn't resolve file input {:?}", f))?;
-        
-        let fpath_str = r.dest.to_str()
-            .ok_or(anyhow::anyhow!("Couldn't convert PathBuf '{:?}' to String", &r.dest))?;
-
-        // FileInput generates both var and file output
-        variable_outputs.insert(fpath_str.to_string(), r.variable.clone());
-        file_outputs.insert(fpath_str.to_string(), r.clone());
-    };
-
-    match &inputs.aws {
-        Some(aws) => {
-            let r = aws.assume_role.resolve(ctx).await
-                .with_context(|| format!("Could not resolve AWS input {:?}", aws))?;
-
-            for vo in r {
-                variable_outputs.insert(vo.name.clone(), vo);
-            }
-            
-        },
-        None => (),
-    }
-
-    match &inputs.hashivault {
-        Some(hashivault) => {
-            let r = hashivault.aws.resolve(ctx).await
-                .with_context(|| format!("Could not resolve Hashivault input {:?}", hashivault))?;
-
-            for vo in r {
-                variable_outputs.insert(vo.name.clone(), vo);
-            }
-            
-        },
-        None => (),
-    }
-
-    match &inputs.sops_dotenv {
-        Some(sops_dotenv) => {
-            for s in sops_dotenv {
-                let r = s.resolve(ctx).await
-                    .with_context(|| format!("Could not resolve SopsDotenv input {:?}", s))?;
-
-                for vo in r {
-                    variable_outputs.insert(vo.name.clone(), vo);
-                }
-            }
-        },
-        None => (),
-    }
-
-    Ok((variable_outputs, file_outputs))
-
 }
 
 /**

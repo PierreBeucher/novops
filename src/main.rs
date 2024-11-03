@@ -97,7 +97,6 @@ fn build_cli() -> Command {
                 .help("Do not check if stdout is a tty (terminal), risking exposing secrets on screen. This is unsecure.")
                 .long("skip-tty-check")
                 .env("NOVOPS_LOAD_SKIP_TTY_CHECK")
-                .value_name("DRY_RUN")
                 .action(ArgAction::SetTrue)
                 .required(false)
             )

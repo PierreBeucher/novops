@@ -298,7 +298,7 @@ async fn test_default_loaded_vars() -> Result<(), anyhow::Error> {
 
     let result = load_env_dryrun_for("empty", "dev").await?;
 
-    assert_eq!(result.variables.get("NOVOPS_ENVIRONMENT").unwrap().value, "dev");
+    assert_eq!(result.variables.get("NOVOPS_ENVIRONMENT").expect("NOVOPS_ENVIRONMENT variable not found in outputs").value, "dev");
 
     Ok(())
 }
