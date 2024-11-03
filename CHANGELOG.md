@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.18.0](https://github.com/PierreBeucher/novops/compare/v0.17.0...v0.18.0) (2024-11-03)
+
+
+### Features
+
+* load inputs in parallel ([44a4ddf](https://github.com/PierreBeucher/novops/commit/44a4ddfd5fd4b22e9a0a3259fa2fe47f80e03bce))
+* load inputs in parallel ([dd311f6](https://github.com/PierreBeucher/novops/commit/dd311f683cee7dca3dab352b2a9fe11da042909f))
+
 ## [0.17.0](https://github.com/PierreBeucher/novops/compare/v0.16.0...v0.17.0) (2024-10-11)
 
 
