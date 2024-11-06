@@ -1,21 +1,23 @@
 
 use anyhow::Context;
 use google_secretmanager1::{
-        SecretManager, 
+        SecretManager,
         oauth2::{
-            self, 
+            self,
             hyper_rustls::HttpsConnector,
-            authenticator::{Authenticator, ApplicationDefaultCredentialsTypes}, 
+            authenticator::{Authenticator, ApplicationDefaultCredentialsTypes},
             ApplicationDefaultCredentialsAuthenticator,
-            ApplicationDefaultCredentialsFlowOpts
+            ApplicationDefaultCredentialsFlowOpts,
+            read_external_account_secret
         },
-        hyper::{self, client::HttpConnector}, 
+        hyper::{self, client::HttpConnector},
         hyper_rustls,
         api::SecretPayload
     };
 use log::debug;
 use async_trait::async_trait;
 use home;
+use std::env;
 
 use crate::core::NovopsContext;
 
@@ -36,11 +38,11 @@ impl GCloudClient for DefaultGCloudClient{
 
         let authenticator = get_authenticator()
             .await.with_context(|| "Couldn't get Google client authenticator")?;
-        
+
         let hub = SecretManager::new(
             hyper::Client::builder().build(
                 hyper_rustls::HttpsConnectorBuilder::new().with_native_roots()?.https_or_http().enable_http1().build()
-            ), 
+            ),
             authenticator
         );
 
@@ -48,12 +50,12 @@ impl GCloudClient for DefaultGCloudClient{
             .secrets_versions_access(name)
             .doit()
             .await.with_context(|| format!("Couldn't get secret {:?}. Did you setup credentials compatible with Application Default Credentials?", name))?;
-        
+
         let result = secret.payload
             .ok_or(anyhow::anyhow!("No secret value found for '{}'", name))?;
-            
+
         Ok(result)
-            
+
     }
 }
 
@@ -63,6 +65,7 @@ impl GCloudClient for DefaultGCloudClient{
 /// 1. GOOGLE_APPLICATION_CREDENTIALS environment variable
 /// 2. User credentials set up by using the Google Cloud CLI
 /// 3. The attached service account, returned by the metadata server
+/// 4. External credentials (Workload Identity Federation)
 ///
 /// But google_secretmanager1 only performs 1 and 3
 /// Workaround by implementing our own way for 2.
@@ -85,7 +88,7 @@ async fn get_authenticator() -> Result<Authenticator<HttpsConnector<HttpConnecto
                 Ok(auth) => Ok(auth),
                 Err(e) => {
                     debug!("Couldn't generate Authorized User Credentials authenticator: ${:?}", e);
-                    
+
                     // 3. Use google_secretmanager1 again to retrieve Metadata instance
                     debug!("Trying to get Instance Metadata authenticator");
                     let metadata_authentiactor = try_metadata_authenticator().await;
@@ -95,7 +98,17 @@ async fn get_authenticator() -> Result<Authenticator<HttpsConnector<HttpConnecto
                         Err(e) => {
                             debug!("Couldn't generate Instance Metadata authenticator: ${:?}", e);
 
-                            Err(anyhow::anyhow!("Couldn't generate Authenticator for Google client. Did you setup credentials compatible with Application Default Credentials? "))
+                            // 4. Try external account authneticator (workload identity federation)
+                            debug!("Trying to get external account authenticator");
+                            let external_account_authenticator = try_external_account_authenticator().await;
+
+                            match external_account_authenticator {
+                                Ok(auth) => Ok(auth),
+                                Err(e) => {
+                                    debug!("Couldn't generate external account authenticator: ${:?}", e);
+                                    Err(anyhow::anyhow!("Couldn't generate Authenticator for Google client. Did you setup credentials compatible with Application Default Credentials? "))
+                                }
+                            }
                         },
                     }
                 },
@@ -103,8 +116,8 @@ async fn get_authenticator() -> Result<Authenticator<HttpsConnector<HttpConnecto
         },
     }
 
-    
-        
+
+
 }
 
 async fn try_metadata_authenticator() -> Result<Authenticator<HttpsConnector<HttpConnector>>, anyhow::Error>{
@@ -118,13 +131,13 @@ async fn try_metadata_authenticator() -> Result<Authenticator<HttpsConnector<Htt
             .build()
             .await
             .with_context(|| "Unable to create Instance Metadata authenticator")?,
-        ApplicationDefaultCredentialsTypes::ServiceAccount(_) => 
+        ApplicationDefaultCredentialsTypes::ServiceAccount(_) =>
             return Err(anyhow::anyhow!("Expected ServiceAccount authenticator."))
     };
     Ok(result)
 }
 
-// Try to generate a Service Account Authenticator using GOOGLE_APPLICATION_CREDENTIALS env var 
+// Try to generate a Service Account Authenticator using GOOGLE_APPLICATION_CREDENTIALS env var
 async fn try_service_account_authenticator() -> Result<Authenticator<HttpsConnector<HttpConnector>>, anyhow::Error>  {
 
     let opts = ApplicationDefaultCredentialsFlowOpts::default();
@@ -137,7 +150,7 @@ async fn try_service_account_authenticator() -> Result<Authenticator<HttpsConnec
             .build()
             .await
             .with_context(|| "Unable to create service account authenticator")?,
-        ApplicationDefaultCredentialsTypes::InstanceMetadata(_) => 
+        ApplicationDefaultCredentialsTypes::InstanceMetadata(_) =>
             return Err(anyhow::anyhow!("Expected ServiceAccount authenticator."))
     };
     Ok(result)
@@ -162,6 +175,25 @@ async fn try_user_authenticator() -> Result<Authenticator<HttpsConnector<HttpCon
         Ok(user_authenticator)
 }
 
+
+// Try to generate a user authenticator using external account workflow
+async fn try_external_account_authenticator() -> Result<Authenticator<HttpsConnector<HttpConnector>>, anyhow::Error> {
+    let credentials_path = env::var("GOOGLE_APPLICATION_CREDENTIALS")
+        .map_err(|_| anyhow::anyhow!("GOOGLE_APPLICATION_CREDENTIALS environment variable not set"))?;
+
+    let external_account_secret = read_external_account_secret(credentials_path)
+        .await
+        .with_context(|| "Couldn't read Google client external account secret")?;
+
+    let authenticator = oauth2::ExternalAccountAuthenticator::builder(external_account_secret)
+        .build()
+        .await
+        .with_context(|| "Couldn't build ExternalAccountAuthenticator for Google client")?;
+
+    Ok(authenticator)
+}
+
+
 #[async_trait]
 impl GCloudClient for DryRunGCloudClient{
 
@@ -174,7 +206,7 @@ impl GCloudClient for DryRunGCloudClient{
             data_crc32c: Some(i64::from(crc32c::crc32c(result.as_bytes())))
         })
 
-        
+
     }
 }
 
