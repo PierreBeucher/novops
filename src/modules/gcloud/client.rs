@@ -39,7 +39,7 @@ impl GCloudClient for DefaultGCloudClient{
         
         let hub = SecretManager::new(
             hyper::Client::builder().build(
-                hyper_rustls::HttpsConnectorBuilder::new().with_native_roots().https_or_http().enable_http1().build()
+                hyper_rustls::HttpsConnectorBuilder::new().with_native_roots()?.https_or_http().enable_http1().build()
             ), 
             authenticator
         );
