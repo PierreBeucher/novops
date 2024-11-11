@@ -22,15 +22,15 @@ Novops will load configuration in that order:
 - Inputs are **resolved** into **Environment Variables** and **Files** (and other Outputs constructs internally with files and variables)
 - Inputs can also use other Inputs, such as an Hashicorp Vault `hvault_kv2` Inputs used by a `variable` Input to resolve a secret into an environment variable (see below for example)
 
-Example: environments `dev` and `prod` with inputs `files`, `variables` and `hvault_kv2`. 
+Example: environments `dev` and `prod` with inputs `files`, `variables` and `hvault_kv2`.
 
 ```yaml
 environments:
 
   # Environment name
-  dev:    
+  dev:
 
-   # "variables" is a list of "variable" inputs for environment 
+   # "variables" is a list of "variable" inputs for environment
    # Loading these inputs will result in envionment variables outputs
    variables:
 
@@ -47,10 +47,10 @@ environments:
           hvault_kv2:
             path: crafteo/app/dev
             key: password
-    
+
     # "files" is a list of "file" inputs
     files:
-      
+
       # - content: input resolving to a string. Can be a plain string or another input resolving to a string
       # - variable: a variable name which will point to generated file
       # - dest: Optionally, the final destination where file will be generate. By default Novops create a file in a secure directory.
@@ -62,11 +62,11 @@ environments:
       - variable: MY_APP_CONFIG
         content: |
           bind_addr: localhost
-    
+
       # Like variables input, file Input content can use another Input
       # to load value from external source
       - variable: MY_APP_TOKEN
-        content: 
+        content:
           hvault_kv2:
             path: crafteo/app/dev
             key: token
@@ -74,7 +74,7 @@ environments:
 
 ## Root `config` keyword
 
-Root `config` is used to specifhy global configurations for Novops and its modules:
+Root `config` is used to specify global configurations for Novops and its modules:
 
 ```yaml
 config:
