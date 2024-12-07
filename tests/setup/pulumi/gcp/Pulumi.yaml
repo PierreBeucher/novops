@@ -2,4 +2,4 @@ name: novops-test-infra-gcp
 runtime: nodejs
 description: Setup Google Cloud infra for Novops tests
 config:
-  gcp:project: novops-testing
+  gcp:project: "398497848942"

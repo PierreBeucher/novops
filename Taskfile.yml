@@ -58,6 +58,7 @@ tasks:
     cmds:
       - task: test-setup
       - task: test-integ-run
+      - task: test-authentication
       - task: test-teardown
 
   test-setup:
@@ -182,6 +183,15 @@ tasks:
     cmds:
       - tests/install/test-install.sh
 
+  # Tests Novops authentication methods 
+  test-authentication:
+    cmds:
+      - task: test-authentication-gcp-wif
+  
+  # Test Google Worklow Identity Federation authentication
+  test-authentication-gcp-wif:
+    cmd: tests/authentication/test-gcp-workload-identity-federation-creds.sh
+   
   #
   # Release
   #
