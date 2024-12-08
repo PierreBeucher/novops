@@ -2,13 +2,10 @@
   description = "Novops, the cross-platform secret manager for development and CI environments";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-24.11";
     flake-utils.url = "github:numtide/flake-utils";
     
-    crane = {
-      url = "github:ipetkov/crane";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    crane.url = "github:ipetkov/crane";
 
     rust-overlay = {
       url = "github:oxalica/rust-overlay";
@@ -69,7 +66,23 @@
           openssl.dev
           mdbook
           mdbook-linkcheck
-          json-schema-for-humans
+
+          # Until https://github.com/NixOS/nixpkgs/issues/359286 fixed and https://github.com/NixOS/nixpkgs/pull/362898 merged
+          # json-schema-for-humans
+          (json-schema-for-humans.overrideAttrs (oldAttrs: {
+            version = "1.3.0";
+            src = fetchFromGitHub {
+              owner = "coveooss";
+              repo = "json-schema-for-humans";
+              rev = "refs/tags/v1.3.0";
+              hash = "sha256-0nen6oJOWdihm/EWKSGQLlD70pRxezhCHykBJxlSFHo=";
+            };
+            postPatch = ''
+              substituteInPlace pyproject.toml \
+                --replace-fail 'markdown2 = "^2.5.0"' 'markdown2 = "^2.4.1"'
+            '';
+          }))
+
           gnumake
           zip
           gh
@@ -95,7 +108,7 @@
           awscli2-patched
           aws-vault
 
-          pulumi
+          pulumi-bin
           pulumiPackages.pulumi-language-nodejs
         ];
 
