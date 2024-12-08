@@ -20,5 +20,11 @@ pre-build = [
 [target.x86_64-apple-darwin]
 image = "x86_64-apple-darwin-cross:local"
 
+[target.x86_64-apple-darwin.env]
+passthrough = ["MACOSX_DEPLOYMENT_TARGET=macos13"]
+
 [target.aarch64-apple-darwin]
 image = "aarch64-apple-darwin-cross:local"
+
+[target.aarch64-apple-darwin.env]
+passthrough = ["MACOSX_DEPLOYMENT_TARGET=macos13"]
