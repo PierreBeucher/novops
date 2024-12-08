@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.19.0](https://github.com/PierreBeucher/novops/compare/v0.18.0...v0.19.0) (2024-12-08)
+
+
+### Features
+
+* **gcloud:** Add support for external account authentication ([566fc7f](https://github.com/PierreBeucher/novops/commit/566fc7f1a783d06cbf016ed70be03c46e6347871))
+* **gcloud:** Add support for external account authentication ([566cf5f](https://github.com/PierreBeucher/novops/commit/566cf5f2b8dc112d5866a9095e41d808b8462d26))
+
 ## [0.18.0](https://github.com/PierreBeucher/novops/compare/v0.17.0...v0.18.0) (2024-11-03)
 
 
