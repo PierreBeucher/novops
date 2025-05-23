@@ -118,6 +118,10 @@ impl core::ResolveTo<Vec<VariableOutput>> for SopsDotenvInput {
         let mut variables = vec![];
 
         for line in output.lines() {
+          if line.starts_with('#') {
+              continue;
+          }
+
           let (name, value) = line.split_once('=').unwrap();
           
           
