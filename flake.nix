@@ -2,7 +2,7 @@
   description = "Novops, the cross-platform secret manager for development and CI environments";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-24.11";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
     flake-utils.url = "github:numtide/flake-utils";
     
     crane.url = "github:ipetkov/crane";

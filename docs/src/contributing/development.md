@@ -12,6 +12,7 @@ All commands are CI-agnostic: they work the same locally and on CI by leveraging
 - [Test](#test)
   - [Running non-integration tests](#running-non-integration-tests)
   - [Runnning integration tests](#runnning-integration-tests)
+- [Maintenance and updates](#maintenance-and-updates)
 - [Doc](#doc)
 - [Release](#release)
 
@@ -112,6 +113,12 @@ task test-integ
 # Cleanup resources to avoid unnecessary cost
 task test-teardown
 ```
+
+## Maintenance and updates
+
+- Update Cargo deps `cargo update`
+- Update Nix flake to latest version and run `nix flake update`
+- Update Containerfile version to match Nix flake `rustc --version`
 
 ## Doc
 
