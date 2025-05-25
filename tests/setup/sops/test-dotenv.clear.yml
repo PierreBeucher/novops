@@ -1,5 +1,6 @@
 APP_TOKEN: "s3cret!"
 app_host: http://localhost
+# This comment should be ignored
 WITH_LINES: |
   foo
   bar\nbaz\\n\nzzz
