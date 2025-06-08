@@ -119,6 +119,7 @@ task test-teardown
 - Update Cargo deps `cargo update`
 - Update Nix flake to latest version and run `nix flake update`
 - Update Containerfile version to match Nix flake `rustc --version`
+- Update test images in `tests/install/test-install.sh` to match latest version - used fixed image version, not `latest`
 
 ## Doc
 

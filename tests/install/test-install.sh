@@ -18,7 +18,7 @@ function test_novops_install() {
     fi
 }
 
-test_novops_install docker.io/library/alpine:3.19.1 "apk update && apk add curl unzip && ./install.sh && novops --version"
-test_novops_install docker.io/library/debian:12.5-slim "apt update && apt install curl unzip -y && ./install.sh && novops --version"
-test_novops_install docker.io/library/ubuntu:22.04 "apt update && apt install curl unzip -y && ./install.sh && novops --version"
+test_novops_install docker.io/library/alpine:3.22.0 "apk update && apk add curl unzip && ./install.sh && novops --version"
+test_novops_install docker.io/library/debian:12.11-slim "apt update && apt install curl unzip -y && ./install.sh && novops --version"
+test_novops_install docker.io/library/ubuntu:24.04 "apt update && apt install curl unzip -y && ./install.sh && novops --version"
 
