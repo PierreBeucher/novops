@@ -173,7 +173,7 @@ pub async fn get_sdk_config(client_conf: &AwsClientConfig) -> Result<aws_config:
  * This function wraps a logic for unit testing
  */
 fn build_config_loader(client_conf: &AwsClientConfig) -> Result<aws_config::ConfigLoader, anyhow::Error> {
-    let mut shared_config = aws_config::defaults(BehaviorVersion::v2024_03_28());
+    let mut shared_config = aws_config::defaults(BehaviorVersion::latest());
 
     if let Some(endpoint) = &client_conf.endpoint {
         shared_config = shared_config.endpoint_url(endpoint);
