@@ -1,7 +1,6 @@
 
 /// Simple wrapper around BitWarden CLI
 /// Keep it simple as we intend to remove/deprecated Bitwarden usage in the future
-
 use std::process::{Command, Output};
 use std;
 use serde_json;
