@@ -2894,6 +2894,7 @@ dependencies = [
  "pretty_assertions",
  "rand 0.5.6",
  "reqwest",
+ "rustls 0.23.27",
  "schemars",
  "serde",
  "serde_json",
