@@ -144,7 +144,7 @@
             packages = devShellPackages ++ [
               pkgs.cargo-cross
               pkgs.rustup
-              pkgs.nodejs_23 # for npx release-please
+              pkgs.nodejs_24 # for npx release-please
             ];
 
             buildInputs = devShellBuildInputs;
