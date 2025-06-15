@@ -18,13 +18,7 @@ pre-build = [
 # Requires custom images, see docs/src/contributing/development.md
 #
 [target.x86_64-apple-darwin]
-image = "x86_64-apple-darwin-cross:local"
-
-[target.x86_64-apple-darwin.env]
-passthrough = ["MACOSX_DEPLOYMENT_TARGET=macos13"]
+image = "ghcr.io/cross-rs/x86_64-apple-darwin-cross:local"
 
 [target.aarch64-apple-darwin]
-image = "aarch64-apple-darwin-cross:local"
-
-[target.aarch64-apple-darwin.env]
-passthrough = ["MACOSX_DEPLOYMENT_TARGET=macos13"]
+image = "ghcr.io/cross-rs/aarch64-apple-darwin-cross:local"
