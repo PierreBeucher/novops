@@ -51,8 +51,10 @@ mkdir release
 
 build_and_zip x86_64-unknown-linux-musl     "_linux_x86_64"
 build_and_zip aarch64-unknown-linux-musl    "_linux_aarch64"
-build_and_zip x86_64-apple-darwin           "_macos_x86_64"
-build_and_zip aarch64-apple-darwin          "_macos_aarch64"
+
+# No working for now, see: https://github.com/PierreBeucher/novops/issues/149
+# build_and_zip x86_64-apple-darwin           "_macos_x86_64"
+# build_and_zip aarch64-apple-darwin          "_macos_aarch64"
 
 # Legacy release name using "novops-X64-Linux.zip" 
 # to avoid disruption on install scripts relying on this release name
