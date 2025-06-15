@@ -1,0 +1,14 @@
+---
+description: When you must run a command, always consider this
+globs: 
+alwaysApply: false
+---
+When you run a command, always consider that commands must be run under a Nix Development shell locally.
+
+To run a command under a Nix Dev shell:
+
+nix develop -c COMMAND
+
+Eg. when I ask to run echo hello world, you must in fact run:
+
+nix develop -c echo hello world

@@ -1,0 +1,12 @@
+---
+description: When testing is requiref for task
+globs: 
+alwaysApply: false
+---
+When running tests, use command:
+
+task test-xxx
+
+See [Taskfile.yml](mdc:Taskfile.yml) for all tests possible. Each task has a comment specify the pre-requisites and how they are run.
+
+Do not run test-teardown even if tests are successfull - I'll do that manually or ask for it explicitely.
