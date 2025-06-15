@@ -15,7 +15,7 @@ jobs:
 
       - uses: nixbuild/nix-quick-install-action@v27
 
-      - uses: nix-community/cache-nix-action@v5
+      - uses: nix-community/cache-nix-action@v6
         with:
           primary-key: nix-${{ runner.os }}-${{ hashFiles('**/*.nix') }}
           restore-prefixes-first-match: nix-${{ runner.os }}-
@@ -39,7 +39,7 @@ jobs:
 
       - uses: nixbuild/nix-quick-install-action@v27
 
-      - uses: nix-community/cache-nix-action@v5
+      - uses: nix-community/cache-nix-action@v6
         with:
           primary-key: nix-${{ runner.os }}-${{ hashFiles('**/*.nix') }}
           restore-prefixes-first-match: nix-${{ runner.os }}-
@@ -67,7 +67,7 @@ jobs:
       - uses: nixbuild/nix-quick-install-action@v27
 
       - name: Restore and cache Nix store
-        uses: nix-community/cache-nix-action@v5
+        uses: nix-community/cache-nix-action@v6
         with:
           primary-key: nix-${{ runner.os }}-${{ hashFiles('**/*.nix') }}
           restore-prefixes-first-match: nix-${{ runner.os }}-
@@ -138,7 +138,7 @@ jobs:
       - uses: nixbuild/nix-quick-install-action@v27
 
       - name: Restore and cache Nix store
-        uses: nix-community/cache-nix-action@v5
+        uses: nix-community/cache-nix-action@v6
         with:
           primary-key: nix-${{ runner.os }}-${{ hashFiles('**/*.nix') }}
           restore-prefixes-first-match: nix-${{ runner.os }}-
