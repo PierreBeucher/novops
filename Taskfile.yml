@@ -45,6 +45,7 @@ tasks:
   # Tests
   #
 
+  # Run all tests. Setup required infrastructure and run tests.
   test-all:
     cmds:
       - task: test-integ
@@ -53,7 +54,7 @@ tasks:
       - task: test-cli
       - task: test-install
 
-  # Integration test requires setup with containers and infrastructure
+  # Run integration tests. Will run test setup with containers and infrastructure as code.
   test-integ:
     cmds:
       - task: test-setup
@@ -61,6 +62,7 @@ tasks:
       - task: test-authentication
       - task: test-teardown
 
+  # Run test setup. Setup containers and infrastructure as code required for integration tests.
   test-setup:
     cmds:
       - pnpm i --prefix tests/setup/pulumi
