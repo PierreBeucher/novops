@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.20.0](https://github.com/PierreBeucher/novops/compare/v0.19.0...v0.20.0) (2025-06-15)
+
+
+### Features
+
+* update Cargo and overall project dependencies ([392bbce](https://github.com/PierreBeucher/novops/commit/392bbce2fcf05b1be644e0916097296062c60cf8))
+* update overall project dependencies ([2b2bc46](https://github.com/PierreBeucher/novops/commit/2b2bc46405741cd3b92e399a5b706d9c1432a7e5))
+
+
+### Bug Fixes
+
+* Ignore comments in sops input ([ed024eb](https://github.com/PierreBeucher/novops/commit/ed024eb8f0eb2109861c8384e671736ac53aa2e5))
+* Ignore comments in sops input ([29fde45](https://github.com/PierreBeucher/novops/commit/29fde45a978aa0bdc489c7d421cbbcce33f03642))
+
 ## [0.19.0](https://github.com/PierreBeucher/novops/compare/v0.18.0...v0.19.0) (2024-12-08)
 
 
