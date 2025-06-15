@@ -15,7 +15,7 @@ jobs:
 
       - uses: nixbuild/nix-quick-install-action@v27
 
-      - uses: nix-community/cache-nix-action@v5
+      - uses: nix-community/cache-nix-action@v6
         with:
           primary-key: nix-${{ runner.os }}-${{ hashFiles('**/*.nix') }}
           restore-prefixes-first-match: nix-${{ runner.os }}-
@@ -39,7 +39,7 @@ jobs:
 
       - uses: nixbuild/nix-quick-install-action@v27
 
-      - uses: nix-community/cache-nix-action@v5
+      - uses: nix-community/cache-nix-action@v6
         with:
           primary-key: nix-${{ runner.os }}-${{ hashFiles('**/*.nix') }}
           restore-prefixes-first-match: nix-${{ runner.os }}-
@@ -67,7 +67,7 @@ jobs:
       - uses: nixbuild/nix-quick-install-action@v27
 
       - name: Restore and cache Nix store
-        uses: nix-community/cache-nix-action@v5
+        uses: nix-community/cache-nix-action@v6
         with:
           primary-key: nix-${{ runner.os }}-${{ hashFiles('**/*.nix') }}
           restore-prefixes-first-match: nix-${{ runner.os }}-
@@ -128,14 +128,17 @@ jobs:
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
   
   test-misc:
-    runs-on: ubuntu-latest
+    # Use 22.04 as of Podman apparmor issue
+    # See https://github.com/containers/podman/issues/24642 
+    # and https://github.com/mgoltzsche/podman-static/pull/116/files
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
 
       - uses: nixbuild/nix-quick-install-action@v27
 
       - name: Restore and cache Nix store
-        uses: nix-community/cache-nix-action@v5
+        uses: nix-community/cache-nix-action@v6
         with:
           primary-key: nix-${{ runner.os }}-${{ hashFiles('**/*.nix') }}
           restore-prefixes-first-match: nix-${{ runner.os }}-
@@ -156,8 +159,8 @@ jobs:
             target/            
           key: ${{ runner.os }}-${{ runner.arch }}-cargo
 
+      - run: nix develop -c task test-install
       - run: nix develop -c task test-clippy
       - run: nix develop -c task test-doc
       - run: nix develop -c task test-cli
-      - run: nix develop -c task test-install
       

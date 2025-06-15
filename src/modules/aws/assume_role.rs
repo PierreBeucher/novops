@@ -36,7 +36,6 @@ impl ResolveTo<Vec<VariableOutput>> for AwsAssumeRoleInput {
         let session_random_suffix: String = rand::thread_rng()
             .sample_iter(&Alphanumeric)
             .take(7)
-            .map(char::from)
             .collect();
 
         let mut role_session_name = format!("novops-{:}-{:}-{:}", &ctx.app_name, &ctx.env_name, &session_random_suffix);

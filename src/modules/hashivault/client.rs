@@ -395,7 +395,7 @@ fn read_vault_token_file(token_path: &PathBuf) -> Result<String, anyhow::Error>{
         .with_context(|| format!("Couldn't read token file at {:?}", token_path))?;
 
     // trim result as empty spaces or linefeed causes vaultrs to panic
-    return Ok(String::from(token.trim()))
+    Ok(String::from(token.trim()))
 }
 
 

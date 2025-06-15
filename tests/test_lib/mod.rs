@@ -89,6 +89,11 @@ pub async fn test_setup() -> Result<(), anyhow::Error> {
     // known age keys
     std::env::set_var("SOPS_AGE_KEY_FILE", "tests/setup/sops/age1");
 
+    // required for some tests using rustls
+    // Otherwise getting error: no process-level CryptoProvider available -- call CryptoProvider::install_default() before this point
+    // See https://github.com/rustls/rustls/issues/1938
+    let _ = rustls::crypto::ring::default_provider().install_default();
+
     Ok(())
 }
 

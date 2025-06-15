@@ -12,6 +12,7 @@ All commands are CI-agnostic: they work the same locally and on CI by leveraging
 - [Test](#test)
   - [Running non-integration tests](#running-non-integration-tests)
   - [Runnning integration tests](#runnning-integration-tests)
+- [Maintenance and updates](#maintenance-and-updates)
 - [Doc](#doc)
 - [Release](#release)
 
@@ -48,17 +49,25 @@ For Darwin (macOS), you must build Darwin Cross image yourself (Apple does not a
     mkdir ./macos-sdk
     cp path/to/sdk/MacOSX13.0.sdk.tar.xz ./macos-sdk/MacOSX13.0.sdk.tar.xz
 
-    # Build images
-    docker build -f ./cross-toolchains/docker/Dockerfile.x86_64-apple-darwin-cross \
+    cargo build-docker-image x86_64-apple-darwin-cross --tag local \
       --build-arg MACOS_SDK_DIR=./macos-sdk \
-      --build-arg MACOS_SDK_FILE="MacOSX13.0.sdk.tar.xz" \
-      -t x86_64-apple-darwin-cross:local .
+      --build-arg MACOS_SDK_FILE="MacOSX13.0.sdk.tar.xz"
 
-    docker build -f ./cross-toolchains/docker/Dockerfile.aarch64-apple-darwin-cross \
+    cargo build-docker-image aarch64-apple-darwin-cross --tag local \
       --build-arg MACOS_SDK_DIR=./macos-sdk \
-      --build-arg MACOS_SDK_FILE="MacOSX13.0.sdk.tar.xz" \
-      -t aarch64-apple-darwin-cross:local \
-      .
+      --build-arg MACOS_SDK_FILE="MacOSX13.0.sdk.tar.xz"
+
+    # Or use older direct docker build commands:
+    # docker build -f ./cross-toolchains/docker/Dockerfile.x86_64-apple-darwin-cross \
+    #  --build-arg MACOS_SDK_DIR=./macos-sdk \
+    #  --build-arg MACOS_SDK_FILE="MacOSX13.0.sdk.tar.xz" \
+    #  -t x86_64-apple-darwin-cross:local .
+
+    # docker build -f ./cross-toolchains/docker/Dockerfile.aarch64-apple-darwin-cross \
+    #  --build-arg MACOS_SDK_DIR=./macos-sdk \
+    #  --build-arg MACOS_SDK_FILE="MacOSX13.0.sdk.tar.xz" \
+    #  -t aarch64-apple-darwin-cross:local \
+    #  .
     ```
 
 ## Test
@@ -112,6 +121,13 @@ task test-integ
 # Cleanup resources to avoid unnecessary cost
 task test-teardown
 ```
+
+## Maintenance and updates
+
+- Update Cargo deps `cargo update`
+- Update Nix flake to latest version and run `nix flake update`
+- Update Containerfile version to match Nix flake `rustc --version`
+- Update test images in `tests/install/test-install.sh` to match latest version - used fixed image version, not `latest`
 
 ## Doc
 

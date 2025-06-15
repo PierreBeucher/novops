@@ -16,15 +16,10 @@ pre-build = [
 #
 # macOS
 # Requires custom images, see docs/src/contributing/development.md
+# No working for now, see: https://github.com/PierreBeucher/novops/issues/149
 #
 [target.x86_64-apple-darwin]
-image = "x86_64-apple-darwin-cross:local"
-
-[target.x86_64-apple-darwin.env]
-passthrough = ["MACOSX_DEPLOYMENT_TARGET=macos13"]
+image = "ghcr.io/cross-rs/x86_64-apple-darwin-cross:local"
 
 [target.aarch64-apple-darwin]
-image = "aarch64-apple-darwin-cross:local"
-
-[target.aarch64-apple-darwin.env]
-passthrough = ["MACOSX_DEPLOYMENT_TARGET=macos13"]
+image = "ghcr.io/cross-rs/aarch64-apple-darwin-cross:local"
