@@ -8,141 +8,141 @@ on:
 
 jobs:
 
-  # # Build and push to cachix
-  # build-flake:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v3
+  # Build and push to cachix
+  build-flake:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
 
-  #     - uses: nixbuild/nix-quick-install-action@v27
+      - uses: nixbuild/nix-quick-install-action@v27
 
-  #     - uses: nix-community/cache-nix-action@v6
-  #       with:
-  #         primary-key: nix-${{ runner.os }}-${{ hashFiles('**/*.nix') }}
-  #         restore-prefixes-first-match: nix-${{ runner.os }}-
+      - uses: nix-community/cache-nix-action@v6
+        with:
+          primary-key: nix-${{ runner.os }}-${{ hashFiles('**/*.nix') }}
+          restore-prefixes-first-match: nix-${{ runner.os }}-
 
-  #     - uses: cachix/cachix-action@v12
-  #       with:
-  #         name: novops
-  #         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+      - uses: cachix/cachix-action@v12
+        with:
+          name: novops
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
       
-  #     - run: nix build --json | jq -r '.[].outputs | to_entries[].value' | cachix push novops
+      - run: nix build --json | jq -r '.[].outputs | to_entries[].value' | cachix push novops
   
-  # test-integ:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v3
+  test-integ:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
 
-  #     - name: Free Disk Space
-  #       uses: jlumbroso/free-disk-space@main
-  #       with:
-  #         # this might remove tools that are actually needed,
-  #         # if set to "true" but frees about 6 GB
-  #         tool-cache: false
-  #         large-packages: false
+      - name: Free Disk Space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          # this might remove tools that are actually needed,
+          # if set to "true" but frees about 6 GB
+          tool-cache: false
+          large-packages: false
 
-  #     - uses: nixbuild/nix-quick-install-action@v27
+      - uses: nixbuild/nix-quick-install-action@v27
 
-  #     - name: Restore and cache Nix store
-  #       uses: nix-community/cache-nix-action@v6
-  #       with:
-  #         primary-key: nix-${{ runner.os }}-${{ hashFiles('**/*.nix') }}
-  #         restore-prefixes-first-match: nix-${{ runner.os }}-
+      - name: Restore and cache Nix store
+        uses: nix-community/cache-nix-action@v6
+        with:
+          primary-key: nix-${{ runner.os }}-${{ hashFiles('**/*.nix') }}
+          restore-prefixes-first-match: nix-${{ runner.os }}-
 
-  #     - uses: cachix/cachix-action@v12
-  #       with:
-  #         name: novops
-  #         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+      - uses: cachix/cachix-action@v12
+        with:
+          name: novops
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
 
-  #     - uses: actions/cache@v3
-  #       name: setup Cargo cache
-  #       with:
-  #         path: |
-  #           ~/.cargo/bin/
-  #           ~/.cargo/registry/index/
-  #           ~/.cargo/registry/cache/
-  #           ~/.cargo/git/db/
-  #           target/            
-  #         key: ${{ runner.os }}-${{ runner.arch }}-cargo
+      - uses: actions/cache@v3
+        name: setup Cargo cache
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/            
+          key: ${{ runner.os }}-${{ runner.arch }}-cargo
 
-  #     - uses: actions/cache@v4
-  #       name: Setup pnpm cache
-  #       with:
-  #         path: ${{ env.PNPM_HOME }}/store
-  #         key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-  #         restore-keys: |
-  #           ${{ runner.os }}-pnpm-store-
+      - uses: actions/cache@v4
+        name: Setup pnpm cache
+        with:
+          path: ${{ env.PNPM_HOME }}/store
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
 
-  #     # Cloud login
-  #     - uses: google-github-actions/auth@v2
-  #       with:
-  #         credentials_json: '${{ secrets.GOOGLE_CREDENTIALS }}'
+      # Cloud login
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: '${{ secrets.GOOGLE_CREDENTIALS }}'
       
-  #     - uses: azure/login@v2
-  #       with:
-  #         creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
           
-  #     # Run tests
-  #     - run: nix develop -c task test-setup
-  #       env:
-  #         PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+      # Run tests
+      - run: nix develop -c task test-setup
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
 
-  #         # Pulumi Azure Native provider auth
-  #         # Still required by Pulumi despite already previou az log-in
-  #         ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-  #         ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-  #         ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-  #         ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          # Pulumi Azure Native provider auth
+          # Still required by Pulumi despite already previou az log-in
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
       
-  #     - run: nix develop -c task test-integ-run
+      - run: nix develop -c task test-integ-run
 
-  #     - run: nix develop -c task test-teardown
-  #       env:
-  #         PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
-  #         ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-  #         ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-  #         ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-  #         ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      - run: nix develop -c task test-teardown
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
   
-  # test-misc:
-  #   # Use 22.04 as of Podman apparmor issue
-  #   # See https://github.com/containers/podman/issues/24642 
-  #   # and https://github.com/mgoltzsche/podman-static/pull/116/files
-  #   runs-on: ubuntu-22.04
-  #   steps:
-  #     - uses: actions/checkout@v3
+  test-misc:
+    # Use 22.04 as of Podman apparmor issue
+    # See https://github.com/containers/podman/issues/24642 
+    # and https://github.com/mgoltzsche/podman-static/pull/116/files
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
 
-  #     - uses: nixbuild/nix-quick-install-action@v27
+      - uses: nixbuild/nix-quick-install-action@v27
 
-  #     - name: Restore and cache Nix store
-  #       uses: nix-community/cache-nix-action@v6
-  #       with:
-  #         primary-key: nix-${{ runner.os }}-${{ hashFiles('**/*.nix') }}
-  #         restore-prefixes-first-match: nix-${{ runner.os }}-
+      - name: Restore and cache Nix store
+        uses: nix-community/cache-nix-action@v6
+        with:
+          primary-key: nix-${{ runner.os }}-${{ hashFiles('**/*.nix') }}
+          restore-prefixes-first-match: nix-${{ runner.os }}-
 
-  #     - uses: cachix/cachix-action@v12
-  #       with:
-  #         name: novops
-  #         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+      - uses: cachix/cachix-action@v12
+        with:
+          name: novops
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
 
-  #     - uses: actions/cache@v3
-  #       name: setup Cargo cache
-  #       with:
-  #         path: |
-  #           ~/.cargo/bin/
-  #           ~/.cargo/registry/index/
-  #           ~/.cargo/registry/cache/
-  #           ~/.cargo/git/db/
-  #           target/            
-  #         key: ${{ runner.os }}-${{ runner.arch }}-cargo
+      - uses: actions/cache@v3
+        name: setup Cargo cache
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/            
+          key: ${{ runner.os }}-${{ runner.arch }}-cargo
 
-  #     - run: nix develop -c task test-install
-  #     - run: nix develop -c task test-clippy
-  #     - run: nix develop -c task test-doc
-  #     - run: nix develop -c task test-cli
+      - run: nix develop -c task test-install
+      - run: nix develop -c task test-clippy
+      - run: nix develop -c task test-doc
+      - run: nix develop -c task test-cli
 
   # Linux: static build with Nix / Cross for both x86_64 and aarch64
-  build-linux:
+  build-linux-cross:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
