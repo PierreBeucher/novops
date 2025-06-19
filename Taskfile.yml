@@ -16,6 +16,11 @@ tasks:
       - cross build --target x86_64-unknown-linux-musl --target-dir target/cross/x86_64-unknown-linux-musl
       - cross build --target aarch64-unknown-linux-musl --target-dir target/cross/aarch64-unknown-linux-musl
 
+  build-cross-linux-release:
+    cmds:
+      - cross build --target x86_64-unknown-linux-musl --target-dir target/cross/x86_64-unknown-linux-musl --release
+      - cross build --target aarch64-unknown-linux-musl --target-dir target/cross/aarch64-unknown-linux-musl --release
+
   build-cross-macos:
     cmds:
       - cross build --target x86_64-apple-darwin --target-dir target/cross/x86_64-apple-darwin

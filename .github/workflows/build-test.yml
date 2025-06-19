@@ -142,7 +142,7 @@ jobs:
   #     - run: nix develop -c task test-cli
 
   # Linux: static build with Nix / Cross for both x86_64 and aarch64
-  build-linux:
+  build-linux-cross:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3

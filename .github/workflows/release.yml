@@ -1,28 +1,107 @@
 name: Release
 
-# Same jobs are used for testing or releasing
 on:
   push:
+    tags:
+      - "v*"
+    # test on branch
     branches:
-      - main
+      - macos-build-github
 
 jobs:
-  
-  release:
-    name: release PR
+  # Linux: static build with Nix / Cross for both x86_64 and aarch64
+  build-linux-cross:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v3
 
-      - uses: cachix/install-nix-action@v20
+      - uses: nixbuild/nix-quick-install-action@v27
+
+      - uses: nix-community/cache-nix-action@v6
         with:
-          nix_path: nixpkgs=channel:nixos-unstable
-      
+          primary-key: nix-${{ runner.os }}-${{ hashFiles('**/*.nix') }}
+          restore-prefixes-first-match: nix-${{ runner.os }}-
+
       - uses: cachix/cachix-action@v12
         with:
           name: novops
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+      
+      - run: nix develop .#cross -c task build-cross-linux-release
 
-      - run: nix develop -c task release-pr
+      - run: |
+          mkdir -p release
+
+          # Package x86_64
+          zip -j release/novops_linux_x86_64.zip target/cross/x86_64-unknown-linux-musl/x86_64-unknown-linux-musl/release/novops
+          sha256sum target/cross/x86_64-unknown-linux-musl/x86_64-unknown-linux-musl/release/novops > release/novops_linux_x86_64.sha256sum
+          
+          # Package aarch64
+          zip -j release/novops_linux_aarch64.zip target/cross/aarch64-unknown-linux-musl/aarch64-unknown-linux-musl/release/novops
+          sha256sum target/cross/aarch64-unknown-linux-musl/aarch64-unknown-linux-musl/release/novops > release/novops_linux_aarch64.sha256sum
+          
+      - name: Upload Linux artifacts to GitHub Release
+        run: echo "gh release upload ${GITHUB_REF_NAME} release/*"
         env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # MacOS: run build directly on GitHub actions runners as MacOS Cross image can't be published publicly (license issue)
+  # And cross-compilation from Linux to MacOS is broken as per dependency on aws-lc-rs
+  # See https://github.com/PierreBeucher/novops/issues/149 and https://github.com/aws/aws-lc-rs/issues/818
+  build-macos:
+    strategy:
+      matrix:
+        # Build for all required targets
+        # See https://docs.github.com/en/actions/using-github-hosted-runners/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
+        include:
+          - os: macos-13 # MacOS 13 with Intel CPU
+            rust_target: aarch64-apple-darwin
+            arch: x86_64
+            artifact_suffix: _macos_aarch64
+          - os: macos-15 # MacOS 15 with Apple Silicon CPU
+            rust_target: x86_64-apple-darwin
+            arch: arm64
+            artifact_suffix: _macos_x86_64
+
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: ${{ matrix.rust_target }}
+
+    - name: Install sha256sum
+      run: brew install coreutils
+
+    - name: Cache dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-${{ matrix.arch }}-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-${{ matrix.arch }}-
+
+    - name: Build project
+      run: cargo build --target ${{ matrix.rust_target }} --release
+
+    - name: Package MacOS artifacts
+      run: |
+        mkdir -p release
+        zip -j release/novops${{ matrix.artifact_suffix }}.zip target/${{ matrix.rust_target }}/release/novops
+        sha256sum target/${{ matrix.rust_target }}/release/novops > release/novops${{ matrix.artifact_suffix }}.sha256sum
+
+    - name: Upload MacOS artifacts to GitHub Release
+      run: echo "gh release upload ${GITHUB_REF_NAME} release/*"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
