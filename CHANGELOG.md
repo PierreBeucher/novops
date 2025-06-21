@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.20.1](https://github.com/PierreBeucher/novops/compare/v0.20.0...v0.20.1) (2025-06-21)
+
+
+### Bug Fixes
+
+* doc upload action update ([a6f7e9f](https://github.com/PierreBeucher/novops/commit/a6f7e9f83aecc256e14d06505945f3e20ec40e84))
+
 ## [0.20.0](https://github.com/PierreBeucher/novops/compare/v0.19.0...v0.20.0) (2025-06-15)
 
 
