@@ -43,7 +43,9 @@ jobs:
           sha256sum target/cross/aarch64-unknown-linux-musl/aarch64-unknown-linux-musl/release/novops > release/novops_linux_aarch64.sha256sum
           
       - name: Upload Linux artifacts to GitHub Release
-        run: echo "gh release upload ${GITHUB_REF_NAME} release/*"
+        # TEST CHANGE ME
+        run: gh release upload test-tmp release/*
+        # run: gh release upload ${GITHUB_REF_NAME} release/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -102,6 +104,8 @@ jobs:
         sha256sum target/${{ matrix.rust_target }}/release/novops > release/novops${{ matrix.artifact_suffix }}.sha256sum
 
     - name: Upload MacOS artifacts to GitHub Release
-      run: echo "gh release upload ${GITHUB_REF_NAME} release/*"
+      # TEST CHANGE ME
+      run: gh release upload test-tmp release/*
+      # run: gh release upload ${GITHUB_REF_NAME} release/*
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
