@@ -39,7 +39,7 @@ jobs:
       - run: nix develop -c task doc
       
       - name: Upload mdBook artifact
-        uses: actions/upload-pages-artifact@v1
+        uses: actions/upload-pages-artifact@v3
         with:
           path: ./docs/book
 
