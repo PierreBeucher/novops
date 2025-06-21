@@ -8,29 +8,6 @@ on:
 
 jobs:
 
-  build-cross:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - uses: nixbuild/nix-quick-install-action@v27
-
-      - uses: nix-community/cache-nix-action@v6
-        with:
-          primary-key: nix-${{ runner.os }}-${{ hashFiles('**/*.nix') }}
-          restore-prefixes-first-match: nix-${{ runner.os }}-
-
-      - uses: cachix/cachix-action@v12
-        with:
-          name: novops
-          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
-      
-      - run: nix develop .#cross -c task build-cross-linux
-
-      # Can't include darwin targets as not possible to use it on CI directly for now
-      # since it requires custom Docker images which can't be published as per Apple licenses
-      # - run: nix develop .#cross -c task build-cross-macos
-
   # Build and push to cachix
   build-flake:
     runs-on: ubuntu-latest
@@ -163,4 +140,64 @@ jobs:
       - run: nix develop -c task test-clippy
       - run: nix develop -c task test-doc
       - run: nix develop -c task test-cli
+
+  # Linux: static build with Nix / Cross for both x86_64 and aarch64
+  build-linux-cross:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: nixbuild/nix-quick-install-action@v27
+
+      - uses: nix-community/cache-nix-action@v6
+        with:
+          primary-key: nix-${{ runner.os }}-${{ hashFiles('**/*.nix') }}
+          restore-prefixes-first-match: nix-${{ runner.os }}-
+
+      - uses: cachix/cachix-action@v12
+        with:
+          name: novops
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
       
+      - run: nix develop .#cross -c task build-cross-linux
+
+  # MacOS: run build direcrtly on GitHub actions runners as MacOS Cross image can't be published publicly (license issue)
+  # And cross-compilation from Linux to MacOS is broken as per dependency on aws-lc-rs
+  # See https://github.com/PierreBeucher/novops/issues/149 and https://github.com/aws/aws-lc-rs/issues/818
+  build-macos:
+    strategy:
+      matrix:
+        # Build for all required targets
+        # See https://docs.github.com/en/actions/using-github-hosted-runners/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
+        include:
+          - os: macos-13 # MacOS 13 with Intel CPU
+            rust_target: aarch64-apple-darwin
+            arch: x86_64
+          - os: macos-15 # MacOS 15 with Apple Silicon CPU
+            rust_target: x86_64-apple-darwin
+            arch: arm64
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: ${{ matrix.rust_target }}
+
+    - name: Cache dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-${{ matrix.arch }}-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-${{ matrix.arch }}-
+
+    - name: Build project
+      run: cargo build --target ${{ matrix.rust_target }}
