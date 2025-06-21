@@ -86,7 +86,7 @@
           gnumake
           zip
           gh
-          nodejs-slim # for npx release-please
+          nodejs_24 # for test and release jobs
           nodePackages.pnpm
           cachix
           python311
