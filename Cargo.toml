@@ -40,7 +40,9 @@ crc32c = "0.6"
 sha2 = "0.10.6"
 digest = "0.10.6"
 home = "0.5.5"
-google-secretmanager1 = "5.0.2"
+google-secretmanager1 = "7.0.0+20251209"
+yup-oauth2 = { version = "^12", features = ["service-account", "hyper-rustls", "ring"] }
+rustls = { version = "0.23.27", features = ["ring"] }
 dialoguer = "0.11.0"
 console = "0.15.7"
 base64 = "0.22.1"
@@ -69,7 +71,6 @@ kube = { version = "0.90.0", features = ["runtime", "derive"] }
 k8s-openapi = { version = "0.21.1", features = ["latest"] }
 pem = "3.0.4"
 chrono = "0.4.38"
-rustls = { version = "0.23.27", features = ["ring"] }
 
 [profile.test]
 incremental = true
