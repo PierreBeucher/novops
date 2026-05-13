@@ -167,6 +167,12 @@ async fn main() -> Result<(), anyhow::Error> {
     
     init_logger(); // first things first
 
+    // rustls 0.23+ requires an explicit CryptoProvider to be installed before
+    // any TLS operations. Install the ring provider as the process-level default.
+    rustls::crypto::ring::default_provider()
+        .install_default()
+        .expect("Failed to install rustls ring CryptoProvider");
+
     let mut app = build_cli();
 
     let m = app.get_matches_mut();
